@@ -1,0 +1,12 @@
+{
+  "scale_ndx_to_qqq": 0.021208764943734155,
+  "scale_ixic_to_ndx": 0.008439854474347454,
+  "seam_qqq_ndx_date": "1999-03-10",
+  "seam_ixic_ndx_date": "1985-10-01",
+  "start_date": "1971-02-05",
+  "end_date": "2025-08-29",
+  "start_value": 0.8439854474347454,
+  "ixic_to_ndx_value": 2.3783508878455453,
+  "qqq_seam_value": 43.23427963256836,
+  "end_value": 570.4000244140625
+}
