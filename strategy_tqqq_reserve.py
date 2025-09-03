@@ -126,10 +126,11 @@ def load_unified(pd, csv_path: str):
     return df
 
 
-def compute_temperature_series(pd, np, df):
+def compute_temperature_series(pd, np, df, csv_path: str = "unified_nasdaq.csv"):
+    """Compute temperature series using the provided CSV for the fit."""
     # Use the robust fit from nasdaq_temperature module
     from nasdaq_temperature import NasdaqTemperature  # type: ignore
-    model = NasdaqTemperature(csv_path=None if False else "unified_nasdaq.csv")
+    model = NasdaqTemperature(csv_path=csv_path)
     # Align to df
     start_ts = model.start_ts
     t_years = (df.index - start_ts).days / 365.25
@@ -202,7 +203,7 @@ def main():
     rates = rates.reindex(df.index).ffill().bfill()
 
     # Temperature series
-    temp, A, r, fit_start_ts = compute_temperature_series(pd, np, df)
+    temp, A, r, fit_start_ts = compute_temperature_series(pd, np, df, csv_path=args.csv)
     df["temp"] = temp
 
     # Simulated TQQQ-like and cash daily factors
