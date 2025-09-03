@@ -96,11 +96,21 @@ def iterative_fit(np, t_years, prices, thresholds: List[float]):
 
     # Step 2: exclude > thresholds[0]
     mask2 = rel1 <= thresholds[0]
+    if not mask2.any():
+        raise RuntimeError(
+            f"No points remain after applying threshold {thresholds[0]:.3f} in step 2; "
+            "try using a larger --thresh2 value."
+        )
     A2, r2 = fit_log_linear(np, t_years[mask2], prices[mask2])
     pred2, rel2 = compute_relative_errors(np, A2, r2, t_years, prices)
 
     # Step 3: exclude > thresholds[1] based on step-2 fit
     mask3 = rel2 <= thresholds[1]
+    if not mask3.any():
+        raise RuntimeError(
+            f"No points remain after applying threshold {thresholds[1]:.3f} in step 3; "
+            "try using a larger --thresh3 value."
+        )
     A3, r3 = fit_log_linear(np, t_years[mask3], prices[mask3])
 
     return (A1, r1, pred1, rel1), (A2, r2, pred2, rel2, mask2), (A3, r3, mask3)
