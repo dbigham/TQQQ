@@ -98,11 +98,17 @@ def fetch_fred_series(pd, series_id: str, start, end, api_key: Optional[str]):
         with urllib.request.urlopen(url) as resp:
             csv_bytes = resp.read()
         s = pd.read_csv(io.BytesIO(csv_bytes))
-        # Columns: DATE, SERIES_ID
+        # Columns: typically DATE or observation_date, plus the series value column
         value_col = series_id
         if value_col not in s.columns and value_col.upper() in s.columns:
             value_col = value_col.upper()
-        s = s.rename(columns={"DATE": "date", value_col: "rate"})
+        date_col = "DATE"
+        if date_col not in s.columns:
+            if "observation_date" in s.columns:
+                date_col = "observation_date"
+            elif "date" in s.columns:
+                date_col = "date"
+        s = s.rename(columns={date_col: "date", value_col: "rate"})
         s["date"] = pd.to_datetime(s["date"])
         s = s.set_index("date")["rate"].to_frame()
         s = s.loc[(s.index >= pd.to_datetime(start)) & (s.index <= pd.to_datetime(end))]
