@@ -34,7 +34,8 @@ Method
 CLI
 ---
 python build_unified_nasdaq.py [--out unified_nasdaq.csv] [--upgrade] \
-  [--seam-qqq-ndx YYYY-MM-DD] [--seam-ixic-ndx YYYY-MM-DD] [--no-plot]
+  [--seam-qqq-ndx YYYY-MM-DD] [--seam-ixic-ndx YYYY-MM-DD] [--no-plot] \
+  [--pre-ndx-plus2pct]
 
 - --upgrade: attempts to `pip install -U yfinance pandas matplotlib` before running
 - Seam flags let you pin anchor dates if you want reproducibility across runs
@@ -125,7 +126,7 @@ def parse_date(value: Optional[str]) -> Optional[dt.date]:
     return dt.date.fromisoformat(value)
 
 
-def build_unified(pd, qqq, ndx, ixic, seam_qqq_ndx_date: dt.date, seam_ixic_ndx_date: dt.date):
+def build_unified(pd, qqq, ndx, ixic, seam_qqq_ndx_date: dt.date, seam_ixic_ndx_date: dt.date, ixic_extra_cagr: float = 0.0):
     # Extract anchor values
     seam_qqq_ndx_ts = pd.to_datetime(seam_qqq_ndx_date)
     seam_ixic_ndx_ts = pd.to_datetime(seam_ixic_ndx_date)
@@ -150,7 +151,17 @@ def build_unified(pd, qqq, ndx, ixic, seam_qqq_ndx_date: dt.date, seam_ixic_ndx_
 
     # Build segments
     ixic_scaled = (ixic[ixic.index < seam_ixic_ndx_ts] * scale_ixic_to_ndx).to_frame("close")
-    ixic_scaled["source"] = "IXIC_scaled"
+    if ixic_extra_cagr and abs(ixic_extra_cagr) > 0.0:
+        # Apply extra CAGR to pre-NDX IXIC so that earlier points are adjusted
+        # by (1 + cagr)^(-years_to_seam), keeping the seam value unchanged.
+        years_to_seam = (seam_ixic_ndx_ts - ixic_scaled.index) / pd.Timedelta(days=1)
+        years_to_seam = years_to_seam / 365.25
+        factor = (1.0 + float(ixic_extra_cagr)) ** (-years_to_seam)
+        ixic_scaled["close"] = ixic_scaled["close"].to_numpy() * factor.to_numpy()
+        ixic_source_label = f"IXIC_scaled_extra{ixic_extra_cagr:+.2%}"
+    else:
+        ixic_source_label = "IXIC_scaled"
+    ixic_scaled["source"] = ixic_source_label
 
     ndx_scaled = (ndx[(ndx.index >= seam_ixic_ndx_ts) & (ndx.index < seam_qqq_ndx_ts)] * scale_ndx_to_qqq).to_frame("close")
     ndx_scaled["source"] = "NDX_scaled"
@@ -181,6 +192,7 @@ def build_unified(pd, qqq, ndx, ixic, seam_qqq_ndx_date: dt.date, seam_ixic_ndx_
         "ixic_to_ndx_value": ixic_to_ndx_value,
         "qqq_seam_value": qqq_seam_value,
         "end_value": end_value,
+        "ixic_extra_cagr": float(ixic_extra_cagr),
     }
 
     return unified, meta
@@ -193,6 +205,7 @@ def main():
     parser.add_argument("--seam-qqq-ndx", dest="seam_qqq_ndx", default=None, help="Anchor date (YYYY-MM-DD) for QQQ⇄NDX seam")
     parser.add_argument("--seam-ixic-ndx", dest="seam_ixic_ndx", default=None, help="Anchor date (YYYY-MM-DD) for IXIC⇄NDX seam")
     parser.add_argument("--no-plot", action="store_true", help="Skip showing the log plot")
+    parser.add_argument("--pre-ndx-plus2pct", action="store_true", help="Apply +2% annual CAGR to pre-NDX IXIC segment")
     args = parser.parse_args()
 
     upgrade_packages_if_requested(args.upgrade)
@@ -213,7 +226,8 @@ def main():
         seam_ixic_ndx = find_first_overlap_date(pd, ixic, ndx)
 
     # Build unified
-    unified, meta = build_unified(pd, qqq, ndx, ixic, seam_qqq_ndx, seam_ixic_ndx)
+    ixic_extra_cagr = 0.02 if args.pre_ndx_plus2pct else 0.0
+    unified, meta = build_unified(pd, qqq, ndx, ixic, seam_qqq_ndx, seam_ixic_ndx, ixic_extra_cagr=ixic_extra_cagr)
 
     # Save CSV (date, close, source)
     out_path = args.out
@@ -246,7 +260,10 @@ def main():
         ax.semilogy(unified.index, unified["close"], label="Unified series")
         ax.axvline(pd.to_datetime(meta["seam_ixic_ndx_date"]), color="gray", linestyle="--", alpha=0.5, label="IXIC→NDX seam")
         ax.axvline(pd.to_datetime(meta["seam_qqq_ndx_date"]), color="gray", linestyle=":", alpha=0.5, label="NDX→QQQ seam")
-        ax.set_title("Unified Nasdaq (QQQ + scaled ^NDX + scaled ^IXIC)")
+        title = "Unified Nasdaq (QQQ + scaled ^NDX + scaled ^IXIC)"
+        if meta.get("ixic_extra_cagr", 0.0):
+            title += " [+2% pre-NDX]" if abs(meta["ixic_extra_cagr"] - 0.02) < 1e-9 else f" [+{meta['ixic_extra_cagr']*100:.2f}% pre-NDX]"
+        ax.set_title(title)
         ax.set_xlabel("Date")
         ax.set_ylabel("Adjusted close (log scale)")
         ax.legend()

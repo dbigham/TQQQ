@@ -489,6 +489,9 @@ def main():
     # CAGR for strategy
     years = (df.index[-1] - df.index[0]).days / 365.25
     cagr = (strategy_norm[-1] / strategy_norm[0]) ** (1.0 / years) - 1.0
+    # Print CAGR summary for convenience
+    print(f"Strategy span: {df.index[0].date()} -> {df.index[-1].date()} ({years:.2f} years)")
+    print(f"Strategy CAGR: {cagr * 100.0:.2f}%")
 
     # Plot
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 8), sharex=True)
