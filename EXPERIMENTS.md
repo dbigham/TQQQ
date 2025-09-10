@@ -16,3 +16,11 @@ market temperature is below 0.8, interest rates are under 5%, and the 22‑day r
 non‑negative.  This leverages the cash reserve during deep value periods.
 
 - **CAGR**: ~30.58% (through 2025‑01‑10)
+
+## A3 – Deep Cold Turbo Boost
+Builds on A2 by adding a second leverage tier. When temperature drops below 0.75,
+interest rates are under 4%, and the 22‑day return is at least 2%, exposure gains an
+extra 20% (capped at 140%). This aims to capture strong rebounds during extreme
+discounts.
+
+- **CAGR**: ~31.17% (through 2025‑01‑10)

@@ -175,13 +175,18 @@ def apply_cold_leverage(
     boost: float = 0.2,
     temperature_threshold: float = 0.8,
     rate_threshold: float = 5.0,
+    extra_boost: float = 0.0,
+    extra_temperature_threshold: float = 0.75,
+    extra_rate_threshold: float = 4.0,
+    extra_ret22_threshold: float = 0.02,
 ) -> float:
     """Boost allocation when conditions look favorable.
 
     Parameters allow experiments to fine‑tune when and how much extra leverage
     is deployed. The default matches the original A2 behaviour of adding up to
     20% exposure (capped at 120%) when the market is cold but stable and rates
-    are low.
+    are low. Experiments can optionally specify a second tier "extra" boost
+    that further increases exposure when conditions are extremely favourable.
     """
     if (
         T < temperature_threshold
@@ -190,7 +195,16 @@ def apply_cold_leverage(
         and ret_22 >= 0.0
     ):
         max_p = 1.0 + boost
-        return min(max_p, p + boost)
+        p = min(max_p, p + boost)
+        if (
+            extra_boost > 0.0
+            and T < extra_temperature_threshold
+            and rate_annual_pct < extra_rate_threshold
+            and ret_22 >= extra_ret22_threshold
+        ):
+            max_p = 1.0 + boost + extra_boost
+            p = min(max_p, p + extra_boost)
+        return p
     return p
 
 
@@ -200,6 +214,10 @@ def apply_cold_leverage(
 #   boost: fraction of extra exposure to add when the rule triggers
 #   temperature_threshold: only boost when Nasdaq temperature is below this value
 #   rate_threshold: only boost when the annual interest rate is below this percentage
+#   extra_boost: additional exposure when deep-cold conditions are met
+#   extra_temperature_threshold: temperature must be below this for extra boost
+#   extra_rate_threshold: rate must be below this for extra boost
+#   extra_ret22_threshold: 22-day return must be at least this for extra boost
 
 # Strategy experiment definitions. Each experiment can enable features or tune
 # parameters to explore different behaviours without littering conditional
@@ -211,6 +229,17 @@ EXPERIMENTS = {
             "boost": 0.2,
             "temperature_threshold": 0.8,
             "rate_threshold": 5.0,
+        }
+    },
+    "A3": {
+        "cold_leverage": {
+            "boost": 0.2,
+            "temperature_threshold": 0.8,
+            "rate_threshold": 5.0,
+            "extra_boost": 0.2,
+            "extra_temperature_threshold": 0.75,
+            "extra_rate_threshold": 4.0,
+            "extra_ret22_threshold": 0.02,
         }
     },
 }
