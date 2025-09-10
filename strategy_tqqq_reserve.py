@@ -55,9 +55,9 @@ Outputs
 
 Run
 ---
-python strategy_tqqq_reserve.py [--csv unified_nasdaq.csv] [--end 2025-01-10] [--fred-series FEDFUNDS] \
-  [--leverage 3.0] [--annual-fee 0.0095] [--borrow-divisor 0.7] [--trading-days 252] \
-  [--save-plot strategy_tqqq.png] [--no-show]
+python strategy_tqqq_reserve.py [--csv unified_nasdaq.csv] [--experiment A1] [--end 2025-01-10] \
+  [--fred-series FEDFUNDS] [--leverage 3.0] [--annual-fee 0.0095] [--borrow-divisor 0.7] \
+  [--trading-days 252] [--save-plot strategy_tqqq.png] [--no-show]
 """
 
 from __future__ import annotations
@@ -104,8 +104,11 @@ def fetch_fred_series(pd, series_id: str, start, end):
         with urllib.request.urlopen(url) as resp:
             csv_bytes = resp.read()
         s = pd.read_csv(io.BytesIO(csv_bytes))
+        # fredgraph currently uses 'observation_date' for the date column but older
+        # exports used 'DATE'. Support either for robustness.
+        date_col = "DATE" if "DATE" in s.columns else "observation_date"
         value_col = series_id if series_id in s.columns else series_id.upper()
-        s = s.rename(columns={"DATE": "date", value_col: "rate"})
+        s = s.rename(columns={date_col: "date", value_col: "rate"})
         s["date"] = pd.to_datetime(s["date"])
         s = s.set_index("date")["rate"].to_frame()
         s = s.loc[(s.index >= pd.to_datetime(start)) & (s.index <= pd.to_datetime(end))]
@@ -163,11 +166,67 @@ def apply_rate_taper(p: float, rate_annual_pct: float) -> float:
     return p * factor
 
 
+def apply_cold_leverage(
+    p: float,
+    T: float,
+    rate_annual_pct: float,
+    ret_22: float,
+    *,
+    boost: float = 0.2,
+    temperature_threshold: float = 0.8,
+    rate_threshold: float = 5.0,
+) -> float:
+    """Boost allocation when conditions look favorable.
+
+    Parameters allow experiments to fine‑tune when and how much extra leverage
+    is deployed. The default matches the original A2 behaviour of adding up to
+    20% exposure (capped at 120%) when the market is cold but stable and rates
+    are low.
+    """
+    if (
+        T < temperature_threshold
+        and rate_annual_pct < rate_threshold
+        and not math.isnan(ret_22)
+        and ret_22 >= 0.0
+    ):
+        max_p = 1.0 + boost
+        return min(max_p, p + boost)
+    return p
+
+
+# Strategy parameters
+# -------------------
+# cold_leverage:
+#   boost: fraction of extra exposure to add when the rule triggers
+#   temperature_threshold: only boost when Nasdaq temperature is below this value
+#   rate_threshold: only boost when the annual interest rate is below this percentage
+
+# Strategy experiment definitions. Each experiment can enable features or tune
+# parameters to explore different behaviours without littering conditional
+# logic throughout the simulation.
+EXPERIMENTS = {
+    "A1": {},  # Baseline strategy with no extra features
+    "A2": {
+        "cold_leverage": {
+            "boost": 0.2,
+            "temperature_threshold": 0.8,
+            "rate_threshold": 5.0,
+        }
+    },
+}
+
+
 def main():
     parser = argparse.ArgumentParser(description="Simulate TQQQ+reserve strategy with temperature & filters")
     parser.add_argument("--csv", default="unified_nasdaq.csv", help="Unified dataset CSV path")
     parser.add_argument("--end", default="2025-01-10", help="End date (YYYY-MM-DD) inclusive")
     parser.add_argument("--fred-series", default="FEDFUNDS", help="FRED rate series (default FEDFUNDS)")
+    parser.add_argument(
+        "--experiment",
+        default="A1",
+        choices=sorted(EXPERIMENTS.keys()),
+        help="Strategy experiment to run (default A1)"
+    )
     parser.add_argument("--leverage", type=float, default=3.0)
     parser.add_argument("--annual-fee", type=float, default=0.0095)
     parser.add_argument("--borrow-divisor", type=float, default=0.7)
@@ -180,6 +239,8 @@ def main():
     parser.add_argument("--debug-csv", default=None, help="If set, write rebalance debug CSV to this path (default strategy_tqqq_reserve_debug.csv if a debug range is provided)")
     parser.add_argument("--no-show", action="store_true")
     args = parser.parse_args()
+    experiment = args.experiment.upper()
+    config = EXPERIMENTS[experiment]
 
     pd, np, plt = import_libs()
     df = load_unified(pd, args.csv)
@@ -309,7 +370,11 @@ def main():
             T = df["temp"].iloc[i]
             base_p = target_allocation_from_temperature(T)
             rate_today = float(rate_ann[i])
+            r22 = df["ret_22"].iloc[i]
             target_p = apply_rate_taper(base_p, rate_today)
+            cl_cfg = config.get("cold_leverage")
+            if cl_cfg:
+                target_p = apply_cold_leverage(target_p, T, rate_today, r22, **cl_cfg)
             base_p_series[i] = base_p
             target_p_series[i] = target_p
 
@@ -320,7 +385,7 @@ def main():
                 r3 = df["ret_3"].iloc[i]
                 r6 = df["ret_6"].iloc[i]
                 r12 = df["ret_12"].iloc[i]
-                r22 = df["ret_22"].iloc[i]
+                # r22 already computed above
                 trig_buy_r3 = (not math.isnan(r3) and r3 <= -0.03)
                 trig_buy_r6 = (not math.isnan(r6) and r6 <= -0.03)
                 trig_buy_r12 = (not math.isnan(r12) and r12 <= -0.02)
@@ -386,7 +451,7 @@ def main():
                 r3 = df["ret_3"].iloc[i]
                 r6 = df["ret_6"].iloc[i]
                 r12 = df["ret_12"].iloc[i]
-                r22 = df["ret_22"].iloc[i]
+                # r22 already computed above
                 trig_sell_r3 = (not math.isnan(r3) and r3 >= 0.03)
                 trig_sell_r6 = (not math.isnan(r6) and r6 >= 0.03)
                 trig_sell_r12 = (not math.isnan(r12) and r12 >= 0.0225)
