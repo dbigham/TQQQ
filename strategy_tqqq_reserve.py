@@ -208,6 +208,69 @@ def apply_cold_leverage(
     return p
 
 
+# Momentum leverage helpers
+# -------------------------
+def apply_hot_momentum_leverage(
+    p: float,
+    T: float,
+    rate_annual_pct: float,
+    ret_3: float,
+    ret_6: float,
+    ret_12: float,
+    ret_22: float,
+    *,
+    boost: float = 0.2,
+    temperature_max: float = 1.15,
+    rate_threshold: float = 5.0,
+    ret22_threshold: float = 0.05,
+    ret3_threshold: float = 0.0,
+    ret6_threshold: float = 0.0,
+    ret12_threshold: float = 0.0,
+    extra_boost: float = 0.2,
+    extra_temperature_max: float = 1.05,
+    extra_rate_threshold: float = 4.0,
+    extra_ret22_threshold: float = 0.10,
+    cap: float = 1.6,
+    extra_cap: float = 1.8,
+) -> float:
+    """Temporarily boost exposure during strong uptrends."""
+
+    if (
+        T < temperature_max
+        and rate_annual_pct < rate_threshold
+        and not math.isnan(ret_22)
+        and ret_22 >= ret22_threshold
+        and ret_3 >= ret3_threshold
+        and ret_6 >= ret6_threshold
+        and ret_12 >= ret12_threshold
+    ):
+        p = min(cap, p + boost)
+        if (
+            extra_boost > 0.0
+            and T < extra_temperature_max
+            and rate_annual_pct < extra_rate_threshold
+            and ret_22 >= extra_ret22_threshold
+        ):
+            p = min(extra_cap, p + extra_boost)
+    return p
+
+
+def apply_momentum_stop(
+    p: float,
+    ret_3: float,
+    ret_12: float,
+    *,
+    stop_ret12: float = -0.02,
+    stop_ret3: float = -0.01,
+    base_p: float,
+) -> float:
+    """Revert to baseline allocation if momentum fades."""
+
+    if ret_12 <= stop_ret12 or ret_3 <= stop_ret3:
+        return base_p
+    return p
+
+
 # Strategy parameters
 # -------------------
 # cold_leverage:
@@ -218,6 +281,17 @@ def apply_cold_leverage(
 #   extra_temperature_threshold: temperature must be below this for extra boost
 #   extra_rate_threshold: rate must be below this for extra boost
 #   extra_ret22_threshold: 22-day return must be at least this for extra boost
+# hot_momentum_leverage:
+#   boost: exposure added when strong positive momentum is present
+#   temperature_max: only apply boost if temperature is below this ceiling
+#   rate_threshold: only apply boost if rates are below this percentage
+#   ret22_threshold/ret3_threshold/ret6_threshold/ret12_threshold: minimum recent returns
+#   extra_boost: additional boost under even stronger conditions
+#   extra_temperature_max: tighter temperature ceiling for extra boost
+#   extra_rate_threshold: tighter rate ceiling for extra boost
+#   extra_ret22_threshold: higher 22-day return needed for extra boost
+#   cap/extra_cap: overall exposure caps for first and second boost
+#   stop_ret12/stop_ret3: revert to baseline if momentum drops below these
 
 # Strategy experiment definitions. Each experiment can enable features or tune
 # parameters to explore different behaviours without littering conditional
@@ -241,6 +315,32 @@ EXPERIMENTS = {
             "extra_rate_threshold": 4.0,
             "extra_ret22_threshold": 0.02,
         }
+    },
+    "A4": {
+        "cold_leverage": {
+            "boost": 0.2,
+            "temperature_threshold": 0.8,
+            "rate_threshold": 5.0,
+            "extra_boost": 0.2,
+            "extra_temperature_threshold": 0.75,
+            "extra_rate_threshold": 4.0,
+            "extra_ret22_threshold": 0.02,
+        },
+        "hot_momentum_leverage": {
+            "boost": 0.2,
+            "temperature_max": 1.15,
+            "rate_threshold": 5.0,
+            "ret22_threshold": 0.05,
+            "ret3_threshold": 0.0,
+            "ret6_threshold": 0.0,
+            "ret12_threshold": 0.0,
+            "extra_boost": 0.2,
+            "extra_temperature_max": 1.05,
+            "extra_rate_threshold": 4.0,
+            "extra_ret22_threshold": 0.10,
+            "stop_ret12": -0.02,
+            "stop_ret3": -0.01,
+        },
     },
 }
 
@@ -399,11 +499,25 @@ def main():
             T = df["temp"].iloc[i]
             base_p = target_allocation_from_temperature(T)
             rate_today = float(rate_ann[i])
+            r3 = df["ret_3"].iloc[i]
+            r6 = df["ret_6"].iloc[i]
+            r12 = df["ret_12"].iloc[i]
             r22 = df["ret_22"].iloc[i]
             target_p = apply_rate_taper(base_p, rate_today)
             cl_cfg = config.get("cold_leverage")
             if cl_cfg:
                 target_p = apply_cold_leverage(target_p, T, rate_today, r22, **cl_cfg)
+            target_p_base = target_p
+            hml_cfg = config.get("hot_momentum_leverage")
+            if hml_cfg:
+                hml_main = {k: v for k, v in hml_cfg.items() if k not in ("stop_ret12", "stop_ret3")}
+                target_p = apply_hot_momentum_leverage(
+                    target_p, T, rate_today, r3, r6, r12, r22, **hml_main
+                )
+                stop_cfg = {k: hml_cfg[k] for k in ("stop_ret12", "stop_ret3") if k in hml_cfg}
+                target_p = apply_momentum_stop(
+                    target_p, r3, r12, base_p=target_p_base, **stop_cfg
+                )
             base_p_series[i] = base_p
             target_p_series[i] = target_p
 
@@ -411,10 +525,7 @@ def main():
             if target_p > curr_p + eps:
                 # Buy-side filters
                 block_buy = False
-                r3 = df["ret_3"].iloc[i]
-                r6 = df["ret_6"].iloc[i]
-                r12 = df["ret_12"].iloc[i]
-                # r22 already computed above
+                # r3, r6, r12, r22 already computed above
                 trig_buy_r3 = (not math.isnan(r3) and r3 <= -0.03)
                 trig_buy_r6 = (not math.isnan(r6) and r6 <= -0.03)
                 trig_buy_r12 = (not math.isnan(r12) and r12 <= -0.02)
@@ -477,10 +588,7 @@ def main():
             elif target_p < curr_p - eps:
                 # Sell-side filters
                 block_sell = False
-                r3 = df["ret_3"].iloc[i]
-                r6 = df["ret_6"].iloc[i]
-                r12 = df["ret_12"].iloc[i]
-                # r22 already computed above
+                # r3, r6, r12, r22 already computed above
                 trig_sell_r3 = (not math.isnan(r3) and r3 >= 0.03)
                 trig_sell_r6 = (not math.isnan(r6) and r6 >= 0.03)
                 trig_sell_r12 = (not math.isnan(r12) and r12 >= 0.0225)
