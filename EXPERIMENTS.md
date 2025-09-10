@@ -24,3 +24,11 @@ extra 20% (capped at 140%). This aims to capture strong rebounds during extreme
 discounts.
 
 - **CAGR**: ~31.17% (through 2025‑01‑10)
+
+## A4 – Momentum Overdrive
+Adds a "hot momentum" layer that increases exposure by 20% during strong,
+broad uptrends when temperature and rates are acceptable, with an additional
+20% tier for exceptional rallies (capped at 160%/180% total). A momentum stop
+reverts to the baseline allocation if short‑term returns weaken.
+
+- **CAGR**: ~31.36% (through 2025‑01‑10)
