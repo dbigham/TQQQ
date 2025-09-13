@@ -58,3 +58,10 @@ with CAGR progressing roughly as follows:
 Using a full overlay maximizes return while cushioning drawdowns.
 
 - **CAGR**: ~39.44% (through 2025‑01‑10)
+
+## A7 – Overlay Cap/Floor Optimization
+Refines A6 by sweeping the option overlay's daily gain cap and loss floor.
+A wider call cap (20%) paired with a tighter put floor (5%) delivers much
+greater growth while retaining downside protection.
+
+- **CAGR**: ~75.05% (through 2025‑01‑10)

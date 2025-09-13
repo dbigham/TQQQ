@@ -403,6 +403,17 @@ EXPERIMENTS["A6"] = {
     },
 }
 
+# A7 tunes the option overlay caps/floors for better growth
+EXPERIMENTS["A7"] = {
+    **EXPERIMENTS["A6"],
+    "option_overlay": {
+        "fraction": 1.0,
+        "call_cap": 0.20,
+        "put_floor": 0.05,
+        "decay": 0.0002,
+    },
+}
+
 
 def main():
     parser = argparse.ArgumentParser(description="Simulate TQQQ+reserve strategy with temperature & filters")
