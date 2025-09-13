@@ -39,3 +39,22 @@ below –0.2 **and** the credit spread exceeds 2.15, TQQQ exposure is slashed to
 0% until conditions improve, aiming to avoid high‑risk regimes.
 
 - **CAGR**: ~32.16% (through 2025‑01‑10)
+
+## A6 – Option Overlay Buffer
+Extends A5 by replacing the TQQQ sleeve with a call‑spread/put‑collar
+overlay. The overlay caps daily losses around 8% while allowing gains up
+to roughly 12% and includes a small daily decay to reflect option carry.
+Sweeping the overlay fraction revealed monotonically improving results,
+with CAGR progressing roughly as follows:
+
+| Overlay fraction | CAGR |
+|-----------------:|-----:|
+| 0%               | 32.16% |
+| 25%              | 34.02% |
+| 50%              | 35.84% |
+| 75%              | 37.66% |
+| 100%             | **39.44%** |
+
+Using a full overlay maximizes return while cushioning drawdowns.
+
+- **CAGR**: ~39.44% (through 2025‑01‑10)

@@ -317,6 +317,16 @@ def apply_macro_filter(
 #   extra_ret22_threshold: higher 22-day return needed for extra boost
 #   cap/extra_cap: overall exposure caps for first and second boost
 #   stop_ret12/stop_ret3: revert to baseline if momentum drops below these
+# macro_filter:
+#   yc_threshold: trigger when yield-curve spread falls below this
+#   credit_threshold: trigger when credit spread rises above this
+#   reduce_to: allocation fraction to reduce to when triggered
+#   require_both: if True, both conditions must trigger; otherwise either
+# option_overlay:
+#   fraction: portion of TQQQ replaced with an options structure
+#   call_cap: max daily gain for overlay portion (e.g. 0.12 for 12%)
+#   put_floor: max daily loss for overlay portion (e.g. 0.08 for 8%)
+#   decay: daily return drag/benefit to model option carry
 
 # Strategy experiment definitions. Each experiment can enable features or tune
 # parameters to explore different behaviours without littering conditional
@@ -377,6 +387,19 @@ EXPERIMENTS["A5"] = {
         "credit_threshold": 2.15,
         "reduce_to": 0.0,
         "require_both": True,
+    },
+}
+
+# A6 adds an option overlay to asymmetrically cushion drawdowns
+EXPERIMENTS["A6"] = {
+    **EXPERIMENTS["A5"],
+    "option_overlay": {
+        # Sweep of overlay fractions showed monotonic improvement up to a full
+        # replacement of the TQQQ sleeve. Using 100% overlay maximizes CAGR.
+        "fraction": 1.0,
+        "call_cap": 0.12,
+        "put_floor": 0.08,
+        "decay": 0.0002,
     },
 }
 
@@ -456,6 +479,16 @@ def main():
     daily_borrow = borrowed_fraction * ((rate_ann / 100.0) / float(args.trading_days))
     tqqq_factor = (1.0 + leverage * rets) * (1.0 - daily_fee) * (1.0 - (daily_borrow / float(args.borrow_divisor)))
 
+    # Optional option overlay parameters
+    opt_cfg = config.get("option_overlay")
+    if opt_cfg:
+        overlay_fraction = float(opt_cfg.get("fraction", 0.0))
+        overlay_call_cap = float(opt_cfg.get("call_cap", 0.10))
+        overlay_put_floor = float(opt_cfg.get("put_floor", 0.10))
+        overlay_decay = float(opt_cfg.get("decay", 0.0))
+    else:
+        overlay_fraction = overlay_call_cap = overlay_put_floor = overlay_decay = 0.0
+
     # Simulation state
     dates = df.index.to_numpy()
     num_days = len(df)
@@ -489,7 +522,15 @@ def main():
     for i in range(num_days):
         # Update holdings based on previous day growth (for i=0 this applies one day of cash growth)
         if i > 0:
-            port_tqqq[i] = port_tqqq[i - 1] * tqqq_factor[i]
+            base_factor = tqqq_factor[i]
+            if overlay_fraction > 0.0:
+                daily_ret = base_factor - 1.0
+                r_capped = min(overlay_call_cap, max(-overlay_put_floor, daily_ret))
+                overlay_factor = 1.0 + r_capped - overlay_decay
+                effective_factor = (1.0 - overlay_fraction) * base_factor + overlay_fraction * overlay_factor
+                port_tqqq[i] = port_tqqq[i - 1] * effective_factor
+            else:
+                port_tqqq[i] = port_tqqq[i - 1] * base_factor
             port_cash[i] = port_cash[i - 1] * cash_factor[i]
         else:
             port_tqqq[i] = port_tqqq[0] * tqqq_factor[0]
