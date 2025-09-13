@@ -32,3 +32,10 @@ broad uptrends when temperature and rates are acceptable, with an additional
 reverts to the baseline allocation if short‑term returns weaken.
 
 - **CAGR**: ~31.36% (through 2025‑01‑10)
+
+## A5 – Macro Risk-Off Overlay
+Builds on A4 by layering in a macro filter. When the yield curve spread drops
+below –0.2 **and** the credit spread exceeds 2.15, TQQQ exposure is slashed to
+0% until conditions improve, aiming to avoid high‑risk regimes.
+
+- **CAGR**: ~32.16% (through 2025‑01‑10)

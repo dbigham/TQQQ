@@ -271,6 +271,31 @@ def apply_momentum_stop(
     return p
 
 
+def apply_macro_filter(
+    p: float,
+    yc_spread: float,
+    credit_spread: float,
+    *,
+    yc_threshold: float = 0.0,
+    credit_threshold: float = 2.0,
+    reduce_to: float = 0.0,
+    require_both: bool = True,
+) -> float:
+    """Reduce allocation when macro indicators signal elevated risk.
+
+    If ``require_both`` is True, both the yield-curve spread and the credit
+    spread must breach their respective thresholds to trigger the reduction.
+    Otherwise either condition alone will trigger it.
+    """
+
+    yc_bad = not math.isnan(yc_spread) and yc_spread <= yc_threshold
+    credit_bad = not math.isnan(credit_spread) and credit_spread >= credit_threshold
+    triggered = (yc_bad and credit_bad) if require_both else (yc_bad or credit_bad)
+    if triggered:
+        return min(p, reduce_to)
+    return p
+
+
 # Strategy parameters
 # -------------------
 # cold_leverage:
@@ -344,6 +369,17 @@ EXPERIMENTS = {
     },
 }
 
+# A5 builds on A4 with a macro risk-off filter
+EXPERIMENTS["A5"] = {
+    **EXPERIMENTS["A4"],
+    "macro_filter": {
+        "yc_threshold": -0.2,
+        "credit_threshold": 2.15,
+        "reduce_to": 0.0,
+        "require_both": True,
+    },
+}
+
 
 def main():
     parser = argparse.ArgumentParser(description="Simulate TQQQ+reserve strategy with temperature & filters")
@@ -391,6 +427,19 @@ def main():
     rates.index = pd.to_datetime(rates.index)
     rates = rates.sort_index()
     rates = rates.reindex(df.index).ffill().bfill()
+
+    # Macro indicators: yield-curve spread (T10Y2Y) and credit spread (BAA10Y)
+    yc = fetch_fred_series(pd, "T10Y2Y", start_ts, end_ts)
+    yc.index = pd.to_datetime(yc.index)
+    yc = yc.sort_index()
+    cs = fetch_fred_series(pd, "BAA10Y", start_ts, end_ts)
+    cs.index = pd.to_datetime(cs.index)
+    cs = cs.sort_index()
+    macro = pd.DataFrame({
+        "yc_spread": yc["rate"],
+        "credit_spread": cs["rate"],
+    })
+    macro = macro.reindex(df.index).ffill().bfill()
 
     # Temperature series
     temp, A, r, fit_start_ts = compute_temperature_series(pd, np, df, csv_path=args.csv)
@@ -518,6 +567,11 @@ def main():
                 target_p = apply_momentum_stop(
                     target_p, r3, r12, base_p=target_p_base, **stop_cfg
                 )
+            macro_cfg = config.get("macro_filter")
+            if macro_cfg:
+                yc_today = macro["yc_spread"].iloc[i]
+                cs_today = macro["credit_spread"].iloc[i]
+                target_p = apply_macro_filter(target_p, yc_today, cs_today, **macro_cfg)
             base_p_series[i] = base_p
             target_p_series[i] = target_p
 
@@ -724,6 +778,8 @@ def main():
         out = df.copy()
         out = out[["close", "ret", "ret_3", "ret_6", "ret_12", "ret_22", "temp"]].copy()
         out["rate"] = rate_ann
+        out["yc_spread"] = macro["yc_spread"].to_numpy()
+        out["credit_spread"] = macro["credit_spread"].to_numpy()
         out["port_tqqq"] = port_tqqq
         out["port_cash"] = port_cash
         out["port_total"] = port_total
