@@ -397,9 +397,10 @@ EXPERIMENTS["A6"] = {
         # Sweep of overlay fractions showed monotonic improvement up to a full
         # replacement of the TQQQ sleeve. Using 100% overlay maximizes CAGR.
         "fraction": 1.0,
+        "period": 22,
         "call_cap": 0.12,
         "put_floor": 0.08,
-        "decay": 0.0002,
+        "carry": 0.005,
     },
 }
 
@@ -408,9 +409,10 @@ EXPERIMENTS["A7"] = {
     **EXPERIMENTS["A6"],
     "option_overlay": {
         "fraction": 1.0,
-        "call_cap": 0.20,
-        "put_floor": 0.05,
-        "decay": 0.0002,
+        "period": 22,
+        "call_cap": 0.15,
+        "put_floor": 0.10,
+        "carry": 0.005,
     },
 }
 
@@ -496,9 +498,11 @@ def main():
         overlay_fraction = float(opt_cfg.get("fraction", 0.0))
         overlay_call_cap = float(opt_cfg.get("call_cap", 0.10))
         overlay_put_floor = float(opt_cfg.get("put_floor", 0.10))
-        overlay_decay = float(opt_cfg.get("decay", 0.0))
+        overlay_carry = float(opt_cfg.get("carry", 0.0))
+        overlay_period = int(opt_cfg.get("period", 22))
     else:
-        overlay_fraction = overlay_call_cap = overlay_put_floor = overlay_decay = 0.0
+        overlay_fraction = overlay_call_cap = overlay_put_floor = overlay_carry = 0.0
+        overlay_period = 22
 
     # Simulation state
     dates = df.index.to_numpy()
@@ -530,22 +534,43 @@ def main():
     next_rebalance_idx = 0  # day 0 is an eligible rebalance day after updates
     eps = 1e-6
 
+    overlay_value = 0.0 if overlay_fraction <= 0.0 else port_tqqq[0] * overlay_fraction
+    overlay_cum = 1.0
+    overlay_days = 0
+
+    def settle_overlay(idx: int):
+        nonlocal overlay_value, overlay_cum, overlay_days, port_tqqq
+        overlay_start = 0.0 if overlay_cum == 0 else overlay_value / overlay_cum
+        clamped = min(1.0 + overlay_call_cap, max(1.0 - overlay_put_floor, overlay_cum))
+        new_overlay = overlay_start * clamped * (1.0 - overlay_carry)
+        non_overlay = port_tqqq[idx] - overlay_value
+        overlay_value = new_overlay
+        port_tqqq[idx] = non_overlay + overlay_value
+        overlay_value = port_tqqq[idx] * overlay_fraction
+        overlay_cum = 1.0
+        overlay_days = 0
+
     for i in range(num_days):
         # Update holdings based on previous day growth (for i=0 this applies one day of cash growth)
         if i > 0:
             base_factor = tqqq_factor[i]
             if overlay_fraction > 0.0:
-                daily_ret = base_factor - 1.0
-                r_capped = min(overlay_call_cap, max(-overlay_put_floor, daily_ret))
-                overlay_factor = 1.0 + r_capped - overlay_decay
-                effective_factor = (1.0 - overlay_fraction) * base_factor + overlay_fraction * overlay_factor
-                port_tqqq[i] = port_tqqq[i - 1] * effective_factor
+                non_overlay = port_tqqq[i - 1] - overlay_value
+                overlay_value *= base_factor
+                non_overlay *= base_factor
+                overlay_cum *= base_factor
+                port_tqqq[i] = non_overlay + overlay_value
+                overlay_days += 1
             else:
                 port_tqqq[i] = port_tqqq[i - 1] * base_factor
             port_cash[i] = port_cash[i - 1] * cash_factor[i]
         else:
             port_tqqq[i] = port_tqqq[0] * tqqq_factor[0]
             port_cash[i] = port_cash[0] * cash_factor[0]
+
+        # Finalize overlay at period end
+        if overlay_fraction > 0.0 and overlay_days >= overlay_period:
+            settle_overlay(i)
 
         total = port_tqqq[i] + port_cash[i]
         curr_p = 0.0 if total <= 0 else port_tqqq[i] / total
@@ -555,6 +580,8 @@ def main():
         # Rebalance logic
         acted = False
         if i >= next_rebalance_idx:
+            if overlay_fraction > 0.0 and overlay_days > 0:
+                settle_overlay(i)
             # First, check the 22d crash de-risk. If triggered, act immediately and skip momentum filters.
             ret22 = df["ret_22"].iloc[i]
             forced_today = False
@@ -588,6 +615,9 @@ def main():
                 forced_derisk_series[i] = 1
                 acted = True
                 forced_today = True
+                overlay_value = 0.0
+                overlay_cum = 1.0
+                overlay_days = 0
                 # Update debug AFTER action
                 if debug_start_ts is not None:
                     ts_i = dates[i]
@@ -682,6 +712,9 @@ def main():
                         })
                 if not block_buy:
                     port_tqqq[i] = total * target_p
+                    overlay_value = port_tqqq[i] * overlay_fraction
+                    overlay_cum = 1.0
+                    overlay_days = 0
                     port_cash[i] = total - port_tqqq[i]
                     total = port_tqqq[i] + port_cash[i]
                     curr_p = target_p
@@ -743,6 +776,9 @@ def main():
                         })
                 if not block_sell:
                     port_tqqq[i] = total * target_p
+                    overlay_value = port_tqqq[i] * overlay_fraction
+                    overlay_cum = 1.0
+                    overlay_days = 0
                     port_cash[i] = total - port_tqqq[i]
                     total = port_tqqq[i] + port_cash[i]
                     curr_p = target_p
