@@ -41,27 +41,16 @@ below –0.2 **and** the credit spread exceeds 2.15, TQQQ exposure is slashed to
 - **CAGR**: ~32.16% (through 2025‑01‑10)
 
 ## A6 – Option Overlay Buffer
-Extends A5 by replacing the TQQQ sleeve with a call‑spread/put‑collar
-overlay. The overlay caps daily losses around 8% while allowing gains up
-to roughly 12% and includes a small daily decay to reflect option carry.
-Sweeping the overlay fraction revealed monotonically improving results,
-with CAGR progressing roughly as follows:
+Extends A5 by replacing the TQQQ sleeve with a 22‑day collar. The overlay
+limits period losses to roughly 8%, allows gains up to about 12%, and
+charges ~0.5% carry each roll. The collar meaningfully cushions drawdowns
+but also suppresses long‑term growth when applied to the entire sleeve.
 
-| Overlay fraction | CAGR |
-|-----------------:|-----:|
-| 0%               | 32.16% |
-| 25%              | 34.02% |
-| 50%              | 35.84% |
-| 75%              | 37.66% |
-| 100%             | **39.44%** |
-
-Using a full overlay maximizes return while cushioning drawdowns.
-
-- **CAGR**: ~39.44% (through 2025‑01‑10)
+- **CAGR**: ~2.71% (through 2025‑01‑10)
 
 ## A7 – Overlay Cap/Floor Optimization
-Refines A6 by sweeping the option overlay's daily gain cap and loss floor.
-A wider call cap (20%) paired with a tighter put floor (5%) delivers much
-greater growth while retaining downside protection.
+Refines A6 by widening the period collar. A 15% call cap and 10% put floor
+provide a looser upside while maintaining protection, yielding slightly
+higher returns.
 
-- **CAGR**: ~75.05% (through 2025‑01‑10)
+- **CAGR**: ~4.11% (through 2025‑01‑10)
