@@ -24,3 +24,8 @@ def test_a2_cagr():
 def test_a3_cagr():
     cagr = run("A3")
     assert abs(cagr - 31.17) < 0.01
+
+
+def test_a6_cagr():
+    cagr = run("A6")
+    assert abs(cagr - 39.44) < 0.01
