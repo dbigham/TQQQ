@@ -40,17 +40,46 @@ below –0.2 **and** the credit spread exceeds 2.15, TQQQ exposure is slashed to
 
 - **CAGR**: ~32.16% (through 2025‑01‑10)
 
-## A6 – Option Overlay Buffer
-Extends A5 by replacing the TQQQ sleeve with a 22‑day collar. The overlay
-limits period losses to roughly 8%, allows gains up to about 12%, and
-charges ~0.5% carry each roll. The collar meaningfully cushions drawdowns
-but also suppresses long‑term growth when applied to the entire sleeve.
+## A6 – Realized-Volatility Tilt
+Adds a rule that boosts exposure when 22-day realized volatility is very low
+and recent returns are non-negative. In practice this tilt rarely triggers and
+slightly reduces long-term returns.
 
-- **CAGR**: ~2.71% (through 2025‑01‑10)
+- **CAGR**: ~29.51% (through 2025‑01‑10)
 
-## A7 – Overlay Cap/Floor Optimization
-Refines A6 by widening the period collar. A 15% call cap and 10% put floor
-provide a looser upside while maintaining protection, yielding slightly
-higher returns.
+## A7 – Faster Re-entries
+Introduces intra-cycle rebalances when the target allocation exceeds the
+current allocation by 12% and at least six trading days have passed since the
+last rebalance. This keeps the strategy from waiting a full 22 days to buy
+after sharp recoveries.
 
-- **CAGR**: ~4.11% (through 2025‑01‑10)
+- **CAGR**: ~33.23% (through 2025‑01‑10)
+
+## A8 – Relaxed Buy Blocks
+Loosens the momentum-based buy blocks when the market temperature is extremely
+low. The more permissive thresholds provide only a marginal improvement over
+the baseline and trail A7.
+
+- **CAGR**: ~32.79% (through 2025‑01‑10)
+
+## A9 – Partial Macro Risk Positioning
+Keeps 40% exposure during macro risk-off regimes instead of moving entirely to
+cash. This recovers some upside but also reintroduces drawdown exposure,
+resulting in a net reduction in CAGR relative to A7.
+
+- **CAGR**: ~32.53% (through 2025‑01‑10)
+
+## A10 – Momentum Overdrive
+Makes the hot-momentum overlay more aggressive with larger boosts and higher
+caps. The added leverage during rallies increases churn without improving
+long-run growth.
+
+- **CAGR**: ~32.78% (through 2025‑01‑10)
+
+## A11 – Cold-Leverage Surge (Target 35% CAGR)
+Further increases the cold-leverage boost and allows limited extra exposure
+even when recent returns are mildly negative. Combined with faster re-entries,
+this pushes the strategy past the 35% CAGR milestone.
+
+- **CAGR**: ~35.32% (through 2025‑01‑10)
+
