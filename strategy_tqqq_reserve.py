@@ -296,6 +296,44 @@ def apply_macro_filter(
     return p
 
 
+def apply_volatility_adjustment(
+    p: float,
+    vol_22: float,
+    ret_22: float,
+    *,
+    low_threshold: float = 0.012,
+    high_threshold: float = 0.025,
+    low_boost: float = 0.15,
+    high_cut: float = 0.10,
+    low_ret_threshold: float = 0.0,
+    high_ret_threshold: float = 0.0,
+    cap: float = 1.6,
+    floor: float = 0.0,
+) -> float:
+    """Adjust allocation based on recent realized volatility.
+
+    When volatility is very low and returns are non-negative, lean into the
+    trend by adding exposure. When volatility is elevated and returns have
+    turned negative, pull back towards cash.
+    """
+
+    if math.isnan(vol_22):
+        return p
+    if (
+        vol_22 <= low_threshold
+        and not math.isnan(ret_22)
+        and ret_22 >= low_ret_threshold
+    ):
+        return min(cap, p + low_boost)
+    if (
+        vol_22 >= high_threshold
+        and not math.isnan(ret_22)
+        and ret_22 <= high_ret_threshold
+    ):
+        return max(floor, p - high_cut)
+    return p
+
+
 # Strategy parameters
 # -------------------
 # cold_leverage:
@@ -322,11 +360,6 @@ def apply_macro_filter(
 #   credit_threshold: trigger when credit spread rises above this
 #   reduce_to: allocation fraction to reduce to when triggered
 #   require_both: if True, both conditions must trigger; otherwise either
-# option_overlay:
-#   fraction: portion of TQQQ replaced with an options structure
-#   call_cap: max daily gain for overlay portion (e.g. 0.12 for 12%)
-#   put_floor: max daily loss for overlay portion (e.g. 0.08 for 8%)
-#   decay: daily return drag/benefit to model option carry
 
 # Strategy experiment definitions. Each experiment can enable features or tune
 # parameters to explore different behaviours without littering conditional
@@ -390,29 +423,93 @@ EXPERIMENTS["A5"] = {
     },
 }
 
-# A6 adds an option overlay to asymmetrically cushion drawdowns
+# A6 adds a realized-volatility tilt: lean in when calm, pull back when stormy
 EXPERIMENTS["A6"] = {
     **EXPERIMENTS["A5"],
-    "option_overlay": {
-        # Sweep of overlay fractions showed monotonic improvement up to a full
-        # replacement of the TQQQ sleeve. Using 100% overlay maximizes CAGR.
-        "fraction": 1.0,
-        "period": 22,
-        "call_cap": 0.12,
-        "put_floor": 0.08,
-        "carry": 0.005,
+    "volatility_adjustment": {
+        "low_threshold": 0.013,
+        "low_ret_threshold": 0.0,
+        "low_boost": 0.25,
+        "high_threshold": 0.05,
+        "high_ret_threshold": -0.10,
+        "high_cut": 0.0,
+        "cap": 1.85,
     },
 }
 
-# A7 tunes the option overlay caps/floors for better growth
+# A7 enables faster re-entries when allocation drifts too far from target
 EXPERIMENTS["A7"] = {
-    **EXPERIMENTS["A6"],
-    "option_overlay": {
-        "fraction": 1.0,
-        "period": 22,
-        "call_cap": 0.15,
-        "put_floor": 0.10,
-        "carry": 0.005,
+    **EXPERIMENTS["A5"],
+    "intra_cycle_rebalance": {
+        "threshold": 0.12,
+        "min_gap_days": 8,
+        "direction": "buy",
+    },
+}
+
+# A8 loosens buy blocks when the market is extremely cold
+EXPERIMENTS["A8"] = {
+    **EXPERIMENTS["A7"],
+    "buy_block_relax": {
+        "temp_threshold": 0.84,
+        "r3_limit": -0.04,
+        "r6_limit": -0.04,
+        "r12_limit": -0.025,
+        "r22_limit": -0.005,
+        "temp_limit_cold": 1.34,
+        "temp_limit_default": 1.3,
+    },
+}
+
+# A9 keeps some exposure during macro risk-off regimes instead of going fully to cash
+EXPERIMENTS["A9"] = {
+    **EXPERIMENTS["A7"],
+    "macro_filter": {
+        "yc_threshold": -0.2,
+        "credit_threshold": 2.15,
+        "reduce_to": 0.4,
+        "require_both": True,
+    },
+}
+
+# A10 increases the momentum overlay aggressiveness to chase strong rallies harder
+EXPERIMENTS["A10"] = {
+    **EXPERIMENTS["A7"],
+    "hot_momentum_leverage": {
+        "boost": 0.25,
+        "temperature_max": 1.18,
+        "rate_threshold": 5.5,
+        "ret22_threshold": 0.04,
+        "ret3_threshold": -0.01,
+        "ret6_threshold": 0.0,
+        "ret12_threshold": 0.0,
+        "extra_boost": 0.25,
+        "extra_temperature_max": 1.08,
+        "extra_rate_threshold": 5.0,
+        "extra_ret22_threshold": 0.08,
+        "stop_ret12": -0.015,
+        "stop_ret3": -0.005,
+        "cap": 1.9,
+        "extra_cap": 2.05,
+    },
+}
+
+# A11 deploys more leverage in deep cold regimes with slightly looser requirements
+EXPERIMENTS["A11"] = {
+    **EXPERIMENTS["A7"],
+    "cold_leverage": {
+        "boost": 0.30,
+        "temperature_threshold": 0.85,
+        "rate_threshold": 6.0,
+        "extra_boost": 0.40,
+        "extra_temperature_threshold": 0.75,
+        "extra_rate_threshold": 5.0,
+        "extra_ret22_threshold": -0.03,
+    },
+    "intra_cycle_rebalance": {
+        "threshold": 0.11,
+        "min_gap_days": 6,
+        "direction": "buy",
     },
 }
 
@@ -456,6 +553,7 @@ def main():
     df["ret_6"] = df["close"] / df["close"].shift(5) - 1.0
     df["ret_12"] = df["close"] / df["close"].shift(11) - 1.0
     df["ret_22"] = df["close"] / df["close"].shift(21) - 1.0
+    df["vol_22"] = df["ret"].rolling(window=22).std()
 
     # Rates
     rates = fetch_fred_series(pd, args.fred_series, start_ts, end_ts)
@@ -492,18 +590,6 @@ def main():
     daily_borrow = borrowed_fraction * ((rate_ann / 100.0) / float(args.trading_days))
     tqqq_factor = (1.0 + leverage * rets) * (1.0 - daily_fee) * (1.0 - (daily_borrow / float(args.borrow_divisor)))
 
-    # Optional option overlay parameters
-    opt_cfg = config.get("option_overlay")
-    if opt_cfg:
-        overlay_fraction = float(opt_cfg.get("fraction", 0.0))
-        overlay_call_cap = float(opt_cfg.get("call_cap", 0.10))
-        overlay_put_floor = float(opt_cfg.get("put_floor", 0.10))
-        overlay_carry = float(opt_cfg.get("carry", 0.0))
-        overlay_period = int(opt_cfg.get("period", 22))
-    else:
-        overlay_fraction = overlay_call_cap = overlay_put_floor = overlay_carry = 0.0
-        overlay_period = 22
-
     # Simulation state
     dates = df.index.to_numpy()
     num_days = len(df)
@@ -533,57 +619,76 @@ def main():
     # Rebalance scheduling
     next_rebalance_idx = 0  # day 0 is an eligible rebalance day after updates
     eps = 1e-6
-
-    overlay_value = 0.0 if overlay_fraction <= 0.0 else port_tqqq[0] * overlay_fraction
-    overlay_cum = 1.0
-    overlay_days = 0
-
-    def settle_overlay(idx: int):
-        nonlocal overlay_value, overlay_cum, overlay_days, port_tqqq
-        overlay_start = 0.0 if overlay_cum == 0 else overlay_value / overlay_cum
-        clamped = min(1.0 + overlay_call_cap, max(1.0 - overlay_put_floor, overlay_cum))
-        new_overlay = overlay_start * clamped * (1.0 - overlay_carry)
-        non_overlay = port_tqqq[idx] - overlay_value
-        overlay_value = new_overlay
-        port_tqqq[idx] = non_overlay + overlay_value
-        overlay_value = port_tqqq[idx] * overlay_fraction
-        overlay_cum = 1.0
-        overlay_days = 0
+    last_rebalance_idx = -22
 
     for i in range(num_days):
         # Update holdings based on previous day growth (for i=0 this applies one day of cash growth)
         if i > 0:
             base_factor = tqqq_factor[i]
-            if overlay_fraction > 0.0:
-                non_overlay = port_tqqq[i - 1] - overlay_value
-                overlay_value *= base_factor
-                non_overlay *= base_factor
-                overlay_cum *= base_factor
-                port_tqqq[i] = non_overlay + overlay_value
-                overlay_days += 1
-            else:
-                port_tqqq[i] = port_tqqq[i - 1] * base_factor
+            port_tqqq[i] = port_tqqq[i - 1] * base_factor
             port_cash[i] = port_cash[i - 1] * cash_factor[i]
         else:
             port_tqqq[i] = port_tqqq[0] * tqqq_factor[0]
             port_cash[i] = port_cash[0] * cash_factor[0]
 
-        # Finalize overlay at period end
-        if overlay_fraction > 0.0 and overlay_days >= overlay_period:
-            settle_overlay(i)
-
         total = port_tqqq[i] + port_cash[i]
         curr_p = 0.0 if total <= 0 else port_tqqq[i] / total
+
+        T = df["temp"].iloc[i]
+        base_p = target_allocation_from_temperature(T)
+        rate_today = float(rate_ann[i])
+        r3 = df["ret_3"].iloc[i]
+        r6 = df["ret_6"].iloc[i]
+        r12 = df["ret_12"].iloc[i]
+        r22 = df["ret_22"].iloc[i]
+        target_p = apply_rate_taper(base_p, rate_today)
+        cl_cfg = config.get("cold_leverage")
+        if cl_cfg:
+            target_p = apply_cold_leverage(target_p, T, rate_today, r22, **cl_cfg)
+        vol_cfg = config.get("volatility_adjustment")
+        if vol_cfg:
+            vol22 = df["vol_22"].iloc[i]
+            target_p = apply_volatility_adjustment(target_p, vol22, r22, **vol_cfg)
+        target_p_base = target_p
+        hml_cfg = config.get("hot_momentum_leverage")
+        if hml_cfg:
+            hml_main = {k: v for k, v in hml_cfg.items() if k not in ("stop_ret12", "stop_ret3")}
+            target_p = apply_hot_momentum_leverage(
+                target_p, T, rate_today, r3, r6, r12, r22, **hml_main
+            )
+            stop_cfg = {k: hml_cfg[k] for k in ("stop_ret12", "stop_ret3") if k in hml_cfg}
+            target_p = apply_momentum_stop(
+                target_p, r3, r12, base_p=target_p_base, **stop_cfg
+            )
+        macro_cfg = config.get("macro_filter")
+        if macro_cfg:
+            yc_today = macro["yc_spread"].iloc[i]
+            cs_today = macro["credit_spread"].iloc[i]
+            target_p = apply_macro_filter(target_p, yc_today, cs_today, **macro_cfg)
+        base_p_series[i] = base_p
+        target_p_series[i] = target_p
+
+        intra_cfg = config.get("intra_cycle_rebalance")
+        if (
+            intra_cfg
+            and i < next_rebalance_idx
+            and i >= last_rebalance_idx + int(intra_cfg.get("min_gap_days", 5))
+        ):
+            threshold = float(intra_cfg.get("threshold", 0.15))
+            direction = intra_cfg.get("direction", "both").lower()
+            diff = target_p - curr_p
+            trigger_buy = direction in ("both", "buy") and diff >= threshold
+            trigger_sell = direction in ("both", "sell") and diff <= -threshold
+            if trigger_buy or trigger_sell:
+                next_rebalance_idx = i
 
         # (Moved crash de-risk to rebalance-due section to enforce cadence)
 
         # Rebalance logic
         acted = False
         if i >= next_rebalance_idx:
-            if overlay_fraction > 0.0 and overlay_days > 0:
-                settle_overlay(i)
             # First, check the 22d crash de-risk. If triggered, act immediately and skip momentum filters.
-            ret22 = df["ret_22"].iloc[i]
+            ret22 = r22
             forced_today = False
             if not math.isnan(ret22) and ret22 <= -0.1525 and port_tqqq[i] > 0:
                 # Capture debug BEFORE action
@@ -615,9 +720,7 @@ def main():
                 forced_derisk_series[i] = 1
                 acted = True
                 forced_today = True
-                overlay_value = 0.0
-                overlay_cum = 1.0
-                overlay_days = 0
+                last_rebalance_idx = i
                 # Update debug AFTER action
                 if debug_start_ts is not None:
                     ts_i = dates[i]
@@ -627,46 +730,33 @@ def main():
                 port_total[i] = port_tqqq[i] + port_cash[i]
                 deployed_p[i] = curr_p
                 continue
-            T = df["temp"].iloc[i]
-            base_p = target_allocation_from_temperature(T)
-            rate_today = float(rate_ann[i])
-            r3 = df["ret_3"].iloc[i]
-            r6 = df["ret_6"].iloc[i]
-            r12 = df["ret_12"].iloc[i]
-            r22 = df["ret_22"].iloc[i]
-            target_p = apply_rate_taper(base_p, rate_today)
-            cl_cfg = config.get("cold_leverage")
-            if cl_cfg:
-                target_p = apply_cold_leverage(target_p, T, rate_today, r22, **cl_cfg)
-            target_p_base = target_p
-            hml_cfg = config.get("hot_momentum_leverage")
-            if hml_cfg:
-                hml_main = {k: v for k, v in hml_cfg.items() if k not in ("stop_ret12", "stop_ret3")}
-                target_p = apply_hot_momentum_leverage(
-                    target_p, T, rate_today, r3, r6, r12, r22, **hml_main
-                )
-                stop_cfg = {k: hml_cfg[k] for k in ("stop_ret12", "stop_ret3") if k in hml_cfg}
-                target_p = apply_momentum_stop(
-                    target_p, r3, r12, base_p=target_p_base, **stop_cfg
-                )
-            macro_cfg = config.get("macro_filter")
-            if macro_cfg:
-                yc_today = macro["yc_spread"].iloc[i]
-                cs_today = macro["credit_spread"].iloc[i]
-                target_p = apply_macro_filter(target_p, yc_today, cs_today, **macro_cfg)
-            base_p_series[i] = base_p
-            target_p_series[i] = target_p
-
             # Determine direction
             if target_p > curr_p + eps:
                 # Buy-side filters
                 block_buy = False
+                # Thresholds can be relaxed when the market is very cold
+                buy_relax_cfg = config.get("buy_block_relax")
+                limit_r3 = -0.03
+                limit_r6 = -0.03
+                limit_r12 = -0.02
+                limit_r22 = 0.0
+                temp_limit = 1.3
+                if buy_relax_cfg:
+                    temp_threshold_relax = float(buy_relax_cfg.get("temp_threshold", 0.85))
+                    if T <= temp_threshold_relax:
+                        limit_r3 = float(buy_relax_cfg.get("r3_limit", limit_r3))
+                        limit_r6 = float(buy_relax_cfg.get("r6_limit", limit_r6))
+                        limit_r12 = float(buy_relax_cfg.get("r12_limit", limit_r12))
+                        limit_r22 = float(buy_relax_cfg.get("r22_limit", limit_r22))
+                        temp_limit = float(buy_relax_cfg.get("temp_limit_cold", temp_limit))
+                    else:
+                        temp_limit = float(buy_relax_cfg.get("temp_limit_default", temp_limit))
                 # r3, r6, r12, r22 already computed above
-                trig_buy_r3 = (not math.isnan(r3) and r3 <= -0.03)
-                trig_buy_r6 = (not math.isnan(r6) and r6 <= -0.03)
-                trig_buy_r12 = (not math.isnan(r12) and r12 <= -0.02)
-                trig_buy_r22 = (not math.isnan(r22) and r22 <= 0.0)
-                trig_buy_T = (T > 1.3)
+                trig_buy_r3 = (not math.isnan(r3) and r3 <= limit_r3)
+                trig_buy_r6 = (not math.isnan(r6) and r6 <= limit_r6)
+                trig_buy_r12 = (not math.isnan(r12) and r12 <= limit_r12)
+                trig_buy_r22 = (not math.isnan(r22) and r22 <= limit_r22)
+                trig_buy_T = (T > temp_limit)
                 if trig_buy_r3 or trig_buy_r6 or trig_buy_r12 or trig_buy_r22 or trig_buy_T:
                     block_buy = True
                 block_buy_series[i] = 1 if block_buy else 0
@@ -696,14 +786,14 @@ def main():
                             "ret_6": float(r6) if not math.isnan(r6) else float('nan'),
                             "ret_12": float(r12) if not math.isnan(r12) else float('nan'),
                             "ret_22": float(r22) if not math.isnan(r22) else float('nan'),
-                            "limit_buy_r3": -0.03,
-                            "limit_buy_r6": -0.03,
-                            "limit_buy_r12": -0.02,
-                            "limit_buy_r22": 0.0,
-                            "ratio_buy_r3": (float(r3) / -0.03) if (not math.isnan(r3)) else float('nan'),
-                            "ratio_buy_r6": (float(r6) / -0.03) if (not math.isnan(r6)) else float('nan'),
-                            "ratio_buy_r12": (float(r12) / -0.02) if (not math.isnan(r12)) else float('nan'),
-                            "ratio_buy_r22": float('nan'),
+                            "limit_buy_r3": float(limit_r3),
+                            "limit_buy_r6": float(limit_r6),
+                            "limit_buy_r12": float(limit_r12),
+                            "limit_buy_r22": float(limit_r22),
+                            "ratio_buy_r3": (float(r3) / float(limit_r3)) if (not math.isnan(r3) and limit_r3 != 0.0) else float('nan'),
+                            "ratio_buy_r6": (float(r6) / float(limit_r6)) if (not math.isnan(r6) and limit_r6 != 0.0) else float('nan'),
+                            "ratio_buy_r12": (float(r12) / float(limit_r12)) if (not math.isnan(r12) and limit_r12 != 0.0) else float('nan'),
+                            "ratio_buy_r22": (float(r22) / float(limit_r22)) if (not math.isnan(r22) and limit_r22 != 0.0) else float('nan'),
                             "temp_T": float(T),
                             "base_p": float(base_p),
                             "rate_annual_pct": float(rate_today),
@@ -712,13 +802,11 @@ def main():
                         })
                 if not block_buy:
                     port_tqqq[i] = total * target_p
-                    overlay_value = port_tqqq[i] * overlay_fraction
-                    overlay_cum = 1.0
-                    overlay_days = 0
                     port_cash[i] = total - port_tqqq[i]
                     total = port_tqqq[i] + port_cash[i]
                     curr_p = target_p
                     next_rebalance_idx = i + 22
+                    last_rebalance_idx = i
                     acted = True
                     if debug_start_ts is not None:
                         ts_i = dates[i]
@@ -776,13 +864,11 @@ def main():
                         })
                 if not block_sell:
                     port_tqqq[i] = total * target_p
-                    overlay_value = port_tqqq[i] * overlay_fraction
-                    overlay_cum = 1.0
-                    overlay_days = 0
                     port_cash[i] = total - port_tqqq[i]
                     total = port_tqqq[i] + port_cash[i]
                     curr_p = target_p
                     next_rebalance_idx = i + 22
+                    last_rebalance_idx = i
                     acted = True
                     if debug_start_ts is not None:
                         ts_i = dates[i]
@@ -791,6 +877,7 @@ def main():
             else:
                 # No significant change, but treat as a completed rebalance to keep cadence
                 next_rebalance_idx = i + 22
+                last_rebalance_idx = i
                 acted = True
                 if debug_start_ts is not None:
                     ts_i = dates[i]
