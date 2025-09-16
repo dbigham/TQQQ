@@ -55,9 +55,10 @@ Outputs
 
 Run
 ---
-python strategy_tqqq_reserve.py [--csv unified_nasdaq.csv] [--experiment A1] [--end 2025-01-10] \
-  [--fred-series FEDFUNDS] [--leverage 3.0] [--annual-fee 0.0095] [--borrow-divisor 0.7] \
-  [--trading-days 252] [--save-plot strategy_tqqq.png] [--no-show]
+python strategy_tqqq_reserve.py [--csv unified_nasdaq.csv] [--experiment A1] \
+  [--start 2010-01-01] [--end 2025-01-10] [--fred-series FEDFUNDS] [--leverage 3.0] \
+  [--annual-fee 0.0095] [--borrow-divisor 0.7] [--trading-days 252] \
+  [--initial-capital 100000] [--print-rebalances] [--save-plot strategy_tqqq.png] [--no-show]
 """
 
 from __future__ import annotations
@@ -1070,6 +1071,7 @@ EXPERIMENTS["A25"] = {
 def main():
     parser = argparse.ArgumentParser(description="Simulate TQQQ+reserve strategy with temperature & filters")
     parser.add_argument("--csv", default="unified_nasdaq.csv", help="Unified dataset CSV path")
+    parser.add_argument("--start", default=None, help="Start date (YYYY-MM-DD) inclusive")
     parser.add_argument("--end", default="2025-01-10", help="End date (YYYY-MM-DD) inclusive")
     parser.add_argument("--fred-series", default="FEDFUNDS", help="FRED rate series (default FEDFUNDS)")
     parser.add_argument(
@@ -1082,6 +1084,17 @@ def main():
     parser.add_argument("--annual-fee", type=float, default=0.0095)
     parser.add_argument("--borrow-divisor", type=float, default=0.7)
     parser.add_argument("--trading-days", type=int, default=252)
+    parser.add_argument(
+        "--initial-capital",
+        type=float,
+        default=1.0,
+        help="Initial portfolio value for the simulation (default 1.0)",
+    )
+    parser.add_argument(
+        "--print-rebalances",
+        action="store_true",
+        help="Print a detailed log of executed rebalances",
+    )
     parser.add_argument("--save-plot", default=None, help="If set, save output figure to this PNG path")
     parser.add_argument("--save-csv", default=None, help="If set, save daily debug CSV here")
     # Debug mode for rebalance decisions
@@ -1095,8 +1108,13 @@ def main():
 
     pd, np, plt = import_libs()
     df = load_unified(pd, args.csv)
+    if args.start:
+        start_filter_ts = pd.to_datetime(args.start)
+        df = df.loc[df.index >= start_filter_ts]
     end_ts = pd.to_datetime(args.end)
     df = df.loc[df.index <= end_ts]
+    if df.empty:
+        raise RuntimeError("No data available in the requested date range")
     start_ts = df.index.min()
 
     # Daily returns for unified (QQQ proxy)
@@ -1168,9 +1186,10 @@ def main():
     if debug_start_ts is not None and debug_end_ts is None:
         debug_end_ts = debug_start_ts
 
-    # Start with all in cash, normalized portfolio = 1.0
+    # Start with all in cash
+    initial_capital = float(args.initial_capital)
     port_tqqq[0] = 0.0
-    port_cash[0] = 1.0
+    port_cash[0] = initial_capital
     port_total[0] = port_cash[0] + port_tqqq[0]
     deployed_p[0] = 0.0
 
@@ -1179,6 +1198,40 @@ def main():
     eps = 1e-6
     last_rebalance_idx = -22
     peak_total = port_total[0]
+
+    rebalance_entries = []
+
+    def add_rebalance_entry(
+        index: int,
+        new_tqqq: float,
+        new_cash: float,
+        prev_tqqq: float,
+        prev_cash: float,
+        *,
+        reason: str = "rebalance",
+    ) -> None:
+        trade_eps = 1e-9
+        delta_tqqq = float(new_tqqq - prev_tqqq)
+        delta_cash = float(new_cash - prev_cash)
+        if abs(delta_tqqq) < trade_eps and abs(delta_cash) < trade_eps:
+            return
+        total_after = float(new_tqqq + new_cash)
+        p_tqqq = 0.0 if total_after <= 0 else float(new_tqqq / total_after)
+        entry_date = pd.Timestamp(dates[index])
+        rebalance_entries.append(
+            {
+                "index": int(index),
+                "date": entry_date,
+                "p_tqqq": p_tqqq,
+                "p_cash": 1.0 - p_tqqq,
+                "delta_tqqq": delta_tqqq,
+                "delta_cash": delta_cash,
+                "total_after": total_after,
+                "tqqq_value": float(new_tqqq),
+                "cash_value": float(new_cash),
+                "reason": reason,
+            }
+        )
 
     for i in range(num_days):
         # Update holdings based on previous day growth (for i=0 this applies one day of cash growth)
@@ -1347,6 +1400,8 @@ def main():
             ret22 = r22
             forced_today = False
             if not math.isnan(ret22) and ret22 <= -0.1525 and port_tqqq[i] > 0:
+                prev_tqqq = port_tqqq[i]
+                prev_cash = port_cash[i]
                 # Capture debug BEFORE action
                 if debug_start_ts is not None:
                     ts_i = dates[i]
@@ -1370,13 +1425,14 @@ def main():
                         })
                 port_cash[i] = total
                 port_tqqq[i] = 0.0
-                total = port_cash[i]
+                total = port_tqqq[i] + port_cash[i]
                 curr_p = 0.0
                 next_rebalance_idx = i + 22
                 forced_derisk_series[i] = 1
                 acted = True
                 forced_today = True
                 last_rebalance_idx = i
+                add_rebalance_entry(i, port_tqqq[i], port_cash[i], prev_tqqq, prev_cash, reason="forced_derisk")
                 # Update debug AFTER action
                 if debug_start_ts is not None:
                     ts_i = dates[i]
@@ -1457,6 +1513,8 @@ def main():
                             "curr_p_before": float(curr_p)
                         })
                 if not block_buy:
+                    prev_tqqq = port_tqqq[i]
+                    prev_cash = port_cash[i]
                     port_tqqq[i] = total * target_p
                     port_cash[i] = total - port_tqqq[i]
                     total = port_tqqq[i] + port_cash[i]
@@ -1464,6 +1522,7 @@ def main():
                     next_rebalance_idx = i + 22
                     last_rebalance_idx = i
                     acted = True
+                    add_rebalance_entry(i, port_tqqq[i], port_cash[i], prev_tqqq, prev_cash)
                     if debug_start_ts is not None:
                         ts_i = dates[i]
                         if ts_i >= debug_start_ts and ts_i <= debug_end_ts:
@@ -1519,6 +1578,8 @@ def main():
                             "curr_p_before": float(curr_p)
                         })
                 if not block_sell:
+                    prev_tqqq = port_tqqq[i]
+                    prev_cash = port_cash[i]
                     port_tqqq[i] = total * target_p
                     port_cash[i] = total - port_tqqq[i]
                     total = port_tqqq[i] + port_cash[i]
@@ -1526,6 +1587,7 @@ def main():
                     next_rebalance_idx = i + 22
                     last_rebalance_idx = i
                     acted = True
+                    add_rebalance_entry(i, port_tqqq[i], port_cash[i], prev_tqqq, prev_cash)
                     if debug_start_ts is not None:
                         ts_i = dates[i]
                         if ts_i >= debug_start_ts and ts_i <= debug_end_ts:
@@ -1580,6 +1642,72 @@ def main():
     # Print CAGR summary for convenience
     print(f"Strategy span: {df.index[0].date()} -> {df.index[-1].date()} ({years:.2f} years)")
     print(f"Strategy CAGR: {cagr * 100.0:.2f}%")
+
+    if args.print_rebalances:
+        print()
+        if len(rebalance_entries) == 0:
+            print("No rebalances were executed in the specified range.")
+        else:
+            rebalance_df = pd.DataFrame(rebalance_entries)
+            start_date = pd.Timestamp(df.index[0])
+            initial_total = float(port_total[0]) if port_total[0] > 0 else float("nan")
+            cagr_values = []
+            for _, row in rebalance_df.iterrows():
+                total_after = float(row["total_after"])
+                date = pd.Timestamp(row["date"])
+                days_elapsed = (date - start_date).days
+                if (
+                    days_elapsed <= 0
+                    or math.isnan(initial_total)
+                    or initial_total <= 0
+                    or total_after <= 0
+                ):
+                    cagr_values.append(float("nan"))
+                else:
+                    years_elapsed = days_elapsed / 365.25
+                    if years_elapsed <= 0:
+                        cagr_values.append(float("nan"))
+                    else:
+                        cagr_values.append((total_after / initial_total) ** (1.0 / years_elapsed) - 1.0)
+            rebalance_df["cagr"] = cagr_values
+            display_df = rebalance_df.copy()
+            display_df["date"] = display_df["date"].dt.date
+            display_df["tqqq_pct"] = display_df["p_tqqq"] * 100.0
+            display_df["tbill_pct"] = display_df["p_cash"] * 100.0
+            display_df["portfolio_value"] = display_df["total_after"]
+            display_df["cagr_pct"] = display_df["cagr"] * 100.0
+            display_df["action"] = display_df["delta_tqqq"].apply(
+                lambda x: "Buy" if x > 0 else ("Sell" if x < 0 else "Hold")
+            )
+
+            def fmt_pct(val: float) -> str:
+                if pd.isna(val):
+                    return "   n/a"
+                return f"{val:6.2f}%"
+
+            def fmt_amt(val: float) -> str:
+                return f"{val:,.2f}"
+
+            columns = [
+                "date",
+                "action",
+                "tqqq_pct",
+                "tbill_pct",
+                "delta_tqqq",
+                "delta_cash",
+                "portfolio_value",
+                "cagr_pct",
+            ]
+            formatters = {
+                "tqqq_pct": fmt_pct,
+                "tbill_pct": fmt_pct,
+                "delta_tqqq": fmt_amt,
+                "delta_cash": fmt_amt,
+                "portfolio_value": fmt_amt,
+                "cagr_pct": fmt_pct,
+            }
+            print("Rebalance log:")
+            print(display_df[columns].to_string(index=False, formatters=formatters))
 
     # Plot
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 8), sharex=True)
