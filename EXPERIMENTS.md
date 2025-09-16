@@ -83,3 +83,91 @@ this pushes the strategy past the 35% CAGR milestone.
 
 - **CAGR**: ~35.32% (through 2025‑01‑10)
 
+## A12 – Mean-Reversion Kicker
+Adds a contrarian boost when temperature is deeply discounted, rates are low,
+and short-term momentum flips positive while the 22-day return remains
+negative. This provides a small improvement over A11.
+
+- **CAGR**: ~35.44% (through 2025‑01‑10)
+
+## A13 – Drawdown Turbo
+Introduces a drawdown-aware turbo that increases exposure once the strategy is
+down more than ~28% and momentum stabilises, seeking stronger recoveries.
+
+- **CAGR**: ~36.85% (through 2025‑01‑10)
+
+## A14 – Temperature Slope Booster
+Detects steep recoveries in the temperature curve and layers on additional
+leverage when the market is rebounding quickly from depressed levels.
+
+- **CAGR**: ~37.28% (through 2025‑01‑10)
+
+## A15 – Cold Curve Shift
+Alters the baseline temperature curve so deeply discounted regimes start with
+more than 100% exposure even before other overlays apply.
+
+- **CAGR**: ~38.56% (through 2025‑01‑10)
+
+## A16 – Volatility Squeeze Boost
+Adds exposure when 22-day volatility compresses relative to a 66-day window
+while returns turn positive, leaning into calm rebounds.
+
+- **CAGR**: ~38.65% (through 2025‑01‑10)
+
+## A17 – Macro Tailwind Boost
+Grants an extra boost when the yield curve steepens and credit spreads tighten,
+signalling an improving macro backdrop.
+
+- **CAGR**: ~38.64% (through 2025‑01‑10)
+
+## A18 – Recovery Hyperdrive
+Sets a high leverage watermark when deep drawdowns, improving temperature,
+low volatility, and macro tailwinds all align. Performance is largely
+unchanged from A17 because the trigger is rare.
+
+- **CAGR**: ~38.64% (through 2025‑01‑10)
+
+## A19 – Leverage Ladder
+Installs a cold-temperature leverage ladder that guarantees progressively
+higher baseline exposure as valuation falls, lifting CAGR close to 40%.
+
+- **CAGR**: ~39.77% (through 2025‑01‑10)
+
+## A20 – Rate-Scaled Ladder
+Scales the ladder by interest rates so cheap financing lifts exposure further.
+This change backfired, reducing long-run growth by re-levering in the wrong
+periods.
+
+- **CAGR**: ~36.36% (through 2025‑01‑10)
+
+## A21 – Momentum Guard
+Attempts to hold back ladder leverage when intermediate momentum is weak. The
+guard was too restrictive and lowered returns relative to A19.
+
+- **CAGR**: ~35.83% (through 2025‑01‑10)
+
+## A22 – Global Allocation Cap
+Adds a global allocation ceiling to avoid extreme stack-ups while keeping the
+rest of the A19 configuration intact. Performance matches A19.
+
+- **CAGR**: ~39.77% (through 2025‑01‑10)
+
+## A23 – Momentum-Gated Ladder
+Requires increasingly positive momentum to unlock each ladder step. The extra
+gating proved too conservative and trimmed CAGR slightly.
+
+- **CAGR**: ~39.35% (through 2025‑01‑10)
+
+## A24 – Drawdown Guard
+Caps exposure during deep drawdowns until momentum improves. The downside
+protection costs more than it saves in this configuration.
+
+- **CAGR**: ~39.35% (through 2025‑01‑10)
+
+## A25 – Momentum Surge Overlay (Target 40%+)
+Retools the hot-momentum overlay with steeper boosts and tighter gating so the
+strategy leans harder into broad-based rallies while respecting rate and
+temperature limits. This finally clears the 40% CAGR milestone.
+
+- **CAGR**: ~41.21% (through 2025‑01‑10)
+
