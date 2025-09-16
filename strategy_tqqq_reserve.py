@@ -55,10 +55,13 @@ Outputs
 
 Run
 ---
-python strategy_tqqq_reserve.py [--csv unified_nasdaq.csv] [--experiment A1] \
+python strategy_tqqq_reserve.py [--csv unified_nasdaq.csv] [--experiment A25] \
   [--start 2010-01-01] [--end 2025-01-10] [--fred-series FEDFUNDS] [--leverage 3.0] \
   [--annual-fee 0.0095] [--borrow-divisor 0.7] [--trading-days 252] \
   [--initial-capital 100000] [--print-rebalances] [--save-plot strategy_tqqq.png] [--no-show]
+
+The CLI defaults to the best-performing experiment; as of the latest calibration this is
+A25 (Momentum Surge Overlay).
 """
 
 from __future__ import annotations
@@ -1076,9 +1079,9 @@ def main():
     parser.add_argument("--fred-series", default="FEDFUNDS", help="FRED rate series (default FEDFUNDS)")
     parser.add_argument(
         "--experiment",
-        default="A1",
+        default="A25",
         choices=sorted(EXPERIMENTS.keys()),
-        help="Strategy experiment to run (default A1)"
+        help="Strategy experiment to run (default A25, best-known)"
     )
     parser.add_argument("--leverage", type=float, default=3.0)
     parser.add_argument("--annual-fee", type=float, default=0.0095)
