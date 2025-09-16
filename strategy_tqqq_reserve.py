@@ -208,6 +208,362 @@ def apply_cold_leverage(
     return p
 
 
+# Mean-reversion leverage helper
+# -------------------------------
+def apply_mean_reversion_kicker(
+    p: float,
+    T: float,
+    rate_annual_pct: float,
+    ret_3: float,
+    ret_6: float,
+    ret_22: float,
+    *,
+    temperature_threshold: float = 0.78,
+    rate_threshold: float = 6.0,
+    ret22_max: float = -0.04,
+    ret3_min: float = 0.015,
+    ret6_min: float = -0.01,
+    boost: float = 0.25,
+    cap: float = 1.6,
+) -> float:
+    """Add contrarian leverage after sharp drawdowns that start to rebound."""
+
+    if math.isnan(ret_22) or math.isnan(ret_3) or math.isnan(ret_6):
+        return p
+    if (
+        T < temperature_threshold
+        and rate_annual_pct < rate_threshold
+        and ret_22 <= ret22_max
+        and ret_3 >= ret3_min
+        and ret_6 >= ret6_min
+    ):
+        return min(cap, p + boost)
+    return p
+
+
+def apply_drawdown_turbo(
+    p: float,
+    drawdown: float,
+    T: float,
+    rate_annual_pct: float,
+    ret_6: float,
+    ret_12: float,
+    *,
+    drawdown_threshold: float = -0.25,
+    temperature_ceiling: float = 1.05,
+    rate_threshold: float = 6.5,
+    ret6_min: float = 0.0,
+    ret12_min: float = -0.02,
+    boost: float = 0.35,
+    cap: float = 1.9,
+) -> float:
+    """Increase exposure when recovering from deep strategy drawdowns."""
+
+    if math.isnan(ret_6) or math.isnan(ret_12):
+        return p
+    if (
+        drawdown <= drawdown_threshold
+        and T < temperature_ceiling
+        and rate_annual_pct < rate_threshold
+        and ret_6 >= ret6_min
+        and ret_12 >= ret12_min
+    ):
+        return min(cap, p + boost)
+    return p
+
+
+def apply_temperature_slope_boost(
+    p: float,
+    T: float,
+    temp_ch_11: float,
+    temp_ch_22: float,
+    rate_annual_pct: float,
+    ret_3: float,
+    ret_6: float,
+    *,
+    temperature_ceiling: float = 1.05,
+    rate_threshold: float = 6.0,
+    temp_ch11_min: float = 0.03,
+    temp_ch22_min: float = 0.08,
+    ret3_min: float = 0.0,
+    ret6_min: float = -0.01,
+    boost: float = 0.25,
+    extra_boost: float = 0.20,
+    extra_temperature_ceiling: float = 0.95,
+    extra_temp_ch11_min: float = 0.05,
+    extra_temp_ch22_min: float = 0.12,
+    cap: float = 2.0,
+) -> float:
+    """Add leverage when temperature is rising rapidly from discounted levels."""
+
+    if math.isnan(temp_ch_11) or math.isnan(temp_ch_22) or math.isnan(ret_3) or math.isnan(ret_6):
+        return p
+    if (
+        T < temperature_ceiling
+        and rate_annual_pct < rate_threshold
+        and temp_ch_11 >= temp_ch11_min
+        and temp_ch_22 >= temp_ch22_min
+        and ret_3 >= ret3_min
+        and ret_6 >= ret6_min
+    ):
+        p = min(cap, p + boost)
+        if (
+            T < extra_temperature_ceiling
+            and temp_ch_11 >= extra_temp_ch11_min
+            and temp_ch_22 >= extra_temp_ch22_min
+        ):
+            p = min(cap, p + extra_boost)
+    return p
+
+
+def apply_temperature_curve_boost(
+    base_p: float,
+    T: float,
+    *,
+    pivot: float = 0.88,
+    slope: float = 2.2,
+    max_extra: float = 0.4,
+    cap: float = 1.35,
+) -> float:
+    """Shift the baseline temperature curve to allow >100% exposure when very cold."""
+
+    if T >= pivot:
+        return min(cap, base_p)
+    extra = slope * (pivot - T)
+    extra = max(0.0, min(max_extra, extra))
+    return min(cap, base_p + extra)
+
+
+def apply_temperature_leverage_ladder(
+    base_p: float,
+    T: float,
+    ret_6: float,
+    ret_22: float,
+    *,
+    steps: list[dict[str, float]],
+    cap: float = 2.0,
+) -> float:
+    """Ensure a minimum allocation when temperature falls below ladder steps."""
+
+    updated = base_p
+    for step in sorted(steps, key=lambda s: s.get("temp_max", 0.0)):
+        temp_max = step.get("temp_max")
+        min_alloc = step.get("min_allocation")
+        ret6_min = step.get("ret6_min")
+        ret22_min = step.get("ret22_min")
+        if temp_max is None or min_alloc is None:
+            continue
+        meets = T <= temp_max
+        if ret6_min is not None:
+            meets = meets and (not math.isnan(ret_6) and ret_6 >= float(ret6_min))
+        if ret22_min is not None:
+            meets = meets and (not math.isnan(ret_22) and ret_22 >= float(ret22_min))
+        if meets:
+            updated = max(updated, float(min_alloc))
+    return min(cap, updated)
+
+
+def apply_rate_scaled_multiplier(
+    p: float,
+    rate_annual_pct: float,
+    *,
+    rate_floor: float = 2.5,
+    rate_ceiling: float = 7.0,
+    max_scale: float = 1.2,
+    cap: float = 2.5,
+) -> float:
+    """Scale allocation up when financing rates are low."""
+
+    if rate_annual_pct <= rate_floor:
+        scale = max_scale
+    elif rate_annual_pct >= rate_ceiling:
+        scale = 1.0
+    else:
+        span = rate_ceiling - rate_floor
+        scale = 1.0 + (max_scale - 1.0) * (rate_ceiling - rate_annual_pct) / span
+    return min(cap, p * scale)
+
+
+def apply_momentum_guard(
+    p: float,
+    ret_6: float,
+    ret_22: float,
+    *,
+    ret6_floor: float = -0.08,
+    ret22_floor: float = -0.15,
+    scale: float = 0.55,
+    floor: float = 0.6,
+) -> float:
+    """Dial back leverage if intermediate momentum is severely negative."""
+
+    triggers = []
+    if not math.isnan(ret_6) and ret_6 <= ret6_floor:
+        triggers.append(True)
+    if not math.isnan(ret_22) and ret_22 <= ret22_floor:
+        triggers.append(True)
+    if triggers:
+        return max(floor, p * scale)
+    return p
+
+
+def apply_drawdown_guard(
+    p: float,
+    drawdown: float,
+    ret_6: float,
+    ret_22: float,
+    *,
+    drawdown_threshold: float = -0.35,
+    ret6_max: float = -0.02,
+    ret22_max: float = -0.05,
+    cap: float = 1.2,
+) -> float:
+    """Cap exposure during deep drawdowns until momentum improves."""
+
+    if drawdown <= drawdown_threshold:
+        cond6 = math.isnan(ret_6) or ret_6 <= ret6_max
+        cond22 = math.isnan(ret_22) or ret_22 <= ret22_max
+        if cond6 and cond22:
+            return min(cap, p)
+    return p
+
+
+def apply_volatility_squeeze_boost(
+    p: float,
+    vol_22: float,
+    vol_66: float,
+    ret_6: float,
+    ret_22: float,
+    *,
+    vol22_threshold: float = 0.018,
+    vol_ratio_max: float = 0.75,
+    ret6_min: float = 0.02,
+    ret22_min: float = 0.0,
+    boost: float = 0.25,
+    cap: float = 2.1,
+) -> float:
+    """Boost exposure when volatility compresses while momentum turns positive."""
+
+    if math.isnan(vol_22) or math.isnan(vol_66) or math.isnan(ret_6) or math.isnan(ret_22):
+        return p
+    if vol_22 <= 0:
+        return p
+    ratio = vol_22 / vol_66 if vol_66 > 0 else float("inf")
+    if (
+        vol_22 <= vol22_threshold
+        and ratio <= vol_ratio_max
+        and ret_6 >= ret6_min
+        and ret_22 >= ret22_min
+    ):
+        return min(cap, p + boost)
+    return p
+
+
+def apply_macro_tailwind_boost(
+    p: float,
+    yc_spread: float,
+    credit_spread: float,
+    yc_change_22: float,
+    credit_change_22: float,
+    rate_annual_pct: float,
+    *,
+    yc_min: float = -0.4,
+    credit_max: float = 2.5,
+    yc_change_min: float = 0.2,
+    credit_change_max: float = -0.1,
+    rate_threshold: float = 6.5,
+    boost: float = 0.3,
+    cap: float = 2.3,
+) -> float:
+    """Boost exposure when macro indicators signal an improving backdrop."""
+
+    if (
+        math.isnan(yc_spread)
+        or math.isnan(credit_spread)
+        or math.isnan(yc_change_22)
+        or math.isnan(credit_change_22)
+    ):
+        return p
+    if (
+        yc_spread >= yc_min
+        and credit_spread <= credit_max
+        and yc_change_22 >= yc_change_min
+        and credit_change_22 <= credit_change_max
+        and rate_annual_pct < rate_threshold
+    ):
+        return min(cap, p + boost)
+    return p
+
+
+def apply_recovery_hyperdrive(
+    p: float,
+    *,
+    drawdown: float,
+    T: float,
+    ret_6: float,
+    ret_22: float,
+    temp_ch11: float,
+    vol_22: float,
+    vol_66: float,
+    rate_annual_pct: float,
+    yc_spread: float,
+    credit_spread: float,
+    yc_change_22: float,
+    credit_change_22: float,
+    drawdown_threshold: float = -0.32,
+    temperature_max: float = 0.9,
+    ret6_min: float = 0.015,
+    ret22_min: float = -0.08,
+    temp_ch11_min: float = 0.025,
+    vol22_threshold: float = 0.02,
+    vol_ratio_max: float = 0.85,
+    rate_threshold: float = 6.0,
+    yc_min: float = -0.4,
+    credit_max: float = 2.6,
+    yc_change_min: float = 0.1,
+    credit_change_max: float = -0.05,
+    target: float = 2.3,
+) -> float:
+    """Force exposure up to a high watermark when multiple recovery signals align."""
+
+    if any(
+        math.isnan(val)
+        for val in (
+            drawdown,
+            T,
+            ret_6,
+            ret_22,
+            temp_ch11,
+            vol_22,
+            vol_66,
+            rate_annual_pct,
+            yc_spread,
+            credit_spread,
+            yc_change_22,
+            credit_change_22,
+        )
+    ):
+        return p
+    if vol_22 <= 0 or vol_66 <= 0:
+        return p
+    vol_ratio = vol_22 / vol_66
+    if (
+        drawdown <= drawdown_threshold
+        and T <= temperature_max
+        and ret_6 >= ret6_min
+        and ret_22 >= ret22_min
+        and temp_ch11 >= temp_ch11_min
+        and vol_22 <= vol22_threshold
+        and vol_ratio <= vol_ratio_max
+        and rate_annual_pct < rate_threshold
+        and yc_spread >= yc_min
+        and credit_spread <= credit_max
+        and yc_change_22 >= yc_change_min
+        and credit_change_22 <= credit_change_max
+    ):
+        return max(p, target)
+    return p
+
+
 # Momentum leverage helpers
 # -------------------------
 def apply_hot_momentum_leverage(
@@ -513,6 +869,203 @@ EXPERIMENTS["A11"] = {
     },
 }
 
+# A12 adds a mean-reversion kicker after deep drawdowns begin to rebound
+EXPERIMENTS["A12"] = {
+    **EXPERIMENTS["A11"],
+    "mean_reversion_kicker": {
+        "temperature_threshold": 0.78,
+        "rate_threshold": 6.0,
+        "ret22_max": -0.05,
+        "ret3_min": 0.02,
+        "ret6_min": -0.005,
+        "boost": 0.30,
+        "cap": 1.7,
+    },
+}
+
+# A13 introduces a drawdown-aware turbo to lean in during recoveries
+EXPERIMENTS["A13"] = {
+    **EXPERIMENTS["A12"],
+    "drawdown_turbo": {
+        "drawdown_threshold": -0.28,
+        "temperature_ceiling": 1.03,
+        "rate_threshold": 6.5,
+        "ret6_min": 0.01,
+        "ret12_min": -0.01,
+        "boost": 0.35,
+        "cap": 1.85,
+    },
+}
+
+# A14 captures steep temperature recoveries with a slope-based booster
+EXPERIMENTS["A14"] = {
+    **EXPERIMENTS["A13"],
+    "temperature_slope_boost": {
+        "temperature_ceiling": 1.02,
+        "rate_threshold": 6.0,
+        "temp_ch11_min": 0.035,
+        "temp_ch22_min": 0.09,
+        "ret3_min": 0.0,
+        "ret6_min": 0.005,
+        "boost": 0.30,
+        "extra_boost": 0.30,
+        "extra_temperature_ceiling": 0.92,
+        "extra_temp_ch11_min": 0.06,
+        "extra_temp_ch22_min": 0.14,
+        "cap": 2.05,
+    },
+}
+
+# A15 shifts the temperature curve itself to deploy more in deep discounts
+EXPERIMENTS["A15"] = {
+    **EXPERIMENTS["A14"],
+    "temperature_curve_boost": {
+        "pivot": 0.88,
+        "slope": 2.4,
+        "max_extra": 0.45,
+        "cap": 1.45,
+    },
+}
+
+# A16 layers in a volatility-squeeze boost to lean in when calm after storms
+EXPERIMENTS["A16"] = {
+    **EXPERIMENTS["A15"],
+    "volatility_squeeze_boost": {
+        "vol22_threshold": 0.017,
+        "vol_ratio_max": 0.7,
+        "ret6_min": 0.015,
+        "ret22_min": -0.005,
+        "boost": 0.28,
+        "cap": 2.15,
+    },
+}
+
+# A17 rewards improving macro backdrops with an additional tailwind boost
+EXPERIMENTS["A17"] = {
+    **EXPERIMENTS["A16"],
+    "macro_tailwind_boost": {
+        "yc_min": -0.35,
+        "credit_max": 2.4,
+        "yc_change_min": 0.18,
+        "credit_change_max": -0.08,
+        "rate_threshold": 6.2,
+        "boost": 0.32,
+        "cap": 2.25,
+    },
+}
+
+# A18 introduces a composite hyperdrive when every recovery signal aligns
+EXPERIMENTS["A18"] = {
+    **EXPERIMENTS["A17"],
+    "recovery_hyperdrive": {
+        "drawdown_threshold": -0.34,
+        "temperature_max": 0.88,
+        "ret6_min": 0.02,
+        "ret22_min": -0.06,
+        "temp_ch11_min": 0.03,
+        "vol22_threshold": 0.019,
+        "vol_ratio_max": 0.8,
+        "rate_threshold": 6.0,
+        "yc_min": -0.35,
+        "credit_max": 2.4,
+        "yc_change_min": 0.16,
+        "credit_change_max": -0.07,
+        "target": 2.35,
+    },
+}
+
+# A19 installs a cold-temperature leverage ladder to guarantee higher baselines
+EXPERIMENTS["A19"] = {
+    **EXPERIMENTS["A18"],
+    "temperature_leverage_ladder": {
+        "steps": [
+            {"temp_max": 0.86, "min_allocation": 1.2},
+            {"temp_max": 0.82, "min_allocation": 1.5},
+            {"temp_max": 0.78, "min_allocation": 1.8},
+            {"temp_max": 0.74, "min_allocation": 2.1},
+            {"temp_max": 0.70, "min_allocation": 2.3},
+        ],
+        "cap": 2.35,
+    },
+}
+
+# A20 scales the ladder exposure when money is cheap
+EXPERIMENTS["A20"] = {
+    **EXPERIMENTS["A19"],
+    "rate_scaled_leverage": {
+        "rate_floor": 2.5,
+        "rate_ceiling": 6.5,
+        "max_scale": 1.18,
+        "cap": 2.45,
+    },
+}
+
+# A21 adds a momentum guard so high leverage waits for trend confirmation
+EXPERIMENTS["A21"] = {
+    **EXPERIMENTS["A20"],
+    "momentum_guard": {
+        "ret6_floor": -0.06,
+        "ret22_floor": -0.12,
+        "scale": 0.45,
+        "floor": 0.7,
+    },
+}
+
+# A22 applies a global allocation cap to tame extreme stack-ups
+EXPERIMENTS["A22"] = {
+    **EXPERIMENTS["A19"],
+    "global_allocation_cap": 2.45,
+}
+
+# A23 gates the ladder steps on recovering momentum to avoid crash-time overexposure
+EXPERIMENTS["A23"] = {
+    **EXPERIMENTS["A22"],
+    "temperature_leverage_ladder": {
+        "steps": [
+            {"temp_max": 0.86, "min_allocation": 1.2, "ret22_min": -0.08},
+            {"temp_max": 0.82, "min_allocation": 1.5, "ret6_min": 0.0, "ret22_min": -0.05},
+            {"temp_max": 0.78, "min_allocation": 1.8, "ret6_min": 0.01, "ret22_min": -0.02},
+            {"temp_max": 0.74, "min_allocation": 2.05, "ret6_min": 0.015, "ret22_min": 0.0},
+            {"temp_max": 0.70, "min_allocation": 2.3, "ret6_min": 0.02, "ret22_min": 0.02},
+        ],
+        "cap": 2.35,
+    },
+    "global_allocation_cap": 2.4,
+}
+
+# A24 adds a drawdown guard that reins in leverage until momentum mends
+EXPERIMENTS["A24"] = {
+    **EXPERIMENTS["A23"],
+    "drawdown_guard": {
+        "drawdown_threshold": -0.34,
+        "ret6_max": -0.01,
+        "ret22_max": -0.04,
+        "cap": 1.45,
+    },
+}
+
+# A25 retools the hot momentum overlay to press harder during broad rallies
+EXPERIMENTS["A25"] = {
+    **EXPERIMENTS["A22"],
+    "hot_momentum_leverage": {
+        "boost": 0.35,
+        "temperature_max": 1.12,
+        "rate_threshold": 6.0,
+        "ret22_threshold": 0.06,
+        "ret3_threshold": 0.01,
+        "ret6_threshold": 0.015,
+        "ret12_threshold": 0.02,
+        "extra_boost": 0.25,
+        "extra_temperature_max": 1.02,
+        "extra_rate_threshold": 5.5,
+        "extra_ret22_threshold": 0.09,
+        "stop_ret12": -0.01,
+        "stop_ret3": -0.005,
+        "cap": 2.3,
+        "extra_cap": 2.45,
+    },
+}
+
 
 def main():
     parser = argparse.ArgumentParser(description="Simulate TQQQ+reserve strategy with temperature & filters")
@@ -554,6 +1107,7 @@ def main():
     df["ret_12"] = df["close"] / df["close"].shift(11) - 1.0
     df["ret_22"] = df["close"] / df["close"].shift(21) - 1.0
     df["vol_22"] = df["ret"].rolling(window=22).std()
+    df["vol_66"] = df["ret"].rolling(window=66).std()
 
     # Rates
     rates = fetch_fred_series(pd, args.fred_series, start_ts, end_ts)
@@ -574,10 +1128,14 @@ def main():
         "credit_spread": cs["rate"],
     })
     macro = macro.reindex(df.index).ffill().bfill()
+    macro["yc_change_22"] = macro["yc_spread"].diff(22)
+    macro["credit_change_22"] = macro["credit_spread"].diff(22)
 
     # Temperature series
     temp, A, r, fit_start_ts = compute_temperature_series(pd, np, df, csv_path=args.csv)
     df["temp"] = temp
+    df["temp_ch_11"] = df["temp"] / df["temp"].shift(11) - 1.0
+    df["temp_ch_22"] = df["temp"] / df["temp"].shift(21) - 1.0
 
     # Simulated TQQQ-like and cash daily factors
     leverage = float(args.leverage)
@@ -620,6 +1178,7 @@ def main():
     next_rebalance_idx = 0  # day 0 is an eligible rebalance day after updates
     eps = 1e-6
     last_rebalance_idx = -22
+    peak_total = port_total[0]
 
     for i in range(num_days):
         # Update holdings based on previous day growth (for i=0 this applies one day of cash growth)
@@ -633,21 +1192,88 @@ def main():
 
         total = port_tqqq[i] + port_cash[i]
         curr_p = 0.0 if total <= 0 else port_tqqq[i] / total
+        drawdown = 0.0 if peak_total <= 0 else (total / peak_total) - 1.0
 
         T = df["temp"].iloc[i]
-        base_p = target_allocation_from_temperature(T)
         rate_today = float(rate_ann[i])
+        base_p = target_allocation_from_temperature(T)
+        tcurve_cfg = config.get("temperature_curve_boost")
+        if tcurve_cfg:
+            base_p = apply_temperature_curve_boost(base_p, T, **tcurve_cfg)
+        rate_scale_cfg = config.get("rate_scaled_leverage")
+        if rate_scale_cfg:
+            base_p = apply_rate_scaled_multiplier(base_p, rate_today, **rate_scale_cfg)
         r3 = df["ret_3"].iloc[i]
         r6 = df["ret_6"].iloc[i]
         r12 = df["ret_12"].iloc[i]
         r22 = df["ret_22"].iloc[i]
+        ladder_cfg = config.get("temperature_leverage_ladder")
+        if ladder_cfg:
+            base_p = apply_temperature_leverage_ladder(base_p, T, r6, r22, **ladder_cfg)
+        temp_ch11 = df["temp_ch_11"].iloc[i]
+        temp_ch22 = df["temp_ch_22"].iloc[i]
+        vol22 = df["vol_22"].iloc[i]
+        vol66 = df["vol_66"].iloc[i]
+        yc_today = macro["yc_spread"].iloc[i]
+        cs_today = macro["credit_spread"].iloc[i]
+        yc_change22 = macro["yc_change_22"].iloc[i]
+        cs_change22 = macro["credit_change_22"].iloc[i]
+        guard_cfg = config.get("momentum_guard")
+        if guard_cfg:
+            base_p = apply_momentum_guard(base_p, r6, r22, **guard_cfg)
         target_p = apply_rate_taper(base_p, rate_today)
+        dd_guard_cfg = config.get("drawdown_guard")
+        if dd_guard_cfg:
+            target_p = apply_drawdown_guard(target_p, drawdown, r6, r22, **dd_guard_cfg)
         cl_cfg = config.get("cold_leverage")
         if cl_cfg:
             target_p = apply_cold_leverage(target_p, T, rate_today, r22, **cl_cfg)
+        mrk_cfg = config.get("mean_reversion_kicker")
+        if mrk_cfg:
+            target_p = apply_mean_reversion_kicker(
+                target_p,
+                T,
+                rate_today,
+                r3,
+                r6,
+                r22,
+                **mrk_cfg,
+            )
+        dd_cfg = config.get("drawdown_turbo")
+        if dd_cfg:
+            target_p = apply_drawdown_turbo(
+                target_p,
+                drawdown,
+                T,
+                rate_today,
+                r6,
+                r12,
+                **dd_cfg,
+            )
+        tsb_cfg = config.get("temperature_slope_boost")
+        if tsb_cfg:
+            target_p = apply_temperature_slope_boost(
+                target_p,
+                T,
+                temp_ch11,
+                temp_ch22,
+                rate_today,
+                r3,
+                r6,
+                **tsb_cfg,
+            )
+        vs_cfg = config.get("volatility_squeeze_boost")
+        if vs_cfg:
+            target_p = apply_volatility_squeeze_boost(
+                target_p,
+                vol22,
+                vol66,
+                r6,
+                r22,
+                **vs_cfg,
+            )
         vol_cfg = config.get("volatility_adjustment")
         if vol_cfg:
-            vol22 = df["vol_22"].iloc[i]
             target_p = apply_volatility_adjustment(target_p, vol22, r22, **vol_cfg)
         target_p_base = target_p
         hml_cfg = config.get("hot_momentum_leverage")
@@ -662,9 +1288,39 @@ def main():
             )
         macro_cfg = config.get("macro_filter")
         if macro_cfg:
-            yc_today = macro["yc_spread"].iloc[i]
-            cs_today = macro["credit_spread"].iloc[i]
             target_p = apply_macro_filter(target_p, yc_today, cs_today, **macro_cfg)
+        macro_tail_cfg = config.get("macro_tailwind_boost")
+        if macro_tail_cfg:
+            target_p = apply_macro_tailwind_boost(
+                target_p,
+                yc_today,
+                cs_today,
+                yc_change22,
+                cs_change22,
+                rate_today,
+                **macro_tail_cfg,
+            )
+        hyper_cfg = config.get("recovery_hyperdrive")
+        if hyper_cfg:
+            target_p = apply_recovery_hyperdrive(
+                target_p,
+                drawdown=drawdown,
+                T=T,
+                ret_6=r6,
+                ret_22=r22,
+                temp_ch11=temp_ch11,
+                vol_22=vol22,
+                vol_66=vol66,
+                rate_annual_pct=rate_today,
+                yc_spread=yc_today,
+                credit_spread=cs_today,
+                yc_change_22=yc_change22,
+                credit_change_22=cs_change22,
+                **hyper_cfg,
+            )
+        global_cap = config.get("global_allocation_cap")
+        if global_cap is not None:
+            target_p = min(float(global_cap), target_p)
         base_p_series[i] = base_p
         target_p_series[i] = target_p
 
@@ -912,6 +1568,7 @@ def main():
 
         port_total[i] = port_tqqq[i] + port_cash[i]
         deployed_p[i] = curr_p
+        peak_total = max(peak_total, port_total[i])
 
     # Normalized lines for plotting
     unified_norm = df["close"].to_numpy() / df["close"].iloc[0]
@@ -951,10 +1608,26 @@ def main():
         fig.savefig(args.save_plot, dpi=150)
     if args.save_csv:
         out = df.copy()
-        out = out[["close", "ret", "ret_3", "ret_6", "ret_12", "ret_22", "temp"]].copy()
+        out = out[
+            [
+                "close",
+                "ret",
+                "ret_3",
+                "ret_6",
+                "ret_12",
+                "ret_22",
+                "temp",
+                "temp_ch_11",
+                "temp_ch_22",
+                "vol_22",
+                "vol_66",
+            ]
+        ].copy()
         out["rate"] = rate_ann
         out["yc_spread"] = macro["yc_spread"].to_numpy()
         out["credit_spread"] = macro["credit_spread"].to_numpy()
+        out["yc_change_22"] = macro["yc_change_22"].to_numpy()
+        out["credit_change_22"] = macro["credit_change_22"].to_numpy()
         out["port_tqqq"] = port_tqqq
         out["port_cash"] = port_cash
         out["port_total"] = port_total
