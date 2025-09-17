@@ -320,6 +320,101 @@ def apply_temperature_slope_boost(
     return p
 
 
+def apply_rebound_accelerator(
+    p: float,
+    T: float,
+    temp_ch_11: float,
+    temp_ch_22: float,
+    ret_3: float,
+    ret_6: float,
+    ret_22: float,
+    vol_22: float,
+    vol_66: float,
+    rate_annual_pct: float,
+    yc_spread: float,
+    credit_spread: float,
+    yc_change_22: float,
+    credit_change_22: float,
+    *,
+    temp_min: float = 0.7,
+    temp_max: float = 0.97,
+    rate_threshold: float = 6.2,
+    ret3_min: float = 0.008,
+    ret6_min: float = 0.025,
+    ret22_floor: float = -0.14,
+    ret22_ceiling: float = 0.025,
+    temp_ch11_min: float = 0.025,
+    temp_ch22_min: float = 0.06,
+    vol22_max: float = 0.024,
+    vol_ratio_max: float = 0.88,
+    yc_min: float = -0.3,
+    credit_max: float = 2.45,
+    yc_change_min: float = 0.02,
+    credit_change_max: float = -0.01,
+    boost: float = 0.32,
+    cap: float = 2.5,
+    extra_boost: float = 0.12,
+    extra_temp_max: float = 0.9,
+    extra_ret22_floor: float = -0.01,
+    extra_ret22_ceiling: float = 0.04,
+    extra_vol_ratio_max: float = 0.8,
+    extra_cap: float = 2.58,
+) -> float:
+    """Accelerate leverage during early-stage rebounds while drawdowns heal."""
+
+    metrics = (
+        temp_ch_11,
+        temp_ch_22,
+        ret_3,
+        ret_6,
+        ret_22,
+        vol_22,
+        vol_66,
+        yc_spread,
+        credit_spread,
+        yc_change_22,
+        credit_change_22,
+    )
+    if any(math.isnan(x) for x in metrics):
+        return p
+    if vol_22 <= 0 or vol_66 <= 0:
+        return p
+    ratio = vol_22 / vol_66
+    macro_ok = (
+        yc_spread >= yc_min
+        and credit_spread <= credit_max
+        and yc_change_22 >= yc_change_min
+        and credit_change_22 <= credit_change_max
+    )
+    momentum_ok = (
+        ret_3 >= ret3_min
+        and ret_6 >= ret6_min
+        and ret_22 >= ret22_floor
+        and ret_22 <= ret22_ceiling
+    )
+    if (
+        T >= temp_min
+        and T <= temp_max
+        and rate_annual_pct < rate_threshold
+        and temp_ch_11 >= temp_ch11_min
+        and temp_ch_22 >= temp_ch22_min
+        and ratio <= vol_ratio_max
+        and vol_22 <= vol22_max
+        and macro_ok
+        and momentum_ok
+    ):
+        p = min(cap, p + boost)
+        if (
+            extra_boost > 0.0
+            and T <= extra_temp_max
+            and ret_22 >= extra_ret22_floor
+            and ret_22 <= extra_ret22_ceiling
+            and ratio <= extra_vol_ratio_max
+        ):
+            p = min(extra_cap, p + extra_boost)
+    return p
+
+
 def apply_temperature_curve_boost(
     base_p: float,
     T: float,
@@ -388,6 +483,40 @@ def apply_rate_scaled_multiplier(
     return min(cap, p * scale)
 
 
+def apply_rate_tailwind_multiplier(
+    p: float,
+    rate_annual_pct: float,
+    T: float,
+    ret_6: float,
+    ret_22: float,
+    *,
+    rate_floor: float = 3.0,
+    rate_ceiling: float = 6.0,
+    temp_min: float = 0.8,
+    temp_max: float = 1.15,
+    ret6_min: float = 0.0,
+    ret22_min: float = 0.04,
+    scale_max: float = 1.18,
+    cap: float = 2.6,
+) -> float:
+    """Scale exposure when cheap rates and solid trends align."""
+
+    if math.isnan(ret_6) or math.isnan(ret_22):
+        return p
+    if not (temp_min <= T <= temp_max):
+        return p
+    if ret_6 < ret6_min or ret_22 < ret22_min:
+        return p
+    if rate_annual_pct >= rate_ceiling:
+        return p
+    if rate_annual_pct <= rate_floor:
+        scale = scale_max
+    else:
+        span = rate_ceiling - rate_floor
+        scale = 1.0 + (scale_max - 1.0) * (rate_ceiling - rate_annual_pct) / span
+    return min(cap, p * scale)
+
+
 def apply_momentum_guard(
     p: float,
     ret_6: float,
@@ -404,6 +533,32 @@ def apply_momentum_guard(
     if not math.isnan(ret_6) and ret_6 <= ret6_floor:
         triggers.append(True)
     if not math.isnan(ret_22) and ret_22 <= ret22_floor:
+        triggers.append(True)
+    if triggers:
+        return max(floor, p * scale)
+    return p
+
+
+def apply_shock_guard(
+    p: float,
+    ret_1: float,
+    ret_3: float,
+    ret_6: float,
+    *,
+    ret1_floor: float = -0.06,
+    ret3_floor: float = -0.12,
+    ret6_floor: float = -0.18,
+    scale: float = 0.4,
+    floor: float = 0.5,
+) -> float:
+    """Rapidly scale back exposure on abrupt drawdowns."""
+
+    triggers = []
+    if ret_1 <= ret1_floor:
+        triggers.append(True)
+    if not math.isnan(ret_3) and ret_3 <= ret3_floor:
+        triggers.append(True)
+    if not math.isnan(ret_6) and ret_6 <= ret6_floor:
         triggers.append(True)
     if triggers:
         return max(floor, p * scale)
@@ -495,6 +650,93 @@ def apply_macro_tailwind_boost(
         and rate_annual_pct < rate_threshold
     ):
         return min(cap, p + boost)
+    return p
+
+
+def apply_regime_accelerator(
+    p: float,
+    T: float,
+    ret_3: float,
+    ret_6: float,
+    ret_12: float,
+    ret_22: float,
+    vol_22: float,
+    vol_66: float,
+    rate_annual_pct: float,
+    yc_spread: float,
+    credit_spread: float,
+    yc_change_22: float,
+    credit_change_22: float,
+    *,
+    temp_min: float = 0.78,
+    temp_max: float = 1.06,
+    rate_threshold: float = 5.8,
+    ret3_min: float = 0.015,
+    ret6_min: float = 0.03,
+    ret12_min: float = 0.05,
+    ret22_min: float = 0.08,
+    vol22_max: float = 0.022,
+    vol_ratio_max: float = 0.82,
+    yc_min: float = -0.1,
+    credit_max: float = 2.2,
+    yc_change_min: float = 0.05,
+    credit_change_max: float = -0.03,
+    boost: float = 0.25,
+    cap: float = 2.55,
+    extra_boost: float = 0.15,
+    extra_ret22_min: float = 0.12,
+    extra_temp_max: float = 0.94,
+    extra_vol_ratio_max: float = 0.78,
+    extra_cap: float = 2.6,
+) -> float:
+    """Add a regime-based accelerator when everything lines up."""
+
+    metrics = (
+        ret_3,
+        ret_6,
+        ret_12,
+        ret_22,
+        vol_22,
+        vol_66,
+        yc_spread,
+        credit_spread,
+        yc_change_22,
+        credit_change_22,
+    )
+    if any(math.isnan(x) for x in metrics):
+        return p
+    if vol_22 <= 0 or vol_66 <= 0:
+        return p
+    ratio = vol_22 / vol_66
+    macro_ok = (
+        yc_spread >= yc_min
+        and credit_spread <= credit_max
+        and yc_change_22 >= yc_change_min
+        and credit_change_22 <= credit_change_max
+    )
+    momentum_ok = (
+        ret_3 >= ret3_min
+        and ret_6 >= ret6_min
+        and ret_12 >= ret12_min
+        and ret_22 >= ret22_min
+    )
+    if (
+        T >= temp_min
+        and T <= temp_max
+        and rate_annual_pct < rate_threshold
+        and ratio <= vol_ratio_max
+        and vol_22 <= vol22_max
+        and macro_ok
+        and momentum_ok
+    ):
+        p = min(cap, p + boost)
+        if (
+            extra_boost > 0.0
+            and ret_22 >= extra_ret22_min
+            and T <= extra_temp_max
+            and ratio <= extra_vol_ratio_max
+        ):
+            p = min(extra_cap, p + extra_boost)
     return p
 
 
@@ -1070,6 +1312,482 @@ EXPERIMENTS["A25"] = {
     },
 }
 
+# A26 adds a snapback rung to the ladder for deep-value momentum surges
+EXPERIMENTS["A26"] = {
+    **EXPERIMENTS["A25"],
+    "temperature_leverage_ladder": {
+        "steps": [
+            {"temp_max": 0.86, "min_allocation": 1.25},
+            {"temp_max": 0.83, "min_allocation": 1.6},
+            {"temp_max": 0.79, "min_allocation": 1.9, "ret22_min": -0.05},
+            {"temp_max": 0.75, "min_allocation": 2.2, "ret6_min": 0.0, "ret22_min": -0.015},
+            {"temp_max": 0.72, "min_allocation": 2.4, "ret6_min": 0.01, "ret22_min": 0.0},
+            {"temp_max": 0.68, "min_allocation": 2.55, "ret6_min": 0.02, "ret22_min": 0.035},
+        ],
+        "cap": 2.6,
+    },
+    "hot_momentum_leverage": {
+        "boost": 0.35,
+        "temperature_max": 1.10,
+        "rate_threshold": 6.0,
+        "ret22_threshold": 0.065,
+        "ret3_threshold": 0.012,
+        "ret6_threshold": 0.018,
+        "ret12_threshold": 0.022,
+        "extra_boost": 0.28,
+        "extra_temperature_max": 1.01,
+        "extra_rate_threshold": 5.5,
+        "extra_ret22_threshold": 0.10,
+        "stop_ret12": -0.008,
+        "stop_ret3": -0.004,
+        "cap": 2.55,
+        "extra_cap": 2.6,
+    },
+    "global_allocation_cap": 2.6,
+}
+
+# A27 layers a regime accelerator that stacks leverage when momentum, macro, and volatility align
+EXPERIMENTS["A27"] = {
+    **EXPERIMENTS["A25"],
+    "hot_momentum_leverage": {
+        "boost": 0.33,
+        "temperature_max": 1.09,
+        "rate_threshold": 5.9,
+        "ret22_threshold": 0.065,
+        "ret3_threshold": 0.012,
+        "ret6_threshold": 0.018,
+        "ret12_threshold": 0.02,
+        "extra_boost": 0.25,
+        "extra_temperature_max": 1.01,
+        "extra_rate_threshold": 5.4,
+        "extra_ret22_threshold": 0.095,
+        "stop_ret12": -0.009,
+        "stop_ret3": -0.004,
+        "cap": 2.5,
+        "extra_cap": 2.58,
+    },
+    "regime_accelerator": {
+        "temp_min": 0.8,
+        "temp_max": 1.04,
+        "rate_threshold": 5.8,
+        "ret3_min": 0.015,
+        "ret6_min": 0.035,
+        "ret12_min": 0.055,
+        "ret22_min": 0.085,
+        "vol22_max": 0.021,
+        "vol_ratio_max": 0.8,
+        "yc_min": -0.05,
+        "credit_max": 2.2,
+        "yc_change_min": 0.06,
+        "credit_change_max": -0.035,
+        "boost": 0.28,
+        "cap": 2.55,
+        "extra_boost": 0.12,
+        "extra_ret22_min": 0.125,
+        "extra_temp_max": 0.95,
+        "extra_vol_ratio_max": 0.74,
+        "extra_cap": 2.6,
+    },
+    "global_allocation_cap": 2.55,
+}
+
+# A28 retunes the cold ladder and volatility triggers for earlier, gated leverage ramps
+EXPERIMENTS["A28"] = {
+    **EXPERIMENTS["A27"],
+    "temperature_leverage_ladder": {
+        "steps": [
+            {"temp_max": 0.86, "min_allocation": 1.25},
+            {"temp_max": 0.82, "min_allocation": 1.6, "ret22_min": -0.06},
+            {"temp_max": 0.78, "min_allocation": 1.95, "ret22_min": -0.03},
+            {"temp_max": 0.74, "min_allocation": 2.2, "ret6_min": 0.0, "ret22_min": -0.01},
+            {"temp_max": 0.70, "min_allocation": 2.35, "ret6_min": 0.01, "ret22_min": 0.015},
+            {"temp_max": 0.67, "min_allocation": 2.48, "ret6_min": 0.02, "ret22_min": 0.04},
+        ],
+        "cap": 2.5,
+    },
+    "temperature_curve_boost": {
+        "pivot": 0.9,
+        "slope": 2.6,
+        "max_extra": 0.5,
+        "cap": 1.5,
+    },
+    "volatility_squeeze_boost": {
+        "vol22_threshold": 0.018,
+        "vol_ratio_max": 0.72,
+        "ret6_min": 0.02,
+        "ret22_min": -0.002,
+        "boost": 0.32,
+        "cap": 2.28,
+    },
+    "regime_accelerator": {
+        "temp_min": 0.79,
+        "temp_max": 1.05,
+        "rate_threshold": 5.8,
+        "ret3_min": 0.014,
+        "ret6_min": 0.032,
+        "ret12_min": 0.05,
+        "ret22_min": 0.082,
+        "vol22_max": 0.0215,
+        "vol_ratio_max": 0.78,
+        "yc_min": -0.05,
+        "credit_max": 2.15,
+        "yc_change_min": 0.055,
+        "credit_change_max": -0.035,
+        "boost": 0.3,
+        "cap": 2.55,
+        "extra_boost": 0.15,
+        "extra_ret22_min": 0.125,
+        "extra_temp_max": 0.94,
+        "extra_vol_ratio_max": 0.72,
+        "extra_cap": 2.6,
+    },
+    "global_allocation_cap": 2.58,
+}
+
+# A29 introduces a rebound accelerator to lean in before momentum fully heals
+EXPERIMENTS["A29"] = {
+    **EXPERIMENTS["A27"],
+    "temperature_leverage_ladder": {
+        "steps": [
+            {"temp_max": 0.86, "min_allocation": 1.22},
+            {"temp_max": 0.82, "min_allocation": 1.55},
+            {"temp_max": 0.78, "min_allocation": 1.9, "ret22_min": -0.05},
+            {"temp_max": 0.74, "min_allocation": 2.15, "ret6_min": 0.0, "ret22_min": -0.015},
+            {"temp_max": 0.71, "min_allocation": 2.32, "ret6_min": 0.01, "ret22_min": 0.01},
+            {"temp_max": 0.68, "min_allocation": 2.45, "ret6_min": 0.02, "ret22_min": 0.035},
+        ],
+        "cap": 2.5,
+    },
+    "rebound_accelerator": {
+        "temp_min": 0.72,
+        "temp_max": 0.97,
+        "rate_threshold": 6.0,
+        "ret3_min": 0.01,
+        "ret6_min": 0.028,
+        "ret22_floor": -0.12,
+        "ret22_ceiling": 0.02,
+        "temp_ch11_min": 0.028,
+        "temp_ch22_min": 0.07,
+        "vol22_max": 0.023,
+        "vol_ratio_max": 0.85,
+        "yc_min": -0.2,
+        "credit_max": 2.35,
+        "yc_change_min": 0.035,
+        "credit_change_max": -0.015,
+        "boost": 0.34,
+        "cap": 2.52,
+        "extra_boost": 0.14,
+        "extra_temp_max": 0.9,
+        "extra_ret22_floor": -0.005,
+        "extra_ret22_ceiling": 0.035,
+        "extra_vol_ratio_max": 0.78,
+        "extra_cap": 2.58,
+    },
+    "global_allocation_cap": 2.58,
+}
+
+# A30 pushes leverage higher in confirmed regimes while keeping strict gating
+EXPERIMENTS["A30"] = {
+    **EXPERIMENTS["A27"],
+    "temperature_leverage_ladder": {
+        "steps": [
+            {"temp_max": 0.86, "min_allocation": 1.25},
+            {"temp_max": 0.82, "min_allocation": 1.6},
+            {"temp_max": 0.78, "min_allocation": 1.95, "ret22_min": -0.04},
+            {"temp_max": 0.74, "min_allocation": 2.2, "ret6_min": 0.0, "ret22_min": -0.01},
+            {"temp_max": 0.71, "min_allocation": 2.35, "ret6_min": 0.01, "ret22_min": 0.015},
+            {"temp_max": 0.68, "min_allocation": 2.5, "ret6_min": 0.02, "ret22_min": 0.04},
+        ],
+        "cap": 2.55,
+    },
+    "hot_momentum_leverage": {
+        "boost": 0.36,
+        "temperature_max": 1.08,
+        "rate_threshold": 5.9,
+        "ret22_threshold": 0.07,
+        "ret3_threshold": 0.015,
+        "ret6_threshold": 0.02,
+        "ret12_threshold": 0.025,
+        "extra_boost": 0.28,
+        "extra_temperature_max": 1.0,
+        "extra_rate_threshold": 5.3,
+        "extra_ret22_threshold": 0.105,
+        "stop_ret12": -0.008,
+        "stop_ret3": -0.003,
+        "cap": 2.6,
+        "extra_cap": 2.68,
+    },
+    "regime_accelerator": {
+        "temp_min": 0.79,
+        "temp_max": 1.03,
+        "rate_threshold": 5.7,
+        "ret3_min": 0.016,
+        "ret6_min": 0.034,
+        "ret12_min": 0.055,
+        "ret22_min": 0.09,
+        "vol22_max": 0.021,
+        "vol_ratio_max": 0.78,
+        "yc_min": -0.05,
+        "credit_max": 2.1,
+        "yc_change_min": 0.065,
+        "credit_change_max": -0.04,
+        "boost": 0.32,
+        "cap": 2.6,
+        "extra_boost": 0.18,
+        "extra_ret22_min": 0.13,
+        "extra_temp_max": 0.94,
+        "extra_vol_ratio_max": 0.72,
+        "extra_cap": 2.68,
+    },
+    "global_allocation_cap": 2.68,
+}
+
+# A33 adds a fast crash guard and low-rate scaling to the aggressive stack
+EXPERIMENTS["A33"] = {
+    **EXPERIMENTS["A30"],
+    "shock_guard": {
+        "ret1_floor": -0.055,
+        "ret3_floor": -0.10,
+        "ret6_floor": -0.16,
+        "scale": 0.25,
+        "floor": 0.0,
+    },
+    "rate_tailwind_multiplier": {
+        "rate_floor": 3.0,
+        "rate_ceiling": 5.5,
+        "temp_min": 0.82,
+        "temp_max": 1.08,
+        "ret6_min": 0.012,
+        "ret22_min": 0.055,
+        "scale_max": 1.10,
+        "cap": 2.6,
+    },
+    "intra_cycle_rebalance": {
+        "threshold": 0.08,
+        "min_gap_days": 5,
+        "direction": "both",
+    },
+    "global_allocation_cap": 2.55,
+}
+
+# A34 raises the baseline and rate scaling while retaining the crash guard
+EXPERIMENTS["A34"] = {
+    **EXPERIMENTS["A33"],
+    "temperature_curve_boost": {
+        "pivot": 1.0,
+        "slope": 2.3,
+        "max_extra": 0.4,
+        "cap": 1.5,
+    },
+    "temperature_leverage_ladder": {
+        "steps": [
+            {"temp_max": 0.86, "min_allocation": 1.3},
+            {"temp_max": 0.82, "min_allocation": 1.65},
+            {"temp_max": 0.78, "min_allocation": 2.0, "ret22_min": -0.035},
+            {"temp_max": 0.74, "min_allocation": 2.25, "ret6_min": 0.005, "ret22_min": -0.005},
+            {"temp_max": 0.70, "min_allocation": 2.4, "ret6_min": 0.012, "ret22_min": 0.02},
+        ],
+        "cap": 2.45,
+    },
+    "rate_tailwind_multiplier": {
+        "rate_floor": 3.0,
+        "rate_ceiling": 5.5,
+        "temp_min": 0.82,
+        "temp_max": 1.08,
+        "ret6_min": 0.012,
+        "ret22_min": 0.055,
+        "scale_max": 1.15,
+        "cap": 2.6,
+    },
+    "hot_momentum_leverage": {
+        "boost": 0.36,
+        "temperature_max": 1.08,
+        "rate_threshold": 5.9,
+        "ret22_threshold": 0.07,
+        "ret3_threshold": 0.015,
+        "ret6_threshold": 0.02,
+        "ret12_threshold": 0.025,
+        "extra_boost": 0.27,
+        "extra_temperature_max": 0.99,
+        "extra_rate_threshold": 5.3,
+        "extra_ret22_threshold": 0.105,
+        "stop_ret12": -0.008,
+        "stop_ret3": -0.003,
+        "cap": 2.6,
+        "extra_cap": 2.65,
+    },
+    "global_allocation_cap": 2.6,
+}
+
+# A35 widens cold boosts and keeps partial exposure during macro stress
+EXPERIMENTS["A35"] = {
+    **EXPERIMENTS["A34"],
+    "temperature_leverage_ladder": {
+        "steps": [
+            {"temp_max": 0.86, "min_allocation": 1.3},
+            {"temp_max": 0.82, "min_allocation": 1.7},
+            {"temp_max": 0.78, "min_allocation": 2.05, "ret22_min": -0.03},
+            {"temp_max": 0.74, "min_allocation": 2.3, "ret6_min": 0.005, "ret22_min": -0.002},
+            {"temp_max": 0.70, "min_allocation": 2.45, "ret6_min": 0.012, "ret22_min": 0.02},
+            {"temp_max": 0.66, "min_allocation": 2.55, "ret6_min": 0.02, "ret22_min": 0.04},
+        ],
+        "cap": 2.55,
+    },
+    "cold_leverage": {
+        "boost": 0.25,
+        "temperature_threshold": 0.82,
+        "rate_threshold": 5.5,
+        "extra_boost": 0.2,
+        "extra_temperature_threshold": 0.75,
+        "extra_rate_threshold": 4.5,
+        "extra_ret22_threshold": 0.015,
+    },
+    "macro_filter": {
+        "yc_threshold": -0.2,
+        "credit_threshold": 2.15,
+        "reduce_to": 0.2,
+        "require_both": True,
+    },
+    "rate_tailwind_multiplier": {
+        "rate_floor": 3.0,
+        "rate_ceiling": 5.4,
+        "temp_min": 0.8,
+        "temp_max": 1.08,
+        "ret6_min": 0.015,
+        "ret22_min": 0.06,
+        "scale_max": 1.2,
+        "cap": 2.65,
+    },
+    "momentum_guard": {
+        "ret6_floor": -0.04,
+        "ret22_floor": -0.1,
+        "scale": 0.5,
+        "floor": 0.55,
+    },
+    "global_allocation_cap": 2.65,
+}
+
+# A36 simply dials leverage higher while keeping the A27 signal stack intact
+EXPERIMENTS["A36"] = {
+    **EXPERIMENTS["A27"],
+    "leverage_override": 3.6,
+}
+
+# A31 blends rate tailwinds with a warmer baseline curve to stay invested longer
+EXPERIMENTS["A31"] = {
+    **EXPERIMENTS["A27"],
+    "temperature_curve_boost": {
+        "pivot": 1.02,
+        "slope": 2.4,
+        "max_extra": 0.45,
+        "cap": 1.55,
+    },
+    "temperature_leverage_ladder": {
+        "steps": [
+            {"temp_max": 0.86, "min_allocation": 1.25},
+            {"temp_max": 0.82, "min_allocation": 1.65, "ret22_min": -0.06},
+            {"temp_max": 0.78, "min_allocation": 2.0, "ret22_min": -0.03},
+            {"temp_max": 0.74, "min_allocation": 2.2, "ret6_min": 0.005, "ret22_min": -0.005},
+            {"temp_max": 0.71, "min_allocation": 2.35, "ret6_min": 0.012, "ret22_min": 0.015},
+            {"temp_max": 0.68, "min_allocation": 2.45, "ret6_min": 0.02, "ret22_min": 0.035},
+        ],
+        "cap": 2.5,
+    },
+    "hot_momentum_leverage": {
+        "boost": 0.34,
+        "temperature_max": 1.1,
+        "rate_threshold": 5.9,
+        "ret22_threshold": 0.065,
+        "ret3_threshold": 0.012,
+        "ret6_threshold": 0.018,
+        "ret12_threshold": 0.022,
+        "extra_boost": 0.25,
+        "extra_temperature_max": 1.0,
+        "extra_rate_threshold": 5.4,
+        "extra_ret22_threshold": 0.1,
+        "stop_ret12": -0.008,
+        "stop_ret3": -0.004,
+        "cap": 2.55,
+        "extra_cap": 2.62,
+    },
+    "regime_accelerator": {
+        "temp_min": 0.8,
+        "temp_max": 1.04,
+        "rate_threshold": 5.7,
+        "ret3_min": 0.015,
+        "ret6_min": 0.032,
+        "ret12_min": 0.052,
+        "ret22_min": 0.085,
+        "vol22_max": 0.0215,
+        "vol_ratio_max": 0.78,
+        "yc_min": -0.05,
+        "credit_max": 2.15,
+        "yc_change_min": 0.06,
+        "credit_change_max": -0.035,
+        "boost": 0.3,
+        "cap": 2.55,
+        "extra_boost": 0.14,
+        "extra_ret22_min": 0.12,
+        "extra_temp_max": 0.94,
+        "extra_vol_ratio_max": 0.72,
+        "extra_cap": 2.62,
+    },
+    "rate_tailwind_multiplier": {
+        "rate_floor": 3.0,
+        "rate_ceiling": 5.5,
+        "temp_min": 0.82,
+        "temp_max": 1.1,
+        "ret6_min": 0.01,
+        "ret22_min": 0.05,
+        "scale_max": 1.16,
+        "cap": 2.55,
+    },
+    "global_allocation_cap": 2.6,
+}
+
+# A32 warms the base curve, leans into low-rate trends, and keeps a macro cushion
+EXPERIMENTS["A32"] = {
+    **EXPERIMENTS["A27"],
+    "temperature_curve_boost": {
+        "pivot": 1.02,
+        "slope": 2.2,
+        "max_extra": 0.4,
+        "cap": 1.45,
+    },
+    "temperature_leverage_ladder": {
+        "steps": [
+            {"temp_max": 0.86, "min_allocation": 1.25},
+            {"temp_max": 0.82, "min_allocation": 1.55},
+            {"temp_max": 0.78, "min_allocation": 1.9, "ret22_min": -0.04},
+            {"temp_max": 0.74, "min_allocation": 2.2, "ret6_min": 0.0, "ret22_min": -0.01},
+            {"temp_max": 0.70, "min_allocation": 2.35, "ret6_min": 0.01, "ret22_min": 0.015},
+        ],
+        "cap": 2.4,
+    },
+    "macro_filter": {
+        "yc_threshold": -0.2,
+        "credit_threshold": 2.15,
+        "reduce_to": 0.2,
+        "require_both": True,
+    },
+    "intra_cycle_rebalance": {
+        "threshold": 0.1,
+        "min_gap_days": 6,
+        "direction": "buy",
+    },
+    "rate_tailwind_multiplier": {
+        "rate_floor": 3.0,
+        "rate_ceiling": 5.8,
+        "temp_min": 0.85,
+        "temp_max": 1.12,
+        "ret6_min": 0.01,
+        "ret22_min": 0.05,
+        "scale_max": 1.12,
+        "cap": 2.4,
+    },
+    "global_allocation_cap": 2.45,
+}
+
 
 def main():
     parser = argparse.ArgumentParser(description="Simulate TQQQ+reserve strategy with temperature & filters")
@@ -1159,15 +1877,17 @@ def main():
     df["temp_ch_22"] = df["temp"] / df["temp"].shift(21) - 1.0
 
     # Simulated TQQQ-like and cash daily factors
-    leverage = float(args.leverage)
+    leverage = float(config.get("leverage_override", args.leverage))
+    annual_fee = float(config.get("annual_fee_override", args.annual_fee))
+    borrow_divisor = float(config.get("borrow_divisor_override", args.borrow_divisor))
     borrowed_fraction = leverage - 1.0
-    daily_fee = float(args.annual_fee) / float(args.trading_days)
+    daily_fee = annual_fee / float(args.trading_days)
 
     rate_ann = rates["rate"].to_numpy()
     rets = df["ret"].to_numpy()
     cash_factor = 1.0 + (rate_ann / 100.0) / float(args.trading_days)
     daily_borrow = borrowed_fraction * ((rate_ann / 100.0) / float(args.trading_days))
-    tqqq_factor = (1.0 + leverage * rets) * (1.0 - daily_fee) * (1.0 - (daily_borrow / float(args.borrow_divisor)))
+    tqqq_factor = (1.0 + leverage * rets) * (1.0 - daily_fee) * (1.0 - (daily_borrow / borrow_divisor))
 
     # Simulation state
     dates = df.index.to_numpy()
@@ -1263,6 +1983,16 @@ def main():
         r6 = df["ret_6"].iloc[i]
         r12 = df["ret_12"].iloc[i]
         r22 = df["ret_22"].iloc[i]
+        rate_tail_cfg = config.get("rate_tailwind_multiplier")
+        if rate_tail_cfg:
+            base_p = apply_rate_tailwind_multiplier(
+                base_p,
+                rate_today,
+                T,
+                r6,
+                r22,
+                **rate_tail_cfg,
+            )
         ladder_cfg = config.get("temperature_leverage_ladder")
         if ladder_cfg:
             base_p = apply_temperature_leverage_ladder(base_p, T, r6, r22, **ladder_cfg)
@@ -1278,6 +2008,15 @@ def main():
         if guard_cfg:
             base_p = apply_momentum_guard(base_p, r6, r22, **guard_cfg)
         target_p = apply_rate_taper(base_p, rate_today)
+        shock_cfg = config.get("shock_guard")
+        if shock_cfg:
+            target_p = apply_shock_guard(
+                target_p,
+                df["ret"].iloc[i],
+                r3,
+                r6,
+                **shock_cfg,
+            )
         dd_guard_cfg = config.get("drawdown_guard")
         if dd_guard_cfg:
             target_p = apply_drawdown_guard(target_p, drawdown, r6, r22, **dd_guard_cfg)
@@ -1318,6 +2057,25 @@ def main():
                 r6,
                 **tsb_cfg,
             )
+        rebound_cfg = config.get("rebound_accelerator")
+        if rebound_cfg:
+            target_p = apply_rebound_accelerator(
+                target_p,
+                T,
+                temp_ch11,
+                temp_ch22,
+                r3,
+                r6,
+                r22,
+                vol22,
+                vol66,
+                rate_today,
+                yc_today,
+                cs_today,
+                yc_change22,
+                cs_change22,
+                **rebound_cfg,
+            )
         vs_cfg = config.get("volatility_squeeze_boost")
         if vs_cfg:
             target_p = apply_volatility_squeeze_boost(
@@ -1355,6 +2113,24 @@ def main():
                 cs_change22,
                 rate_today,
                 **macro_tail_cfg,
+            )
+        accel_cfg = config.get("regime_accelerator")
+        if accel_cfg:
+            target_p = apply_regime_accelerator(
+                target_p,
+                T,
+                r3,
+                r6,
+                r12,
+                r22,
+                vol22,
+                vol66,
+                rate_today,
+                yc_today,
+                cs_today,
+                yc_change22,
+                cs_change22,
+                **accel_cfg,
             )
         hyper_cfg = config.get("recovery_hyperdrive")
         if hyper_cfg:
