@@ -68,6 +68,19 @@ Key capabilities include:
 ## Strategy Experiments
 Strategy configurations are encapsulated in the `EXPERIMENTS` dictionary so features such as cold-temperature leverage boosts, hot-momentum overlays, macro filters, leverage ladders, and rate tapers can be combined without cluttering the core simulation loop. Each entry corresponds to an experiment documented in depth in `EXPERIMENTS.md`, which traces the evolution from the baseline A1 configuration (~29.7% CAGR) to the current A36 high-leverage variant (~45.31% CAGR through 2025‑01‑10). Use `--experiment A#` on the CLI to reproduce any particular configuration.
 
+### Base experiment walkthrough (A1 foundation)
+
+The strategy engine always starts from the base profile described at the top of `strategy_tqqq_reserve.py`. Later experiments add overlays, but A1 provides the core behaviour:
+
+1. **Pair a simulated TQQQ sleeve with a cash reserve.** Daily returns for the TQQQ sleeve are synthesised from the unified Nasdaq series using 3× leverage, a 0.95% annual fee, and borrowing costs that charge the two borrowed turns of leverage at the prevailing FRED rate divided by a 0.7 borrow divisor. Cash compounds at the same interest rate.
+2. **Measure "temperature" (`T`).** For every trading day, compute the ratio of the actual unified close to the constant-growth fit produced by `nasdaq_temperature.py`. `T = 1.0` means the index sits on the trend line, 1.5 is 50% above the curve, and 0.5 is 50% below.
+3. **Derive the target allocation from temperature anchors.** A1 linearly interpolates between three waypoints: 100% TQQQ when `T ≤ 0.9`, 80% at `T = 1.0`, and 20% when `T ≥ 1.5`. Between the anchors the allocation slides smoothly; the engine never increases exposure on a day where `T > 1.3`, although selling is still allowed.
+4. **Enforce a monthly rebalance cadence with momentum gates.** The portfolio aims to rebalance every 22 trading days. If the due day is blocked, the simulator checks again each subsequent session until trades are permitted and then resets the 22‑day clock. Buy attempts are delayed when QQQ has dropped by at least 3%/3 days, 3%/6 days, 2%/12 days, or 0%/22 days, or when `T > 1.3`. Sell attempts are similarly delayed after gains of 3%/3 days, 3%/6 days, 2.25%/12 days, or 0.75%/22 days.
+5. **Apply crash and rate safety valves.** A drawdown worse than 15.25% over the trailing 22 trading days immediately moves the portfolio to 100% cash, regardless of the rebalance schedule. Separately, the target allocation is tapered when policy rates rise: exposure is untouched below 10%, fades linearly between 10% and 12%, and is forced to zero at 12%.
+6. **Execute trades and compound returns.** When a rebalance is allowed, the engine shifts capital between the cash and TQQQ sleeves toward the temperature- and filter-adjusted target, then compounds both sleeves using that day’s simulated returns and interest accrual. Diagnostic flags (for example `--print-rebalances`) expose the resulting trades for inspection.
+
+Every subsequent experiment in `EXPERIMENTS` tweaks pieces of this base loop—changing the anchors, introducing leverage boosts when the market is cold, adding macro filters, or altering the borrowing assumptions—but the decision flow above always remains the starting point.
+
 Notable overlays include:
 - **Temperature-driven base allocation** with buy/sell blocks and a crash de-risk rule triggered by a 22-day drawdown greater than 15.25%.
 - **Interest-rate tapering** that linearly reduces exposure between 10% and 12% policy rates, alongside options to override leverage, fees, and borrow-cost modelling per experiment.
