@@ -2112,6 +2112,14 @@ def main():
     )
     parser.add_argument("--save-plot", default=None, help="If set, save output figure to this PNG path")
     parser.add_argument("--save-csv", default=None, help="If set, save daily debug CSV here")
+    parser.add_argument(
+        "--save-summary",
+        default=None,
+        help=(
+            "If set, write a markdown summary of key stats to this path; "
+            "if not provided, a default '[symbol]_[experiment]_summary.md' is saved in the symbol directory"
+        ),
+    )
     # Debug mode for rebalance decisions
     parser.add_argument("--debug-start", default=None, help="Start date (YYYY-MM-DD) for rebalance debug output")
     parser.add_argument("--debug-end", default=None, help="End date (YYYY-MM-DD) for rebalance debug output (inclusive)")
@@ -2756,6 +2764,14 @@ def main():
     # CAGR for strategy
     years = (df.index[-1] - df.index[0]).days / 365.25
     cagr = (strategy_norm[-1] / strategy_norm[0]) ** (1.0 / years) - 1.0
+    # Max drawdown for strategy (based on total portfolio)
+    # Avoid division by zero by guarding initial value
+    if len(port_total) > 0 and port_total[0] > 0:
+        running_max = np.maximum.accumulate(port_total)
+        drawdowns = (port_total / running_max) - 1.0
+        max_drawdown = float(np.nanmin(drawdowns)) if drawdowns.size > 0 else float('nan')
+    else:
+        max_drawdown = float('nan')
     # Print CAGR summary for convenience
     print(f"Strategy span: {df.index[0].date()} -> {df.index[-1].date()} ({years:.2f} years)")
     print(f"Strategy CAGR: {cagr * 100.0:.2f}%")
@@ -2891,6 +2907,37 @@ def main():
         out.index = out.index.date
         out.index.name = "date"
         out.to_csv(args.save_csv)
+
+    # Write summary markdown
+    try:
+        symbol_upper = base_symbol.upper()
+        symbol_dir = "qqq" if base_symbol == "QQQ" else base_symbol.lower()
+        os.makedirs(symbol_dir, exist_ok=True)
+        default_summary_name = f"{base_symbol.lower()}_{args.experiment}_summary.md"
+        summary_path = args.save_summary if args.save_summary else os.path.join(symbol_dir, default_summary_name)
+
+        # Fitted curve CAGR comes from r (annualised growth of fitted curve)
+        fitted_curve_cagr = float(r)
+        # Underlying CAGR already computed above as underlying_cagr
+        # Strategy CAGR is cagr; max drawdown computed as max_drawdown
+        # Rebalance count
+        rebalance_count = int(len(rebalance_entries))
+
+        with open(summary_path, "w", encoding="utf-8") as fh:
+            fh.write(f"# {symbol_upper} – Strategy {args.experiment} Summary\n\n")
+            fh.write(f"- **Span**: {df.index[0].date()} → {df.index[-1].date()} ({years:.2f} years)\n")
+            fh.write(f"- **Underlying ({underlying_label}) CAGR**: {underlying_cagr * 100.0:.2f}%\n")
+            fh.write(f"- **Fitted curve CAGR**: {fitted_curve_cagr * 100.0:.2f}%\n")
+            fh.write(f"- **Strategy CAGR**: {cagr * 100.0:.2f}%\n")
+            fh.write(f"- **Max drawdown**: {max_drawdown * 100.0:.2f}%\n")
+            fh.write(f"- **Rebalances executed**: {rebalance_count}\n")
+            fh.write("\n")
+            fh.write("Notes:\n\n")
+            fh.write("- Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.\n")
+            fh.write("- Figures use simulated leveraged sleeve with fees and borrow costs.\n")
+    except Exception:
+        # Non-fatal: continue even if summary cannot be written
+        pass
     # Rebalance debug CSV output
     if (args.debug_start or args.debug_end) and len(debug_rows) > 0:
         debug_df = pd.DataFrame(debug_rows)
