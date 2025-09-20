@@ -156,7 +156,7 @@ def main():
     ax.text(0.02, 0.98, text, transform=ax.transAxes, va="top", ha="left",
             bbox=dict(boxstyle="round", facecolor="white", alpha=0.8))
 
-    ax.set_title("Iterative Constant-Growth Fit (Unified Nasdaq)")
+    ax.set_title(f"Iterative Constant-Growth Fit (Unified Nasdaq, CAGR: {r_final*100.0:.2f}%)")
     ax.set_xlabel("Date")
     ax.set_ylabel("Close (log scale)")
     ax.grid(True, which="both", linestyle=":", alpha=0.4)

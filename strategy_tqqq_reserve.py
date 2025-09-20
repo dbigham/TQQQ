@@ -363,7 +363,7 @@ def save_temperature_plots(
         fig, ax = plt.subplots(figsize=(10, 5))
         ax.semilogy(df_full.index, df_full["close"], label=f"{symbol_upper} price", color="#1f77b4", alpha=0.7)
         ax.semilogy(df_full.index, pred, label="Fitted constant growth", color="#d62728")
-        ax.set_title(f"{symbol_upper} Constant-Growth Fit")
+        ax.set_title(f"{symbol_upper} Constant-Growth Fit (CAGR {r * 100.0:.2f}%)")
         ax.set_xlabel("Date")
         ax.set_ylabel("Close (log scale)")
         ax.grid(True, which="both", linestyle=":", alpha=0.4)
@@ -388,7 +388,7 @@ def save_temperature_plots(
         ax.axhline(1.0, color="gray", linestyle="-", alpha=0.8)
         ax.axhline(1.5, color="gray", linestyle=":", alpha=0.7)
         ax.axhline(0.5, color="gray", linestyle=":", alpha=0.7)
-        ax.set_title(f"{symbol_upper} Temperature (Actual / Fitted)")
+        ax.set_title(f"{symbol_upper} Temperature (Actual / Fitted, CAGR {r * 100.0:.2f}%)")
         ax.set_xlabel("Date")
         ax.set_ylabel("Temperature (ratio)")
         ax.grid(True, linestyle=":", alpha=0.4)
@@ -2816,7 +2816,11 @@ def main():
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 8), sharex=True)
 
     underlying_label = "Unified Nasdaq" if base_symbol == "QQQ" else f"{base_symbol} price"
-    ax1.plot(df.index, unified_norm, label=f"{underlying_label} (normalized)", color="#1f77b4", alpha=0.7)
+    # Compute unlevered underlying CAGR over the plotted span
+    years_span = (df.index[-1] - df.index[0]).days / 365.25
+    underlying_cagr = (unified_norm[-1] / unified_norm[0]) ** (1.0 / years_span) - 1.0 if years_span > 0 else float('nan')
+
+    ax1.plot(df.index, unified_norm, label=f"{underlying_label} (CAGR {underlying_cagr*100.0:.2f}%)", color="#1f77b4", alpha=0.7)
     ax1.plot(df.index, strategy_norm, label=f"Strategy (CAGR {cagr*100.0:.2f}%)", color="#d62728")
     ax1.set_title(f"{underlying_label} vs Strategy Portfolio Value (start=1.0)")
     ax1.set_yscale("log")
