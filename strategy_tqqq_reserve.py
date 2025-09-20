@@ -2151,6 +2151,12 @@ def main():
         prefix = "strategy_qqq_reserve" if base_symbol == "QQQ" else f"strategy_{base_symbol.lower()}_reserve"
         args.save_plot = os.path.join(symbol_dir, f"{prefix}_{experiment}.png")
 
+    # If a CSV path is provided without a directory, write it under the per-symbol dir
+    if args.save_csv:
+        csv_root = args.save_csv
+        if not os.path.dirname(csv_root):
+            args.save_csv = os.path.join(symbol_dir, os.path.basename(csv_root))
+
     pd, np, plt = import_libs()
     df_full, price_source = load_symbol_history(pd, base_symbol, csv_override=args.csv)
     df = df_full.copy()
