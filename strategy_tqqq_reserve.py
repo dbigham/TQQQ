@@ -68,6 +68,7 @@ from __future__ import annotations
 
 import argparse
 import math
+import os
 from typing import Optional
 
 
@@ -1828,6 +1829,16 @@ def main():
     args = parser.parse_args()
     experiment = args.experiment.upper()
     config = EXPERIMENTS[experiment]
+
+    # Ensure saved plot filenames include the experiment name.
+    # If no path provided, default to a strategy-specific filename in repo root.
+    if args.save_plot:
+        root, ext = os.path.splitext(args.save_plot)
+        # Only append if not already suffixed by the experiment token
+        if not (root.endswith(f"_{experiment}") or root.endswith(f"-{experiment}") or root.endswith(f".{experiment}")):
+            args.save_plot = f"{root}_{experiment}{ext}"
+    else:
+        args.save_plot = f"strategy_tqqq_reserve_{experiment}.png"
 
     pd, np, plt = import_libs()
     df = load_unified(pd, args.csv)
