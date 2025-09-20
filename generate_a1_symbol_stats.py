@@ -137,7 +137,7 @@ SPAN_RE = re.compile(r"\- \*\*Span\*\*: (?P<start>\d{4}-\d{2}-\d{2}) → (?P<end
 NUMBER_RE = re.compile(r"-?\d+(?:\.\d+)?")
 
 
-def run_strategy(symbol: str, summary_path: str) -> None:
+def run_strategy(symbol: str, summary_path: str, *, plot_path: str | None = None, csv_path: str | None = None) -> None:
     cmd = [
         sys.executable,
         "strategy_tqqq_reserve.py",
@@ -149,6 +149,10 @@ def run_strategy(symbol: str, summary_path: str) -> None:
         "--save-summary",
         summary_path,
     ]
+    if plot_path:
+        cmd.extend(["--save-plot", plot_path])
+    if csv_path:
+        cmd.extend(["--save-csv", csv_path])
     print(f"Running A1 for {symbol} ...")
     subprocess.run(cmd, check=True)
 
@@ -238,17 +242,41 @@ def compute_fit_quality(symbol: str, df: pd.DataFrame) -> float:
 
 
 def ensure_assets(symbol: str) -> Dict[str, float]:
-    symbol_dir = "qqq" if symbol.upper() == "QQQ" else symbol.lower()
-    os.makedirs(symbol_dir, exist_ok=True)
-    summary_path = os.path.join(symbol_dir, f"{symbol.lower()}_A1_summary.md")
     symbol_upper = symbol.upper()
+    symbol_dir = "qqq" if symbol_upper == "QQQ" else symbol.lower()
+    os.makedirs(symbol_dir, exist_ok=True)
+
+    # Expected standard asset paths
+    experiment = "A1"
+    summary_path = os.path.join(symbol_dir, f"{symbol.lower()}_{experiment}_summary.md")
+    prefix = "strategy_qqq_reserve" if symbol_upper == "QQQ" else f"strategy_{symbol.lower()}_reserve"
+    plot_path = os.path.join(symbol_dir, f"{prefix}_{experiment}.png")
+    csv_path = os.path.join(symbol_dir, f"{prefix}_{experiment}.csv")
+    curve_name = "fit_constant_growth.png" if symbol_upper == "QQQ" else f"fit_constant_growth_{symbol_upper}.png"
+    temp_name = "nasdaq_temperature.png" if symbol_upper == "QQQ" else f"temperature_{symbol_upper}.png"
+    curve_path = os.path.join(symbol_dir, curve_name)
+    temp_path = os.path.join(symbol_dir, temp_name)
+
+    # Inputs that must exist
     data_path = "unified_nasdaq.csv" if symbol_upper == "QQQ" else os.path.join("symbol_data", f"{symbol_upper}.csv")
     temp_cache_path = os.path.join("temperature_cache", f"{symbol_upper}.json")
-    needs_run = not os.path.exists(summary_path) or not os.path.exists(data_path) or not os.path.exists(temp_cache_path)
+
+    # Determine if we need to run to (re)generate any missing artifacts
+    needs_run = (
+        not os.path.exists(summary_path)
+        or not os.path.exists(plot_path)
+        or not os.path.exists(csv_path)
+        or not os.path.exists(curve_path)
+        or not os.path.exists(temp_path)
+        or not os.path.exists(data_path)
+        or not os.path.exists(temp_cache_path)
+    )
+
     if needs_run:
-        run_strategy(symbol, summary_path)
+        run_strategy(symbol, summary_path, plot_path=plot_path, csv_path=csv_path)
     else:
-        print(f"Summary already exists for {symbol}, skipping strategy rerun.")
+        print(f"Assets already exist for {symbol}, skipping strategy rerun.")
+
     metrics = parse_summary(summary_path)
     return metrics
 
