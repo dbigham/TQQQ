@@ -79,6 +79,7 @@ import argparse
 import json
 import math
 import os
+import re
 from typing import Optional
 
 from fit_constant_growth import iterative_fit as curve_iterative_fit
@@ -2120,14 +2121,15 @@ def main():
     experiment = args.experiment.upper()
     config = EXPERIMENTS[experiment]
 
-    # Ensure saved plot filenames include the experiment name.
-    # If no path provided, default to a strategy-specific filename in repo root.
+    # Ensure saved plot filenames include unique tokens without duplication.
+    # Accepts a root filename (no extension) and appends `token` with an underscore
+    # only if the token is not already present as a delimited segment anywhere.
     def ensure_suffix(root: str, token: str) -> str:
         lower_root = root.lower()
         token_lower = token.lower()
-        if lower_root.endswith(f"_{token_lower}") or lower_root.endswith(f"-{token_lower}") or lower_root.endswith(
-            f".{token_lower}"
-        ):
+        # Split on common delimiters to identify existing segments
+        segments = re.split(r"[_\-.]", lower_root)
+        if token_lower in segments:
             return root
         return f"{root}_{token}"
 
