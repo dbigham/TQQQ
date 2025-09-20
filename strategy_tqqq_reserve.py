@@ -197,9 +197,17 @@ def download_symbol_history(pd, symbol: str):
             "yfinance is required to download price history for non-QQQ symbols"
         ) from exc
 
-    data = yf.download(symbol, period="max", auto_adjust=True, progress=False)
+    data = yf.download(symbol, period="max", auto_adjust=True, progress=False, threads=False)
     if data.empty:
-        raise RuntimeError(f"No price data returned for symbol {symbol}")
+        # Some tickers (e.g., recent IPOs or timezone-less listings) fail via download();
+        # fall back to the per-ticker history API before giving up.
+        ticker = yf.Ticker(symbol)
+        try:
+            data = ticker.history(period="max", auto_adjust=True)
+        except Exception as exc:  # pragma: no cover - runtime fallback
+            raise RuntimeError(f"No price data returned for symbol {symbol}") from exc
+        if data.empty:
+            raise RuntimeError(f"No price data returned for symbol {symbol}")
 
     close_series = None
     if isinstance(data.columns, pd.MultiIndex):
