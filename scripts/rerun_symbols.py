@@ -32,6 +32,9 @@ def discover_symbols(root: str) -> List[str]:
         path = os.path.join(root, name)
         if not os.path.isdir(path):
             continue
+        # Skip hidden/system folders
+        if name.startswith('.'):
+            continue
         if name in EXCLUDE_DIRS:
             continue
         # Basic heuristic: treat any directory in root as a symbol folder
