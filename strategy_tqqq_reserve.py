@@ -6,7 +6,11 @@ Overview
 This script simulates an allocation strategy that pairs a leveraged Nasdaq proxy (TQQQ-like)
 with a cash reserve. Allocation to TQQQ is based on the market "temperature" (actual price
 relative to a fitted constant-growth curve) and is adjusted by recent momentum filters and
-interest-rate conditions. The reserve earns the current interest rate.
+interest-rate conditions. The reserve earns the current interest rate. The underlying symbol
+defaults to QQQ but can be overridden via ``--base-symbol`` to run the same framework against
+other indices or assets (for example SPY, BTC-USD, NVDA). When another symbol is selected the
+script downloads its history on demand via Yahoo Finance, caches the fitted growth curve, and
+reuses the saved parameters and PNG diagnostics on subsequent runs.
 
 Key Concepts
 ------------
@@ -43,19 +47,24 @@ Cash grows by: (1 + (rate/100) / trading_days) per day.
 
 Inputs
 ------
-- unified_nasdaq.csv from build_unified_nasdaq.py (date, close)
+- unified_nasdaq.csv from build_unified_nasdaq.py (date, close) when ``--base-symbol QQQ``
+  is used; for other symbols the script downloads auto-adjusted closes (cached under
+  ``symbol_data/``) without requiring pre-built CSVs.
 - Interest rate from FRED (default FEDFUNDS), fetched without key via fredgraph CSV (or other fallbacks)
-- Temperature fit via nasdaq_temperature.py (robust 3-step fit)
+- Temperature fit via nasdaq_temperature.py (robust 3-step fit), cached per symbol along with
+  diagnostic PNG plots in ``temperature_cache/``
 
 Outputs
 -------
-- Plot 1: normalized unified series vs strategy portfolio value (same start = 1.0). Legend includes CAGR.
+- Plot 1: normalized base-symbol series vs strategy portfolio value (same start = 1.0). Legend includes CAGR.
 - Plot 2: temperature (black) with reference lines at T=1.0 (solid), T=1.5 and T=0.5 (dotted), and
-  deployed proportion to TQQQ (green) on same axis.
+  deployed proportion to the leveraged sleeve (green) on the same axis.
+- Fit diagnostics: ``fit_constant_growth*.png`` and temperature plots saved with the symbol in
+  the filename when not running the QQQ baseline.
 
 Run
 ---
-python strategy_tqqq_reserve.py [--csv unified_nasdaq.csv] [--experiment A36] \
+python strategy_tqqq_reserve.py [--base-symbol QQQ] [--csv unified_nasdaq.csv] [--experiment A36] \
   [--start 2010-01-01] [--end 2025-01-10] [--fred-series FEDFUNDS] [--leverage 3.0] \
   [--annual-fee 0.0095] [--borrow-divisor 0.7] [--trading-days 252] \
   [--initial-capital 100000] [--print-rebalances] [--save-plot strategy_tqqq.png] [--no-show]
@@ -67,9 +76,16 @@ A36 (High-Leverage Ramp), which delivers ~45.31% CAGR through 2025-01-10.
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import os
 from typing import Optional
+
+from fit_constant_growth import iterative_fit as curve_iterative_fit
+
+
+TEMPERATURE_CACHE_DIR = "temperature_cache"
+SYMBOL_DATA_DIR = "symbol_data"
 
 
 def import_libs():
@@ -134,17 +150,281 @@ def load_unified(pd, csv_path: str):
     return df
 
 
-def compute_temperature_series(pd, np, df, csv_path: str = "unified_nasdaq.csv"):
-    """Compute temperature series using the provided CSV for the fit."""
-    # Use the robust fit from nasdaq_temperature module
-    from nasdaq_temperature import NasdaqTemperature  # type: ignore
-    model = NasdaqTemperature(csv_path=csv_path)
-    # Align to df
-    start_ts = model.start_ts
+def load_symbol_history(pd, symbol: str, *, csv_override: Optional[str] = None):
+    """Load price history for the requested base symbol.
+
+    For QQQ the unified dataset remains the default. For any symbol the caller
+    may pass ``csv_override`` pointing at a CSV with ``date``/``close`` columns
+    (identical format to ``unified_nasdaq.csv``). If no CSV is provided or the
+    symbol is not QQQ, the function looks for a cached download in
+    ``SYMBOL_DATA_DIR`` and falls back to Yahoo Finance when necessary.
+    """
+
+    symbol_upper = symbol.upper()
+
+    if csv_override:
+        if not os.path.exists(csv_override):
+            raise FileNotFoundError(f"CSV override not found: {csv_override}")
+        df = load_unified(pd, csv_override)
+        return df, os.path.abspath(csv_override)
+
+    if symbol_upper == "QQQ":
+        default_csv = "unified_nasdaq.csv"
+        if os.path.exists(default_csv):
+            df = load_unified(pd, default_csv)
+            return df, os.path.abspath(default_csv)
+
+    cache_name = f"{symbol_upper}.csv"
+    cache_path = os.path.join(SYMBOL_DATA_DIR, cache_name)
+    if os.path.exists(cache_path):
+        df = load_unified(pd, cache_path)
+        return df, os.path.abspath(cache_path)
+
+    df = download_symbol_history(pd, symbol_upper)
+    os.makedirs(SYMBOL_DATA_DIR, exist_ok=True)
+    df_to_save = df.copy()
+    df_to_save.index.name = "date"
+    df_to_save.to_csv(cache_path)
+    return df, os.path.abspath(cache_path)
+
+
+def download_symbol_history(pd, symbol: str):
+    try:
+        import yfinance as yf  # type: ignore
+    except ImportError as exc:  # pragma: no cover - exercised via runtime usage
+        raise RuntimeError(
+            "yfinance is required to download price history for non-QQQ symbols"
+        ) from exc
+
+    data = yf.download(symbol, period="max", auto_adjust=True, progress=False)
+    if data.empty:
+        raise RuntimeError(f"No price data returned for symbol {symbol}")
+
+    close_series = None
+    if isinstance(data.columns, pd.MultiIndex):
+        level0 = data.columns.get_level_values(0)
+        for key in ("Adj Close", "Close"):
+            if key in level0:
+                slice_df = data.xs(key, axis=1, level=0)
+                if isinstance(slice_df, pd.DataFrame):
+                    close_series = slice_df.iloc[:, 0]
+                else:
+                    close_series = slice_df
+                break
+    else:
+        for key in ("Adj Close", "Close"):
+            if key in data.columns:
+                close_series = data[key]
+                break
+
+    if close_series is None:
+        raise RuntimeError(f"Downloaded data for {symbol} does not contain Close/Adj Close columns")
+
+    series = close_series.astype(float).copy()
+    series = series.dropna()
+    df = pd.DataFrame({"close": series})
+    df.index = pd.to_datetime(df.index)
+    if getattr(df.index, "tz", None) is not None:
+        df.index = df.index.tz_localize(None)
+    df = df.sort_index()
+    df = df[~df.index.duplicated(keep="first")]
+    df = df[df.index.notna()]
+    df = df[df["close"] > 0]
+    if df.empty:
+        raise RuntimeError(f"No valid price rows for symbol {symbol}")
+    return df
+
+
+def ensure_temperature_assets(pd, np, plt, symbol: str, df_full, *, thresh2=0.35, thresh3=0.15):
+    """Return temperature fit parameters, caching them alongside diagnostic plots."""
+
+    os.makedirs(TEMPERATURE_CACHE_DIR, exist_ok=True)
+    symbol_upper = symbol.upper()
+    cache_path = os.path.join(TEMPERATURE_CACHE_DIR, f"{symbol_upper}.json")
+
+    data_start = pd.Timestamp(df_full.index.min()).normalize().date().isoformat()
+    data_end = pd.Timestamp(df_full.index.max()).normalize().date().isoformat()
+    rows = int(df_full.shape[0])
+
+    cached = None
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path, "r", encoding="utf-8") as fh:
+                cached = json.load(fh)
+            if not (
+                cached.get("data_start") == data_start
+                and cached.get("data_end") == data_end
+                and cached.get("rows") == rows
+                and float(cached.get("thresh2", thresh2)) == float(thresh2)
+                and float(cached.get("thresh3", thresh3)) == float(thresh3)
+            ):
+                cached = None
+        except Exception:
+            cached = None
+
+    if cached:
+        start_ts = pd.to_datetime(cached["start_ts"])
+        A = float(cached["A"])
+        r = float(cached["r"])
+        # Regenerate plots if they were removed
+        curve_png = cached.get("curve_plot")
+        temp_png = cached.get("temperature_plot")
+        regenerate_curve = curve_png and not os.path.exists(curve_png)
+        regenerate_temp = temp_png and not os.path.exists(temp_png)
+        if regenerate_curve or regenerate_temp:
+            curve_png, temp_png = save_temperature_plots(
+                pd,
+                np,
+                plt,
+                symbol_upper,
+                df_full,
+                A,
+                r,
+                start_ts,
+                force_curve=regenerate_curve,
+                force_temp=regenerate_temp,
+            )
+            cached["curve_plot"] = curve_png
+            cached["temperature_plot"] = temp_png
+            with open(cache_path, "w", encoding="utf-8") as fh:
+                json.dump(cached, fh, indent=2, sort_keys=True)
+        return A, r, start_ts
+
+    start_ts = pd.Timestamp(df_full.index.min())
+    t_years = (df_full.index - start_ts).days / 365.25
+    prices = df_full["close"].to_numpy()
+
+    t_array = t_years.to_numpy() if hasattr(t_years, "to_numpy") else t_years
+    _, _, step3 = curve_iterative_fit(np, t_array, prices, thresholds=[thresh2, thresh3])
+    A3, r3, _ = step3
+    A = float(A3)
+    r = float(r3)
+
+    curve_png, temp_png = save_temperature_plots(
+        pd,
+        np,
+        plt,
+        symbol_upper,
+        df_full,
+        A,
+        r,
+        start_ts,
+    )
+
+    payload = {
+        "symbol": symbol_upper,
+        "A": A,
+        "r": r,
+        "start_ts": pd.Timestamp(start_ts).isoformat(),
+        "data_start": data_start,
+        "data_end": data_end,
+        "rows": rows,
+        "thresh2": float(thresh2),
+        "thresh3": float(thresh3),
+        "curve_plot": curve_png,
+        "temperature_plot": temp_png,
+    }
+    with open(cache_path, "w", encoding="utf-8") as fh:
+        json.dump(payload, fh, indent=2, sort_keys=True)
+
+    return A, r, start_ts
+
+
+def save_temperature_plots(
+    pd,
+    np,
+    plt,
+    symbol_upper: str,
+    df_full,
+    A: float,
+    r: float,
+    start_ts,
+    *,
+    force_curve: bool = True,
+    force_temp: bool = True,
+):
+    """Persist the curve-fit and temperature PNG diagnostics for the symbol."""
+
+    curve_name = "fit_constant_growth.png"
+    temp_name = "nasdaq_temperature.png"
+    if symbol_upper != "QQQ":
+        curve_name = f"fit_constant_growth_{symbol_upper}.png"
+        temp_name = f"temperature_{symbol_upper}.png"
+
+    curve_path = os.path.abspath(curve_name)
+    temp_path = os.path.abspath(temp_name)
+
+    t_years = (df_full.index - start_ts).days / 365.25
+    pred = A * np.power(1.0 + r, t_years)
+    temp = df_full["close"].to_numpy() / pred
+
+    if force_curve:
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.semilogy(df_full.index, df_full["close"], label=f"{symbol_upper} price", color="#1f77b4", alpha=0.7)
+        ax.semilogy(df_full.index, pred, label="Fitted constant growth", color="#d62728")
+        ax.set_title(f"{symbol_upper} Constant-Growth Fit")
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Close (log scale)")
+        ax.grid(True, which="both", linestyle=":", alpha=0.4)
+        ax.legend(loc="upper left")
+        text = f"A (start): {A:.4f}\nAnnual growth: {r * 100.0:.2f}%"
+        ax.text(
+            0.02,
+            0.98,
+            text,
+            transform=ax.transAxes,
+            va="top",
+            ha="left",
+            bbox=dict(boxstyle="round", facecolor="white", alpha=0.8),
+        )
+        fig.tight_layout()
+        fig.savefig(curve_path, dpi=150)
+        plt.close(fig)
+
+    if force_temp:
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.plot(df_full.index, temp, label="Temperature", color="black")
+        ax.axhline(1.0, color="gray", linestyle="-", alpha=0.8)
+        ax.axhline(1.5, color="gray", linestyle=":", alpha=0.7)
+        ax.axhline(0.5, color="gray", linestyle=":", alpha=0.7)
+        ax.set_title(f"{symbol_upper} Temperature (Actual / Fitted)")
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Temperature (ratio)")
+        ax.grid(True, linestyle=":", alpha=0.4)
+        ax.legend(loc="upper left")
+        fig.tight_layout()
+        fig.savefig(temp_path, dpi=150)
+        plt.close(fig)
+
+    return curve_path, temp_path
+
+
+def compute_temperature_series(
+    pd,
+    np,
+    df,
+    csv_path: str = "unified_nasdaq.csv",
+    model_params: Optional[tuple[float, float, object]] = None,
+):
+    """Compute temperature series using cached parameters or by fitting a CSV."""
+
+    if model_params is None:
+        from nasdaq_temperature import NasdaqTemperature  # type: ignore
+
+        model = NasdaqTemperature(csv_path=csv_path)
+        A = float(model.A)
+        r = float(model.r)
+        start_ts = pd.to_datetime(model.start_ts)
+    else:
+        A, r, start_ts = model_params
+        A = float(A)
+        r = float(r)
+        start_ts = pd.to_datetime(start_ts)
+
     t_years = (df.index - start_ts).days / 365.25
-    pred = model.A * np.power(1.0 + model.r, t_years)
+    pred = A * np.power(1.0 + r, t_years)
     temp = df["close"].to_numpy() / pred
-    return temp, model.A, model.r, start_ts
+    return temp, A, r, start_ts
 
 
 def target_allocation_from_temperature(T: float) -> float:
@@ -1794,7 +2074,16 @@ EXPERIMENTS["A32"] = {
 
 def main():
     parser = argparse.ArgumentParser(description="Simulate TQQQ+reserve strategy with temperature & filters")
-    parser.add_argument("--csv", default="unified_nasdaq.csv", help="Unified dataset CSV path")
+    parser.add_argument(
+        "--base-symbol",
+        default="QQQ",
+        help="Underlying symbol/index used for the leverage sleeve (default QQQ)",
+    )
+    parser.add_argument(
+        "--csv",
+        default=None,
+        help="Optional CSV path with date/close columns (defaults to unified_nasdaq.csv for QQQ)",
+    )
     parser.add_argument("--start", default=None, help="Start date (YYYY-MM-DD) inclusive")
     parser.add_argument("--end", default="2025-01-10", help="End date (YYYY-MM-DD) inclusive")
     parser.add_argument("--fred-series", default="FEDFUNDS", help="FRED rate series (default FEDFUNDS)")
@@ -1827,21 +2116,34 @@ def main():
     parser.add_argument("--debug-csv", default=None, help="If set, write rebalance debug CSV to this path (default strategy_tqqq_reserve_debug.csv if a debug range is provided)")
     parser.add_argument("--no-show", action="store_true")
     args = parser.parse_args()
+    base_symbol = args.base_symbol.upper()
     experiment = args.experiment.upper()
     config = EXPERIMENTS[experiment]
 
     # Ensure saved plot filenames include the experiment name.
     # If no path provided, default to a strategy-specific filename in repo root.
+    def ensure_suffix(root: str, token: str) -> str:
+        lower_root = root.lower()
+        token_lower = token.lower()
+        if lower_root.endswith(f"_{token_lower}") or lower_root.endswith(f"-{token_lower}") or lower_root.endswith(
+            f".{token_lower}"
+        ):
+            return root
+        return f"{root}_{token}"
+
     if args.save_plot:
         root, ext = os.path.splitext(args.save_plot)
-        # Only append if not already suffixed by the experiment token
-        if not (root.endswith(f"_{experiment}") or root.endswith(f"-{experiment}") or root.endswith(f".{experiment}")):
-            args.save_plot = f"{root}_{experiment}{ext}"
+        if base_symbol != "QQQ":
+            root = ensure_suffix(root, base_symbol)
+        root = ensure_suffix(root, experiment)
+        args.save_plot = f"{root}{ext}"
     else:
-        args.save_plot = f"strategy_tqqq_reserve_{experiment}.png"
+        prefix = "strategy_tqqq_reserve" if base_symbol == "QQQ" else f"strategy_{base_symbol.lower()}_reserve"
+        args.save_plot = f"{prefix}_{experiment}.png"
 
     pd, np, plt = import_libs()
-    df = load_unified(pd, args.csv)
+    df_full, price_source = load_symbol_history(pd, base_symbol, csv_override=args.csv)
+    df = df_full.copy()
     if args.start:
         start_filter_ts = pd.to_datetime(args.start)
         df = df.loc[df.index >= start_filter_ts]
@@ -1883,8 +2185,15 @@ def main():
     macro["yc_change_22"] = macro["yc_spread"].diff(22)
     macro["credit_change_22"] = macro["credit_spread"].diff(22)
 
-    # Temperature series
-    temp, A, r, fit_start_ts = compute_temperature_series(pd, np, df, csv_path=args.csv)
+    # Temperature series (fit cached per symbol)
+    A_fit, r_fit, fit_start_ts_full = ensure_temperature_assets(pd, np, plt, base_symbol, df_full)
+    temp, A, r, fit_start_ts = compute_temperature_series(
+        pd,
+        np,
+        df,
+        csv_path=price_source,
+        model_params=(A_fit, r_fit, fit_start_ts_full),
+    )
     df["temp"] = temp
     df["temp_ch_11"] = df["temp"] / df["temp"].shift(11) - 1.0
     df["temp_ch_22"] = df["temp"] / df["temp"].shift(21) - 1.0
@@ -2504,9 +2813,10 @@ def main():
     # Plot
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 8), sharex=True)
 
-    ax1.plot(df.index, unified_norm, label="Unified (normalized)", color="#1f77b4", alpha=0.7)
+    underlying_label = "Unified Nasdaq" if base_symbol == "QQQ" else f"{base_symbol} price"
+    ax1.plot(df.index, unified_norm, label=f"{underlying_label} (normalized)", color="#1f77b4", alpha=0.7)
     ax1.plot(df.index, strategy_norm, label=f"Strategy (CAGR {cagr*100.0:.2f}%)", color="#d62728")
-    ax1.set_title("Unified Nasdaq vs Strategy Portfolio Value (start=1.0)")
+    ax1.set_title(f"{underlying_label} vs Strategy Portfolio Value (start=1.0)")
     ax1.set_yscale("log")
     ax1.set_ylabel("Value (normalized, log)")
     ax1.grid(True, linestyle=":", alpha=0.4)
@@ -2516,7 +2826,8 @@ def main():
     ax2.axhline(1.0, color="gray", linestyle="-", alpha=0.8)
     ax2.axhline(1.5, color="gray", linestyle=":", alpha=0.7)
     ax2.axhline(0.5, color="gray", linestyle=":", alpha=0.7)
-    ax2.plot(df.index, deployed_p, label="Proportion in TQQQ", color="green", alpha=0.8)
+    exposure_label = "TQQQ" if base_symbol == "QQQ" else f"leveraged {base_symbol}"
+    ax2.plot(df.index, deployed_p, label=f"Proportion in {exposure_label}", color="green", alpha=0.8)
     ax2.set_title("Temperature and Deployment")
     ax2.set_xlabel("Date")
     ax2.set_ylabel("T, deployment (0-1)")
@@ -2564,7 +2875,15 @@ def main():
     if (args.debug_start or args.debug_end) and len(debug_rows) > 0:
         debug_df = pd.DataFrame(debug_rows)
         debug_df = debug_df.sort_values("date")
-        debug_path = args.debug_csv if args.debug_csv else "strategy_tqqq_reserve_debug.csv"
+        if args.debug_csv:
+            debug_path = args.debug_csv
+        else:
+            default_debug = (
+                "strategy_tqqq_reserve_debug.csv"
+                if base_symbol == "QQQ"
+                else f"strategy_{base_symbol.lower()}_reserve_debug.csv"
+            )
+            debug_path = default_debug
         debug_df.to_csv(debug_path, index=False)
     if not args.no_show:
         plt.show()

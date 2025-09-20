@@ -1,2 +1,4 @@
 __pycache__/
 *.pyc
+symbol_data/
+temperature_cache/
