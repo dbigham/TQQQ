@@ -61,9 +61,10 @@ Key capabilities include:
 
 6. **Run the TQQQ + reserve strategy**:
    ```bash
-   python strategy_tqqq_reserve.py --csv unified_nasdaq.csv --experiment A36 --save-plot strategy_tqqq_reserve.png
+   python strategy_tqqq_reserve.py --base-symbol QQQ --csv unified_nasdaq.csv --experiment A36 --save-plot strategy_tqqq_reserve.png
    ```
    By default the CLI executes experiment **A36 – High-Leverage Ramp**, produces two diagnostic plots, and prints summary metrics such as CAGR and rebalance activity; pass `--print-rebalances` or the debug flags to emit detailed trade logs and a per-day CSV for deeper analysis. The helper `analyze_strategy_debug.py` can then surface deployment statistics and rule violations from a debug dump.
+   Provide a different `--base-symbol` (for example `SPY`, `BTC-USD`, `NVDA`) to drive the strategy with another asset. When a non-QQQ base is requested the script downloads the adjusted history via Yahoo Finance, caches it under `symbol_data/`, and stores the fitted temperature parameters plus diagnostic PNGs for reuse.
 
 ## Strategy Experiments
 Strategy configurations are encapsulated in the `EXPERIMENTS` dictionary so features such as cold-temperature leverage boosts, hot-momentum overlays, macro filters, leverage ladders, and rate tapers can be combined without cluttering the core simulation loop. Each entry corresponds to an experiment documented in depth in `EXPERIMENTS.md`, which traces the evolution from the baseline A1 configuration (~29.7% CAGR) to the current A36 high-leverage variant (~45.31% CAGR through 2025‑01‑10). Use `--experiment A#` on the CLI to reproduce any particular configuration.
@@ -93,6 +94,8 @@ Running the pipeline produces a small set of persisted assets:
 - `unified_nasdaq.csv` – unified adjusted closes with their source segment (`QQQ`, `NDX_scaled`, `IXIC_scaled`, etc.).
 - `unified_nasdaq_meta.json` – seam dates, scaling multipliers, and endpoint levels for the unified series, useful when sharing or rerunning analyses.
 - Optional PNG/CSV outputs from the simulators and strategy runs (examples are checked in for reference).
+- `symbol_data/` – cached auto-adjusted closes for any non-QQQ symbols requested by the strategy CLI.
+- `temperature_cache/` – JSON metadata plus PNG diagnostics for per-symbol temperature fits generated on demand.
 
 Because upstream providers revise historical adjustments, re-running `build_unified_nasdaq.py` periodically will refresh the data with updated values; the metadata file records the seam factors applied in each run for transparency.
 
