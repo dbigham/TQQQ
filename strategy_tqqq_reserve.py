@@ -346,14 +346,15 @@ def save_temperature_plots(
 ):
     """Persist the curve-fit and temperature PNG diagnostics for the symbol."""
 
-    curve_name = "fit_constant_growth.png"
-    temp_name = "nasdaq_temperature.png"
-    if symbol_upper != "QQQ":
-        curve_name = f"fit_constant_growth_{symbol_upper}.png"
-        temp_name = f"temperature_{symbol_upper}.png"
+    # Put artifacts in per-symbol directory
+    symbol_dir = "qqq" if symbol_upper == "QQQ" else symbol_upper.lower()
+    os.makedirs(symbol_dir, exist_ok=True)
 
-    curve_path = os.path.abspath(curve_name)
-    temp_path = os.path.abspath(temp_name)
+    curve_name = "fit_constant_growth.png" if symbol_upper == "QQQ" else f"fit_constant_growth_{symbol_upper}.png"
+    temp_name = "nasdaq_temperature.png" if symbol_upper == "QQQ" else f"temperature_{symbol_upper}.png"
+
+    curve_path = os.path.abspath(os.path.join(symbol_dir, curve_name))
+    temp_path = os.path.abspath(os.path.join(symbol_dir, temp_name))
 
     t_years = (df_full.index - start_ts).days / 365.25
     pred = A * np.power(1.0 + r, t_years)
@@ -2133,15 +2134,22 @@ def main():
             return root
         return f"{root}_{token}"
 
+    # Determine per-symbol artifact directory
+    symbol_dir = "qqq" if base_symbol == "QQQ" else base_symbol.lower()
+    os.makedirs(symbol_dir, exist_ok=True)
+
     if args.save_plot:
         root, ext = os.path.splitext(args.save_plot)
+        # If caller didn't specify a directory, write into the per-symbol dir
+        if not os.path.dirname(root):
+            root = os.path.join(symbol_dir, os.path.basename(root))
         if base_symbol != "QQQ":
             root = ensure_suffix(root, base_symbol)
         root = ensure_suffix(root, experiment)
         args.save_plot = f"{root}{ext}"
     else:
-        prefix = "strategy_tqqq_reserve" if base_symbol == "QQQ" else f"strategy_{base_symbol.lower()}_reserve"
-        args.save_plot = f"{prefix}_{experiment}.png"
+        prefix = "strategy_qqq_reserve" if base_symbol == "QQQ" else f"strategy_{base_symbol.lower()}_reserve"
+        args.save_plot = os.path.join(symbol_dir, f"{prefix}_{experiment}.png")
 
     pd, np, plt = import_libs()
     df_full, price_source = load_symbol_history(pd, base_symbol, csv_override=args.csv)
@@ -2885,11 +2893,13 @@ def main():
             debug_path = args.debug_csv
         else:
             default_debug = (
-                "strategy_tqqq_reserve_debug.csv"
+                "strategy_qqq_reserve_debug.csv"
                 if base_symbol == "QQQ"
                 else f"strategy_{base_symbol.lower()}_reserve_debug.csv"
             )
-            debug_path = default_debug
+            symbol_dir = "qqq" if base_symbol == "QQQ" else base_symbol.lower()
+            os.makedirs(symbol_dir, exist_ok=True)
+            debug_path = os.path.join(symbol_dir, default_debug)
         debug_df.to_csv(debug_path, index=False)
     if not args.no_show:
         plt.show()
