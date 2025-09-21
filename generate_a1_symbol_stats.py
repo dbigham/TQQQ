@@ -45,6 +45,8 @@ class ExperimentSpec:
     identifier: str
     output_path: str
     variable_name: str
+    cagr_key: str
+    include_strategy_alias: bool = True
 
 
 SYMBOLS: List[SymbolInfo] = [
@@ -154,8 +156,8 @@ SYMBOLS: List[SymbolInfo] = [
 assert len(SYMBOLS) == 100, f"Expected 100 symbols, got {len(SYMBOLS)}"
 
 EXPERIMENT_SPECS: List[ExperimentSpec] = [
-    ExperimentSpec("A1", "a1_symbol_stats.py", "A1_SYMBOL_STATS"),
-    ExperimentSpec("A1g", "a1g_symbol_stats.py", "A1G_SYMBOL_STATS"),
+    ExperimentSpec("A1", "a1_symbol_stats.py", "A1_SYMBOL_STATS", "A1_CAGR", True),
+    ExperimentSpec("A1g", "a1g_symbol_stats.py", "A1G_SYMBOL_STATS", "A1G_CAGR", True),
 ]
 
 EXPERIMENT_LOOKUP = {spec.identifier: spec for spec in EXPERIMENT_SPECS}
@@ -426,7 +428,7 @@ def ensure_assets(symbol: str, experiment: str) -> Dict[str, float]:
 
 
 def build_stats(
-    experiment: str,
+    spec: ExperimentSpec,
     *,
     price_cache: Dict[str, pd.DataFrame] | None = None,
     fit_quality_cache: Dict[str, float] | None = None,
@@ -440,7 +442,7 @@ def build_stats(
         baseline_stats = {}
     stats_rows = []
     for info in SYMBOLS:
-        metrics = ensure_assets(info.symbol, experiment)
+        metrics = ensure_assets(info.symbol, spec.identifier)
         baseline_entry = baseline_stats.get(info.symbol, {})
         price_df = price_cache.get(info.symbol)
         if price_df is None:
@@ -467,6 +469,12 @@ def build_stats(
                 fit_quality_cache[info.symbol] = fit_quality
         if fit_quality is None:
             fit_quality = baseline_entry.get("Fit_Quality")
+        strategy_cagr = metrics.get("strategy_cagr")
+        if strategy_cagr is None:
+            strategy_cagr = baseline_entry.get(spec.cagr_key)
+        if strategy_cagr is None:
+            strategy_cagr = baseline_entry.get("Strategy_CAGR")
+        metrics["strategy_cagr"] = strategy_cagr
         chart_path = metrics.get("strategy_chart_path")
         if (not chart_path) and baseline_entry.get("Strategy_Chart_Path"):
             metrics["strategy_chart_path"] = baseline_entry.get("Strategy_Chart_Path")
@@ -505,6 +513,7 @@ def build_stats(
             },
             "Symbol_CAGR": metrics.get("symbol_cagr"),
             "Fitted_CAGR": metrics.get("fitted_cagr"),
+            spec.cagr_key: metrics.get("strategy_cagr"),
             "Strategy_CAGR": metrics.get("strategy_cagr"),
             "Max_Drawdown": metrics.get("max_drawdown"),
             "Rebalances": metrics.get("rebalances"),
@@ -515,6 +524,8 @@ def build_stats(
             "PEG_Ratio_As_Of": metrics.get("peg_ratio_as_of"),
             "Strategy_Chart_Path": metrics.get("strategy_chart_path"),
         }
+        if not spec.include_strategy_alias:
+            ordered[info.symbol].pop("Strategy_CAGR", None)
     return ordered
 
 
@@ -524,36 +535,48 @@ def format_float(val: float | None) -> float | None:
     return float(round(val, 6))
 
 
-def write_output(stats: OrderedDict, path: str, variable_name: str) -> None:
-    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+def write_output(spec: ExperimentSpec, stats: OrderedDict) -> None:
+    path = spec.output_path
+    os.makedirs(os.path.dirname(path) or '.', exist_ok=True)
     lines: List[str] = []
-    lines.append(f"{variable_name} = {{")
+    lines.append(f"{spec.variable_name} = {{")
     for symbol, data in stats.items():
-        lines.append(f"    \"{symbol}\": {{")
-        lines.append(f"        \"Symbol\": \"{data['Symbol']}\",")
-        lines.append(f"        \"Name\": \"{data['Name']}\",")
-        lines.append(f"        \"Description\": \"{data['Description']}\",")
+        lines.append(f'    "{symbol}": {{')
+        lines.append(f'        "Symbol": "{data["Symbol"]}",')
+        lines.append(f'        "Name": "{data["Name"]}",')
+        lines.append(f'        "Description": "{data["Description"]}",')
         span = data.get("Span") or {}
-        lines.append("        \"Span\": {")
-        lines.append(f"            \"Start\": {repr(span.get('Start'))},")
-        lines.append(f"            \"End\": {repr(span.get('End'))},")
+        lines.append('        "Span": {')
+        lines.append(f'            "Start": {repr(span.get("Start"))},')
+        lines.append(f'            "End": {repr(span.get("End"))},')
         years_val = span.get("Years")
         years_repr = "None" if years_val is None else f"{round(years_val, 2)}"
-        lines.append(f"            \"Years\": {years_repr},")
-        lines.append("        },")
-        for key in [
+        lines.append(f'            "Years": {years_repr},')
+        lines.append('        },')
+        value_keys = [
             "Symbol_CAGR",
             "Fitted_CAGR",
-            "Strategy_CAGR",
-            "Max_Drawdown",
-            "Rebalances",
-            "Fit_Quality",
-            "PE_Ratio",
-            "PE_Ratio_As_Of",
-            "PEG_Ratio",
-            "PEG_Ratio_As_Of",
-            "Strategy_Chart_Path",
-        ]:
+            spec.cagr_key,
+        ]
+        if spec.include_strategy_alias and spec.cagr_key != "Strategy_CAGR":
+            value_keys.append("Strategy_CAGR")
+        value_keys.extend(
+            [
+                "Max_Drawdown",
+                "Rebalances",
+                "Fit_Quality",
+                "PE_Ratio",
+                "PE_Ratio_As_Of",
+                "PEG_Ratio",
+                "PEG_Ratio_As_Of",
+                "Strategy_Chart_Path",
+            ]
+        )
+        seen_keys = set()
+        for key in value_keys:
+            if key in seen_keys:
+                continue
+            seen_keys.add(key)
             val = data.get(key)
             if isinstance(val, (int, float)) and not isinstance(val, bool):
                 val_fmt = format_float(float(val))
@@ -567,11 +590,12 @@ def write_output(stats: OrderedDict, path: str, variable_name: str) -> None:
                 val_str = f"{val_fmt}"
             else:
                 val_str = repr(val_fmt)
-            lines.append(f"        \"{key}\": {val_str},")
-        lines.append("    },")
-    lines.append("}")
-    with open(path, "w", encoding="utf-8") as fh:
+            lines.append(f'        "{key}": {val_str},')
+        lines.append('    },')
+    lines.append('}')
+    with open(path, 'w', encoding='utf-8') as fh:
         fh.write("\n".join(lines))
+
 
 
 def main(argv: List[str] | None = None) -> None:
@@ -606,12 +630,12 @@ def main(argv: List[str] | None = None) -> None:
     for spec in selected_specs:
         print(f"Building {spec.identifier} symbol stats ...")
         stats = build_stats(
-            spec.identifier,
+            spec,
             price_cache=price_cache,
             fit_quality_cache=fit_quality_cache,
             baseline_stats=baseline_for_next,
         )
-        write_output(stats, spec.output_path, spec.variable_name)
+        write_output(spec, stats)
         baseline_for_next = stats
 
 
