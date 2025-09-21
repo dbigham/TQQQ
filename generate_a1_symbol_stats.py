@@ -337,7 +337,8 @@ def ensure_assets(symbol: str, experiment: str) -> Dict[str, float]:
     # Expected standard asset paths
     summary_path = os.path.join(symbol_dir, f"{folder_name}_{experiment}_summary.md")
     prefix = "strategy_qqq_reserve" if symbol_upper == "QQQ" else f"strategy_{folder_name}_reserve"
-    plot_path = os.path.join(symbol_dir, f"{prefix}_{experiment}.png")
+    plot_filename = f"{prefix}_{experiment}.png"
+    plot_path = os.path.join(symbol_dir, plot_filename)
     csv_path = os.path.join(symbol_dir, f"{prefix}_{experiment}.csv")
     curve_name = "fit_constant_growth.png" if symbol_upper == "QQQ" else f"fit_constant_growth_{symbol_upper}.png"
     temp_name = "nasdaq_temperature.png" if symbol_upper == "QQQ" else f"temperature_{symbol_upper}.png"
@@ -379,6 +380,8 @@ def ensure_assets(symbol: str, experiment: str) -> Dict[str, float]:
     metrics = parse_summary(summary_path)
     metrics.setdefault("pe_ratio", pe_ratio.value)
     metrics.setdefault("pe_ratio_as_of", pe_ratio.as_of)
+    relative_plot_path = os.path.normpath(plot_path).replace(os.sep, "/")
+    metrics["strategy_chart_path"] = relative_plot_path
     return metrics
 
 
@@ -424,6 +427,9 @@ def build_stats(
                 fit_quality_cache[info.symbol] = fit_quality
         if fit_quality is None:
             fit_quality = baseline_entry.get("Fit_Quality")
+        chart_path = metrics.get("strategy_chart_path")
+        if (not chart_path) and baseline_entry.get("Strategy_Chart_Path"):
+            metrics["strategy_chart_path"] = baseline_entry.get("Strategy_Chart_Path")
         if symbol_cagr is not None and not (
             isinstance(symbol_cagr, float) and math.isnan(symbol_cagr)
         ):
@@ -461,6 +467,7 @@ def build_stats(
             "Fit_Quality": metrics.get("fit_quality"),
             "PE_Ratio": metrics.get("pe_ratio"),
             "PE_Ratio_As_Of": metrics.get("pe_ratio_as_of"),
+            "Strategy_Chart_Path": metrics.get("strategy_chart_path"),
         }
     return ordered
 
@@ -497,6 +504,7 @@ def write_output(stats: OrderedDict, path: str, variable_name: str) -> None:
             "Fit_Quality",
             "PE_Ratio",
             "PE_Ratio_As_Of",
+            "Strategy_Chart_Path",
         ]:
             val = data.get(key)
             if isinstance(val, (int, float)) and not isinstance(val, bool):
