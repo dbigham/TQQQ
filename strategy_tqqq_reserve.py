@@ -1413,6 +1413,44 @@ EXPERIMENTS["GOOG2X"] = {
 }
 EXPERIMENTS["GOOG2x"] = {**EXPERIMENTS["GOOG2X"]}
 
+# TESLA2X calibrates the A1g heuristics for Tesla with a 2x leveraged sleeve
+EXPERIMENTS["TESLA2X"] = {
+    "temperature_allocation": [
+        {"temp": 0.8201083581673381, "allocation": 1.5},
+        {"temp": 1.0, "allocation": 0.45},
+        {"temp": 1.5570503465488417, "allocation": 0.31375185711100995},
+    ],
+    "momentum_filters": {
+        "buy": {
+            "ret3": -0.05979094145328703,
+            "ret6": 0.0077659670035262855,
+            "ret12": -0.007855066600683148,
+            "ret22": 0.004182532001556824,
+            "temp": 1.1949920627986395,
+        },
+        "sell": {
+            "ret3": 0.03784157366662905,
+            "ret6": 0.03830890778260611,
+            "ret12": 0.021650430917415163,
+            "ret22": 0.012962137714778287,
+        },
+    },
+    "rate_taper": {
+        "start": 10.438350002489097,
+        "end": 12.991363019945322,
+        "min_allocation": 0.15849329602147574,
+        "enabled": True,
+    },
+    "crash_derisk": {
+        "enabled": False,
+        "threshold": None,
+        "cooldown_days": 22,
+    },
+    "rebalance_days": 22,
+    "leverage_override": 2.0,
+}
+EXPERIMENTS["TESLA2x"] = {**EXPERIMENTS["TESLA2X"]}
+
 # A5 builds on A4 with a macro risk-off filter
 EXPERIMENTS["A5"] = {
     **EXPERIMENTS["A4"],

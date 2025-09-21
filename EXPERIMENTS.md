@@ -25,9 +25,19 @@ Builds directly on the A1g heuristics but re-optimises the anchors, momentum
 thresholds, and rate taper specifically for Alphabet (GOOGL) while simulating a
 2x leveraged sleeve (matching products such as GGLL). The focused search lifts
 GOOGL’s simulated CAGR to roughly **65.9%** with a 2x sleeve, compared with
-~42% for the unmodified A1g parameters at the same leverage.
+~42% for the unmodified A1g parameters at the same leverage. The configuration
+can be reproduced with `python optimize_leveraged_symbol.py --symbol GOOGL --leverage 2.0`.
 
 - **CAGR**: ~65.9% on GOOGL with 2x leverage (through 2025‑09‑19)
+
+## TESLA2x – Tesla 2x Baseline Optimiser
+Runs the generalised leveraged optimiser against Tesla (TSLA) and a 2x sleeve
+to better match geared products like TSLL. Tesla’s momentum characteristics
+differ markedly from the Nasdaq baseline, so the optimiser leans into deeper
+temperature discounts while keeping a higher minimum allocation when the market
+heats up. Invoke it with `python optimize_leveraged_symbol.py --symbol TSLA --leverage 2.0`.
+
+- **CAGR**: ~91.9% on TSLA with 2x leverage (through 2025‑09‑19)
 
 ## A2 – Cold Leverage Boost
 Adds a "cold leverage" rule that increases TQQQ exposure by 20% (capped at 120%) when
