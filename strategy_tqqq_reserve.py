@@ -83,6 +83,7 @@ import re
 from typing import Mapping, Optional, Sequence
 
 from tqqq import fetch_fred_series as download_fred_series
+from tqqq import ensure_pe_ratio
 from tqqq import iterative_constant_growth, load_price_csv
 
 
@@ -3087,6 +3088,8 @@ def main():
         # Rebalance count
         rebalance_count = int(len(rebalance_entries))
 
+        pe_ratio = ensure_pe_ratio(symbol_upper, symbol_dir)
+
         with open(summary_path, "w", encoding="utf-8") as fh:
             fh.write(f"# {symbol_upper} – Strategy {args.experiment} Summary\n\n")
             fh.write(f"- **Span**: {df.index[0].date()} → {df.index[-1].date()} ({years:.2f} years)\n")
@@ -3095,6 +3098,7 @@ def main():
             fh.write(f"- **Strategy CAGR**: {cagr * 100.0:.2f}%\n")
             fh.write(f"- **Max drawdown**: {max_drawdown * 100.0:.2f}%\n")
             fh.write(f"- **Rebalances executed**: {rebalance_count}\n")
+            fh.write(pe_ratio.as_summary_line() + "\n")
             fh.write("\n")
             fh.write("Notes:\n\n")
             fh.write("- Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.\n")

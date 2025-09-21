@@ -6,6 +6,7 @@
 - **Strategy CAGR**: 29.39%
 - **Max drawdown**: -79.73%
 - **Rebalances executed**: 240
+- **P/E ratio (as of 2025-09-21)**: 34.42
 
 Notes:
 
