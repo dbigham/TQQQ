@@ -1,10 +1,15 @@
 {
-  "growth_rate": 0.92,
+  "growth_rate": 0.25334432855280314,
   "growth_rate_as_of": "2025-09-21",
+  "growth_rate_basis": "Next_5Y_EPS_CAGR",
+  "growth_rate_source": "derived_from_pe_and_peg",
+  "growth_rate_units": "percent",
   "pe_ratio": 23.317812,
   "pe_ratio_as_of": "2025-09-21",
+  "pe_ratio_basis": "Forward_NTM",
   "peg_ratio": 0.9204,
   "peg_ratio_as_of": "2025-09-21",
+  "peg_ratio_basis": "Forward_NTM / Next_5Y_EPS_CAGR (percent)",
   "source": "yfinance",
   "symbol": "AMGN"
 }

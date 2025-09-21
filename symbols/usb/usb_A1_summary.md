@@ -8,7 +8,7 @@
 - **Rebalances executed**: 200
 - **P/E ratio (as of 2025-09-21)**: 12.06
 - **PEG ratio (as of 2025-09-21)**: 1.68
-- **Current growth rate (as of 2025-09-21)**: 13.20%
+- **Current growth rate (as of 2025-09-21)**: 7.19%
 
 Notes:
 
