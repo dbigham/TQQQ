@@ -2335,6 +2335,11 @@ def main():
         action="store_true",
         help="Print a detailed log of executed rebalances",
     )
+    parser.add_argument(
+        "--disable-buy-temp-limit",
+        action="store_true",
+        help="Ignore temperature buy blocks so the strategy can add exposure regardless of T",
+    )
     parser.add_argument("--save-plot", default=None, help="If set, save output figure to this PNG path")
     parser.add_argument("--save-csv", default=None, help="If set, save daily debug CSV here")
     parser.add_argument(
@@ -2351,6 +2356,7 @@ def main():
     parser.add_argument("--debug-csv", default=None, help="If set, write rebalance debug CSV to this path (default strategy_tqqq_reserve_debug.csv if a debug range is provided)")
     parser.add_argument("--no-show", action="store_true")
     args = parser.parse_args()
+    disable_buy_temp_limit = bool(args.disable_buy_temp_limit)
     base_symbol = args.base_symbol.upper()
     experiment = args.experiment.upper()
     config = EXPERIMENTS[experiment]
@@ -2382,6 +2388,8 @@ def main():
     buy_ret12_limit_default = _threshold(buy_filter_cfg, "ret12", -0.02)
     buy_ret22_limit_default = _threshold(buy_filter_cfg, "ret22", 0.0)
     buy_temp_limit_default = _threshold(buy_filter_cfg, "temp", 1.3)
+    if disable_buy_temp_limit:
+        buy_temp_limit_default = None
 
     sell_ret3_limit_default = _threshold(sell_filter_cfg, "ret3", 0.03)
     sell_ret6_limit_default = _threshold(sell_filter_cfg, "ret6", 0.03)
@@ -2861,8 +2869,8 @@ def main():
                 limit_r6 = buy_ret6_limit_default
                 limit_r12 = buy_ret12_limit_default
                 limit_r22 = buy_ret22_limit_default
-                temp_limit = buy_temp_limit_default
-                if buy_relax_cfg:
+                temp_limit = None if disable_buy_temp_limit else buy_temp_limit_default
+                if not disable_buy_temp_limit and buy_relax_cfg:
                     temp_threshold_relax = float(buy_relax_cfg.get("temp_threshold", 0.85))
                     if T <= temp_threshold_relax:
                         if "r3_limit" in buy_relax_cfg:
@@ -2889,7 +2897,7 @@ def main():
                 trig_buy_r6 = (limit_r6 is not None and not math.isnan(r6) and r6 <= limit_r6)
                 trig_buy_r12 = (limit_r12 is not None and not math.isnan(r12) and r12 <= limit_r12)
                 trig_buy_r22 = (limit_r22 is not None and not math.isnan(r22) and r22 <= limit_r22)
-                trig_buy_T = (temp_limit is not None and T > temp_limit)
+                trig_buy_T = ((not disable_buy_temp_limit) and temp_limit is not None and T > temp_limit)
                 if trig_buy_r3 or trig_buy_r6 or trig_buy_r12 or trig_buy_r22 or trig_buy_T:
                     block_buy = True
                 block_buy_series[i] = 1 if block_buy else 0
@@ -3276,5 +3284,10 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
 
 
