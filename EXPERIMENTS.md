@@ -20,6 +20,15 @@ under A1 to **21.55%** while retaining the simple monthly rebalance cadence.
 
 - **CAGR**: varies by symbol; see `python optimize_a1_global.py` for the full table
 
+## GOOG2x – Google 2x Baseline Optimiser
+Builds directly on the A1g heuristics but re-optimises the anchors, momentum
+thresholds, and rate taper specifically for Alphabet (GOOGL) while simulating a
+2x leveraged sleeve (matching products such as GGLL). The focused search lifts
+GOOGL’s simulated CAGR to roughly **65.9%** with a 2x sleeve, compared with
+~42% for the unmodified A1g parameters at the same leverage.
+
+- **CAGR**: ~65.9% on GOOGL with 2x leverage (through 2025‑09‑19)
+
 ## A2 – Cold Leverage Boost
 Adds a "cold leverage" rule that increases TQQQ exposure by 20% (capped at 120%) when
 market temperature is below 0.8, interest rates are under 5%, and the 22‑day return is
