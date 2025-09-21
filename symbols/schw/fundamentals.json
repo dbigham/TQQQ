@@ -1,6 +1,10 @@
 {
-  "as_of": "2025-09-21",
+  "growth_rate": 0.596,
+  "growth_rate_as_of": "2025-09-21",
   "pe_ratio": 25.357527,
+  "pe_ratio_as_of": "2025-09-21",
+  "peg_ratio": 0.6971,
+  "peg_ratio_as_of": "2025-09-21",
   "source": "yfinance",
   "symbol": "SCHW"
 }

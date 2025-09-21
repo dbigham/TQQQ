@@ -1,6 +1,10 @@
 {
-  "as_of": "2025-09-21",
+  "growth_rate": 0.607,
+  "growth_rate_as_of": "2025-09-21",
   "pe_ratio": 28.665585,
+  "pe_ratio_as_of": "2025-09-21",
+  "peg_ratio": 1.3774,
+  "peg_ratio_as_of": "2025-09-21",
   "source": "yfinance",
   "symbol": "TSM"
 }

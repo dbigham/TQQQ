@@ -7,6 +7,8 @@
 - **Max drawdown**: -93.09%
 - **Rebalances executed**: 105
 - **P/E ratio (as of 2025-09-21)**: 26.75
+- **PEG ratio (as of 2025-09-21)**: 1.63
+- **Current growth rate (as of 2025-09-21)**: 17.90%
 
 Notes:
 

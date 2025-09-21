@@ -1,6 +1,10 @@
 {
-  "as_of": "2025-09-21",
+  "growth_rate": 4.678,
+  "growth_rate_as_of": "2025-09-21",
   "pe_ratio": 29.320719,
+  "pe_ratio_as_of": "2025-09-21",
+  "peg_ratio": 0.1758,
+  "peg_ratio_as_of": "2025-09-21",
   "source": "yfinance",
   "symbol": "MU"
 }

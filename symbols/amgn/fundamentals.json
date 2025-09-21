@@ -1,6 +1,10 @@
 {
-  "as_of": "2025-09-21",
+  "growth_rate": 0.92,
+  "growth_rate_as_of": "2025-09-21",
   "pe_ratio": 23.317812,
+  "pe_ratio_as_of": "2025-09-21",
+  "peg_ratio": 0.9204,
+  "peg_ratio_as_of": "2025-09-21",
   "source": "yfinance",
   "symbol": "AMGN"
 }

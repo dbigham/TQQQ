@@ -1,6 +1,10 @@
 {
-  "as_of": "2025-09-21",
+  "growth_rate": -0.22,
+  "growth_rate_as_of": "2025-09-21",
   "pe_ratio": 18.080322,
+  "pe_ratio_as_of": "2025-09-21",
+  "peg_ratio": -0.8218328181818181,
+  "peg_ratio_as_of": "2025-09-21",
   "source": "yfinance",
   "symbol": "BMY"
 }

@@ -19,7 +19,7 @@ from typing import Any, Dict, List
 import numpy as np
 import pandas as pd
 
-from tqqq import PERatio, ensure_pe_ratio
+from tqqq import Fundamentals, ensure_fundamentals
 
 try:
     from a1_symbol_stats import A1_SYMBOL_STATS as EXISTING_A1_STATS
@@ -165,7 +165,7 @@ SPAN_RE = re.compile(r"\- \*\*Span\*\*: (?P<start>\d{4}-\d{2}-\d{2}) → (?P<end
 NUMBER_RE = re.compile(r"-?\d+(?:\.\d+)?")
 
 
-def ensure_summary_pe_line(summary_path: str, pe_ratio: PERatio) -> None:
+def ensure_summary_fundamental_lines(summary_path: str, fundamentals: Fundamentals) -> None:
     if not os.path.exists(summary_path):
         return
     try:
@@ -174,16 +174,18 @@ def ensure_summary_pe_line(summary_path: str, pe_ratio: PERatio) -> None:
     except FileNotFoundError:
         return
 
-    desired = pe_ratio.as_summary_line().strip()
-    existing_idx = None
-    for idx, line in enumerate(lines):
-        if line.strip().startswith("- **P/E ratio"):
-            existing_idx = idx
-            break
-
-    if existing_idx is not None:
-        lines.pop(existing_idx)
-    line_to_insert = desired
+    prefixes = (
+        "- **P/E ratio",
+        "- **PEG ratio",
+        "- **Current growth rate",
+    )
+    cleaned_lines: List[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped and any(stripped.startswith(prefix) for prefix in prefixes):
+            continue
+        cleaned_lines.append(line)
+    lines = cleaned_lines
 
     insert_idx = None
     for idx, line in enumerate(lines):
@@ -195,10 +197,12 @@ def ensure_summary_pe_line(summary_path: str, pe_ratio: PERatio) -> None:
             if line.strip() == "":
                 insert_idx = idx
                 break
-    if insert_idx is None or insert_idx >= len(lines):
-        lines.append(line_to_insert)
-    else:
-        lines.insert(insert_idx, line_to_insert)
+    if insert_idx is None:
+        insert_idx = len(lines)
+
+    summary_lines = [line.strip() for line in fundamentals.summary_lines()]
+    for offset, new_line in enumerate(summary_lines):
+        lines.insert(insert_idx + offset, new_line)
 
     if lines and lines[-1] != "":
         lines.append("")
@@ -255,6 +259,16 @@ def parse_summary(summary_path: str) -> Dict[str, float]:
                     if date_match:
                         metrics["pe_ratio_as_of"] = date_match.group(1)
                     metrics["pe_ratio"] = None
+                elif "PEG ratio" in label:
+                    date_match = re.search(r"(\d{4}-\d{2}-\d{2})", label)
+                    if date_match:
+                        metrics["peg_ratio_as_of"] = date_match.group(1)
+                    metrics["peg_ratio"] = None
+                elif "Current growth rate" in label:
+                    date_match = re.search(r"(\d{4}-\d{2}-\d{2})", label)
+                    if date_match:
+                        metrics["growth_rate_as_of"] = date_match.group(1)
+                    metrics["growth_rate"] = None
                 continue
             value = float(number_match.group(0))
             if "Underlying" in label:
@@ -272,6 +286,16 @@ def parse_summary(summary_path: str) -> Dict[str, float]:
                 if date_match:
                     metrics["pe_ratio_as_of"] = date_match.group(1)
                 metrics["pe_ratio"] = value
+            elif "PEG ratio" in label:
+                date_match = re.search(r"(\d{4}-\d{2}-\d{2})", label)
+                if date_match:
+                    metrics["peg_ratio_as_of"] = date_match.group(1)
+                metrics["peg_ratio"] = value
+            elif "Current growth rate" in label:
+                date_match = re.search(r"(\d{4}-\d{2}-\d{2})", label)
+                if date_match:
+                    metrics["growth_rate_as_of"] = date_match.group(1)
+                metrics["growth_rate"] = value / 100.0
     if span_info:
         metrics["span_start"] = span_info["start"]
         metrics["span_end"] = span_info["end"]
@@ -374,12 +398,16 @@ def ensure_assets(symbol: str, experiment: str) -> Dict[str, float]:
         else:
             print(f"Assets already exist for {symbol}, skipping strategy rerun.")
 
-    pe_ratio = ensure_pe_ratio(symbol_upper, symbol_dir)
-    ensure_summary_pe_line(summary_path, pe_ratio)
+    fundamentals = ensure_fundamentals(symbol_upper, symbol_dir)
+    ensure_summary_fundamental_lines(summary_path, fundamentals)
 
     metrics = parse_summary(summary_path)
-    metrics.setdefault("pe_ratio", pe_ratio.value)
-    metrics.setdefault("pe_ratio_as_of", pe_ratio.as_of)
+    metrics.setdefault("pe_ratio", fundamentals.pe_ratio.value)
+    metrics.setdefault("pe_ratio_as_of", fundamentals.pe_ratio.as_of)
+    metrics.setdefault("peg_ratio", fundamentals.peg_ratio.value)
+    metrics.setdefault("peg_ratio_as_of", fundamentals.peg_ratio.as_of)
+    metrics.setdefault("growth_rate", fundamentals.growth_rate.value)
+    metrics.setdefault("growth_rate_as_of", fundamentals.growth_rate.as_of)
     relative_plot_path = os.path.normpath(plot_path).replace(os.sep, "/")
     metrics["strategy_chart_path"] = relative_plot_path
     return metrics
@@ -467,6 +495,10 @@ def build_stats(
             "Fit_Quality": metrics.get("fit_quality"),
             "PE_Ratio": metrics.get("pe_ratio"),
             "PE_Ratio_As_Of": metrics.get("pe_ratio_as_of"),
+            "PEG_Ratio": metrics.get("peg_ratio"),
+            "PEG_Ratio_As_Of": metrics.get("peg_ratio_as_of"),
+            "Growth_Rate": metrics.get("growth_rate"),
+            "Growth_Rate_As_Of": metrics.get("growth_rate_as_of"),
             "Strategy_Chart_Path": metrics.get("strategy_chart_path"),
         }
     return ordered
@@ -504,6 +536,10 @@ def write_output(stats: OrderedDict, path: str, variable_name: str) -> None:
             "Fit_Quality",
             "PE_Ratio",
             "PE_Ratio_As_Of",
+            "PEG_Ratio",
+            "PEG_Ratio_As_Of",
+            "Growth_Rate",
+            "Growth_Rate_As_Of",
             "Strategy_Chart_Path",
         ]:
             val = data.get(key)

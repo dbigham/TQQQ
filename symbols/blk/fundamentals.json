@@ -1,6 +1,10 @@
 {
-  "as_of": "2025-09-21",
+  "growth_rate": 0.066,
+  "growth_rate_as_of": "2025-09-21",
   "pe_ratio": 27.625092,
+  "pe_ratio_as_of": "2025-09-21",
+  "peg_ratio": 2.1124,
+  "peg_ratio_as_of": "2025-09-21",
   "source": "yfinance",
   "symbol": "BLK"
 }

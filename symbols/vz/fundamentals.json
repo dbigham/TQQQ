@@ -1,6 +1,10 @@
 {
-  "as_of": "2025-09-21",
+  "growth_rate": 0.089,
+  "growth_rate_as_of": "2025-09-21",
   "pe_ratio": 10.111628,
+  "pe_ratio_as_of": "2025-09-21",
+  "peg_ratio": 2.0544,
+  "peg_ratio_as_of": "2025-09-21",
   "source": "yfinance",
   "symbol": "VZ"
 }
