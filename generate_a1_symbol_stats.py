@@ -243,13 +243,14 @@ def compute_fit_quality(symbol: str, df: pd.DataFrame) -> float:
 
 def ensure_assets(symbol: str) -> Dict[str, float]:
     symbol_upper = symbol.upper()
-    symbol_dir = "qqq" if symbol_upper == "QQQ" else symbol.lower()
+    folder_name = "qqq" if symbol_upper == "QQQ" else symbol.lower()
+    symbol_dir = os.path.join("symbols", folder_name)
     os.makedirs(symbol_dir, exist_ok=True)
 
     # Expected standard asset paths
     experiment = "A1"
-    summary_path = os.path.join(symbol_dir, f"{symbol.lower()}_{experiment}_summary.md")
-    prefix = "strategy_qqq_reserve" if symbol_upper == "QQQ" else f"strategy_{symbol.lower()}_reserve"
+    summary_path = os.path.join(symbol_dir, f"{folder_name}_{experiment}_summary.md")
+    prefix = "strategy_qqq_reserve" if symbol_upper == "QQQ" else f"strategy_{folder_name}_reserve"
     plot_path = os.path.join(symbol_dir, f"{prefix}_{experiment}.png")
     csv_path = os.path.join(symbol_dir, f"{prefix}_{experiment}.csv")
     curve_name = "fit_constant_growth.png" if symbol_upper == "QQQ" else f"fit_constant_growth_{symbol_upper}.png"

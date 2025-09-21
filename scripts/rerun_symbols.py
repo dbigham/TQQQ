@@ -23,21 +23,23 @@ EXCLUDE_DIRS = {
     "scripts",
     "symbol_data",
     "temperature_cache",
+    "symbols",  # aggregated artifacts folder, not a ticker
 }
 
 
 def discover_symbols(root: str) -> List[str]:
     symbols: List[str] = []
-    for name in os.listdir(root):
-        path = os.path.join(root, name)
+    symbols_root = os.path.join(root, "symbols")
+    scan_root = symbols_root if os.path.isdir(symbols_root) else root
+    for name in os.listdir(scan_root):
+        path = os.path.join(scan_root, name)
         if not os.path.isdir(path):
             continue
         # Skip hidden/system folders
         if name.startswith('.'):
             continue
-        if name in EXCLUDE_DIRS:
+        if scan_root == root and name in EXCLUDE_DIRS:
             continue
-        # Basic heuristic: treat any directory in root as a symbol folder
         # Map folder name -> ticker symbol (uppercased, preserving hyphens and carets)
         symbols.append(name.upper())
     symbols.sort()
@@ -45,10 +47,12 @@ def discover_symbols(root: str) -> List[str]:
 
 
 def run_symbol(symbol: str, experiment: str, start: str | None, end: str | None, fred_series: str | None, dry_run: bool) -> int:
-    symbol_dir = "qqq" if symbol.upper() == "QQQ" else symbol.lower()
+    folder_name = "qqq" if symbol.upper() == "QQQ" else symbol.lower()
+    symbol_dir = os.path.join("symbols", folder_name)
     os.makedirs(symbol_dir, exist_ok=True)
-    plot_path = os.path.join(symbol_dir, f"strategy_{symbol_dir}_reserve_{experiment}.png")
-    csv_path = os.path.join(symbol_dir, f"strategy_{symbol_dir}_reserve_{experiment}.csv")
+    plot_path = os.path.join(symbol_dir, f"strategy_{folder_name}_reserve_{experiment}.png")
+    csv_path = os.path.join(symbol_dir, f"strategy_{folder_name}_reserve_{experiment}.csv")
+    summary_path = os.path.join(symbol_dir, f"{folder_name}_{experiment}_summary.md")
     # Summary path is optional; the strategy writes a sensible default if omitted
 
     cmd = [
@@ -62,6 +66,8 @@ def run_symbol(symbol: str, experiment: str, start: str | None, end: str | None,
         plot_path,
         "--save-csv",
         csv_path,
+        "--save-summary",
+        summary_path,
         "--no-show",
     ]
     if start:

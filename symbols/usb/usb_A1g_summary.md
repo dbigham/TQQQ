@@ -1,0 +1,13 @@
+# USB – Strategy A1g Summary
+
+- **Span**: 1973-05-03 → 2025-01-10 (51.69 years)
+- **Underlying (USB price) CAGR**: 11.84%
+- **Fitted curve CAGR**: 14.18%
+- **Strategy CAGR**: 9.37%
+- **Max drawdown**: -95.31%
+- **Rebalances executed**: 249
+
+Notes:
+
+- Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
+- Figures use simulated leveraged sleeve with fees and borrow costs.

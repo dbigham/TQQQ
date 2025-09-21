@@ -354,8 +354,8 @@ def save_temperature_plots(
 ):
     """Persist the curve-fit and temperature PNG diagnostics for the symbol."""
 
-    # Put artifacts in per-symbol directory
-    symbol_dir = "qqq" if symbol_upper == "QQQ" else symbol_upper.lower()
+    # Put artifacts in per-symbol directory under symbols/
+    symbol_dir = os.path.join("symbols", ("qqq" if symbol_upper == "QQQ" else symbol_upper.lower()))
     os.makedirs(symbol_dir, exist_ok=True)
 
     curve_name = "fit_constant_growth.png" if symbol_upper == "QQQ" else f"fit_constant_growth_{symbol_upper}.png"
@@ -2192,7 +2192,7 @@ def main():
         help="Optional CSV path with date/close columns (defaults to unified_nasdaq.csv for QQQ)",
     )
     parser.add_argument("--start", default=None, help="Start date (YYYY-MM-DD) inclusive")
-    parser.add_argument("--end", default="2025-01-10", help="End date (YYYY-MM-DD) inclusive")
+    parser.add_argument("--end", default="2025-09-19", help="End date (YYYY-MM-DD) inclusive")
     parser.add_argument("--fred-series", default="FEDFUNDS", help="FRED rate series (default FEDFUNDS)")
     parser.add_argument(
         "--experiment",
@@ -2297,7 +2297,7 @@ def main():
         return f"{root}_{token}"
 
     # Determine per-symbol artifact directory
-    symbol_dir = "qqq" if base_symbol == "QQQ" else base_symbol.lower()
+    symbol_dir = os.path.join("symbols", ("qqq" if base_symbol == "QQQ" else base_symbol.lower()))
     os.makedirs(symbol_dir, exist_ok=True)
 
     if args.save_plot:
@@ -3106,7 +3106,7 @@ def main():
     # Write summary markdown
     try:
         symbol_upper = base_symbol.upper()
-        symbol_dir = "qqq" if base_symbol == "QQQ" else base_symbol.lower()
+        symbol_dir = os.path.join("symbols", ("qqq" if base_symbol == "QQQ" else base_symbol.lower()))
         os.makedirs(symbol_dir, exist_ok=True)
         default_summary_name = f"{base_symbol.lower()}_{args.experiment}_summary.md"
         summary_path = args.save_summary if args.save_summary else os.path.join(symbol_dir, default_summary_name)
@@ -3145,7 +3145,7 @@ def main():
                 if base_symbol == "QQQ"
                 else f"strategy_{base_symbol.lower()}_reserve_debug.csv"
             )
-            symbol_dir = "qqq" if base_symbol == "QQQ" else base_symbol.lower()
+            symbol_dir = os.path.join("symbols", ("qqq" if base_symbol == "QQQ" else base_symbol.lower()))
             os.makedirs(symbol_dir, exist_ok=True)
             debug_path = os.path.join(symbol_dir, default_debug)
         debug_df.to_csv(debug_path, index=False)
