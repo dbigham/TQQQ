@@ -1413,6 +1413,17 @@ EXPERIMENTS["GOOG2X"] = {
 }
 EXPERIMENTS["GOOG2x"] = {**EXPERIMENTS["GOOG2X"]}
 
+# GOOG2X.B caps deployment at 100% with no margin borrowing while keeping 2x sleeve
+EXPERIMENTS["GOOG2X_B"] = {
+    **EXPERIMENTS["GOOG2X"],
+    "temperature_allocation": [
+        {"temp": 0.9112842466027813, "allocation": 1.0},
+        {"temp": 1.0, "allocation": 0.9996099084782909},
+        {"temp": 1.4141245147869759, "allocation": 0.08827971012283556},
+    ],
+}
+EXPERIMENTS["GOOG2XB"] = {**EXPERIMENTS["GOOG2X_B"]}
+EXPERIMENTS["GOOG2X.B"] = {**EXPERIMENTS["GOOG2X_B"]}
 # TESLA2X calibrates the A1g heuristics for Tesla with a 2x leveraged sleeve
 EXPERIMENTS["TESLA2X"] = {
     "temperature_allocation": [
@@ -1451,6 +1462,17 @@ EXPERIMENTS["TESLA2X"] = {
 }
 EXPERIMENTS["TESLA2x"] = {**EXPERIMENTS["TESLA2X"]}
 
+# TESLA2X.B caps deployment at 100% while retaining the 2x sleeve characteristics
+EXPERIMENTS["TESLA2X_B"] = {
+    **EXPERIMENTS["TESLA2X"],
+    "temperature_allocation": [
+        {"temp": 0.8201083581673381, "allocation": 1.0},
+        {"temp": 1.0, "allocation": 0.45},
+        {"temp": 1.5570503465488417, "allocation": 0.31375185711100995},
+    ],
+}
+EXPERIMENTS["TESLA2XB"] = {**EXPERIMENTS["TESLA2X_B"]}
+EXPERIMENTS["TESLA2X.B"] = {**EXPERIMENTS["TESLA2X_B"]}
 # CRM2X tunes the leveraged optimiser for Salesforce with a 2x sleeve
 EXPERIMENTS["CRM2X"] = {
     "temperature_allocation": [
@@ -1489,6 +1511,17 @@ EXPERIMENTS["CRM2X"] = {
 }
 EXPERIMENTS["CRM2x"] = {**EXPERIMENTS["CRM2X"]}
 
+# CRM2X.B mirrors CRM2X but caps deployment at 100% of capital
+EXPERIMENTS["CRM2X_B"] = {
+    **EXPERIMENTS["CRM2X"],
+    "temperature_allocation": [
+        {"temp": 0.943276238479186, "allocation": 1.0},
+        {"temp": 1.0, "allocation": 1.0},
+        {"temp": 1.2851226598530594, "allocation": 0.07214073410116358},
+    ],
+}
+EXPERIMENTS["CRM2XB"] = {**EXPERIMENTS["CRM2X_B"]}
+EXPERIMENTS["CRM2X.B"] = {**EXPERIMENTS["CRM2X_B"]}
 # A5 builds on A4 with a macro risk-off filter
 EXPERIMENTS["A5"] = {
     **EXPERIMENTS["A4"],

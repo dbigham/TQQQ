@@ -30,6 +30,14 @@ can be reproduced with `python optimize_leveraged_symbol.py --symbol GOOGL --lev
 
 - **CAGR**: ~65.9% on GOOGL with 2x leverage (through 2025‑09‑19)
 
+
+## GOOG2x.b – Google 2x Capped Sleeve
+Clones the GOOG2X parameters but caps temperature anchors at 100% allocation so the
+strategy never borrows beyond the 2x product itself. Invoke with
+--experiment GOOG2X_B (aliases: GOOG2XB, GOOG2X.B).
+
+- **CAGR**: ~47.7% on GOOGL with 2x leverage (through 2025-09-19)
+
 ## TESLA2x – Tesla 2x Baseline Optimiser
 Runs the generalised leveraged optimiser against Tesla (TSLA) and a 2x sleeve
 to better match geared products like TSLL. Tesla’s momentum characteristics
@@ -38,6 +46,14 @@ temperature discounts while keeping a higher minimum allocation when the market
 heats up. Invoke it with `python optimize_leveraged_symbol.py --symbol TSLA --leverage 2.0`.
 
 - **CAGR**: ~91.9% on TSLA with 2x leverage (through 2025‑09‑19)
+
+
+## TESLA2x.b – Tesla 2x Capped Sleeve
+Shares the TESLA2X filters but limits the deployment curve to 100% so the
+portfolio never borrows on top of the 2x instrument. Run with
+--experiment TESLA2X_B (aliases: TESLA2XB, TESLA2X.B).
+
+- **CAGR**: ~76.4% on TSLA with 2x leverage (through 2025-09-19)
 
 ## CRM2x – Salesforce 2x Baseline Optimiser
 Applies the leveraged optimiser to Salesforce (CRM) while emulating a 2x sleeve
@@ -48,6 +64,14 @@ modest rate taper to control leverage costs. The tuned configuration lifts the
 Recreate the parameters with `python optimize_leveraged_symbol.py --symbol CRM --leverage 2.0`.
 
 - **CAGR**: ~36.8% on CRM with 2x leverage (through 2025‑09‑19)
+
+
+## CRM2x.b – Salesforce 2x Capped Sleeve
+Uses the CRM2X tuning but clamps the allocation curve at 100%, matching an
+unlevered capital base while still trading a 2x CRM product. Call it via
+--experiment CRM2X_B (aliases: CRM2XB, CRM2X.B).
+
+- **CAGR**: ~35.8% on CRM with 2x leverage (through 2025-09-19)
 
 ## A2 – Cold Leverage Boost
 Adds a "cold leverage" rule that increases TQQQ exposure by 20% (capped at 120%) when
@@ -283,4 +307,9 @@ percentage points of CAGR (+8.5% relative).
 
 - **CAGR**: ~45.31% (through 2025‑01‑10)
 - **Improvement vs A27**: +3.55 pp (+8.5%)
+
+
+
+
+
 
