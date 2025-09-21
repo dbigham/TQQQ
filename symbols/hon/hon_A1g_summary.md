@@ -1,11 +1,11 @@
 # HON – Strategy A1g Summary
 
-- **Span**: 1962-01-02 → 2025-01-10 (63.02 years)
-- **Underlying (HON price) CAGR**: 8.82%
+- **Span**: 1962-01-02 → 2025-09-19 (63.71 years)
+- **Underlying (HON price) CAGR**: 8.68%
 - **Fitted curve CAGR**: 10.71%
-- **Strategy CAGR**: 8.81%
+- **Strategy CAGR**: 8.45%
 - **Max drawdown**: -95.78%
-- **Rebalances executed**: 302
+- **Rebalances executed**: 307
 
 Notes:
 

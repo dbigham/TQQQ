@@ -1,11 +1,11 @@
 # INTU – Strategy A1 Summary
 
-- **Span**: 1993-03-12 → 2025-01-10 (31.83 years)
-- **Underlying (INTU price) CAGR**: 19.17%
+- **Span**: 1993-03-12 → 2025-09-19 (32.52 years)
+- **Underlying (INTU price) CAGR**: 19.10%
 - **Fitted curve CAGR**: 17.93%
-- **Strategy CAGR**: 21.71%
+- **Strategy CAGR**: 21.84%
 - **Max drawdown**: -88.54%
-- **Rebalances executed**: 108
+- **Rebalances executed**: 113
 
 Notes:
 

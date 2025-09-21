@@ -1,9 +1,9 @@
 # NVDA – Strategy A1g Summary
 
-- **Span**: 1999-01-22 → 2025-01-10 (25.97 years)
-- **Underlying (NVDA price) CAGR**: 37.09%
+- **Span**: 1999-01-22 → 2025-09-19 (26.66 years)
+- **Underlying (NVDA price) CAGR**: 37.32%
 - **Fitted curve CAGR**: 28.03%
-- **Strategy CAGR**: 57.94%
+- **Strategy CAGR**: 56.27%
 - **Max drawdown**: -97.23%
 - **Rebalances executed**: 109
 

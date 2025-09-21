@@ -1,11 +1,11 @@
 # ^GSPC – Strategy A1g Summary
 
-- **Span**: 1927-12-30 → 2025-01-10 (97.03 years)
-- **Underlying (^GSPC price) CAGR**: 6.16%
+- **Span**: 1927-12-30 → 2025-09-19 (97.72 years)
+- **Underlying (^GSPC price) CAGR**: 6.26%
 - **Fitted curve CAGR**: 7.12%
-- **Strategy CAGR**: 10.22%
+- **Strategy CAGR**: 10.21%
 - **Max drawdown**: -85.74%
-- **Rebalances executed**: 510
+- **Rebalances executed**: 514
 
 Notes:
 

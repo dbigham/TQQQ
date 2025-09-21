@@ -1,11 +1,11 @@
 # DIS – Strategy A1g Summary
 
-- **Span**: 1962-01-02 → 2025-01-10 (63.02 years)
-- **Underlying (DIS price) CAGR**: 12.71%
+- **Span**: 1962-01-02 → 2025-09-19 (63.71 years)
+- **Underlying (DIS price) CAGR**: 12.65%
 - **Fitted curve CAGR**: 13.20%
-- **Strategy CAGR**: 15.66%
-- **Max drawdown**: -94.12%
-- **Rebalances executed**: 271
+- **Strategy CAGR**: 15.33%
+- **Max drawdown**: -95.07%
+- **Rebalances executed**: 276
 
 Notes:
 

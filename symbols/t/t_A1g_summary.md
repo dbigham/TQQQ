@@ -1,11 +1,11 @@
 # T – Strategy A1g Summary
 
-- **Span**: 1983-11-21 → 2025-01-10 (41.14 years)
-- **Underlying (T price) CAGR**: 11.27%
+- **Span**: 1983-11-21 → 2025-09-19 (41.83 years)
+- **Underlying (T price) CAGR**: 11.90%
 - **Fitted curve CAGR**: 9.44%
-- **Strategy CAGR**: 13.33%
+- **Strategy CAGR**: 14.86%
 - **Max drawdown**: -83.87%
-- **Rebalances executed**: 222
+- **Rebalances executed**: 226
 
 Notes:
 

@@ -1,11 +1,11 @@
 # AMAT – Strategy A1g Summary
 
-- **Span**: 1980-03-17 → 2025-01-10 (44.82 years)
-- **Underlying (AMAT price) CAGR**: 19.03%
+- **Span**: 1980-03-17 → 2025-09-19 (45.51 years)
+- **Underlying (AMAT price) CAGR**: 19.00%
 - **Fitted curve CAGR**: 17.81%
-- **Strategy CAGR**: 14.80%
+- **Strategy CAGR**: 14.97%
 - **Max drawdown**: -98.69%
-- **Rebalances executed**: 170
+- **Rebalances executed**: 173
 
 Notes:
 

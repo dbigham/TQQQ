@@ -1,11 +1,11 @@
 # COST – Strategy A1g Summary
 
-- **Span**: 1986-07-09 → 2025-01-10 (38.51 years)
-- **Underlying (COST price) CAGR**: 13.40%
+- **Span**: 1986-07-09 → 2025-09-19 (39.20 years)
+- **Underlying (COST price) CAGR**: 13.21%
 - **Fitted curve CAGR**: 14.00%
-- **Strategy CAGR**: 16.62%
+- **Strategy CAGR**: 16.34%
 - **Max drawdown**: -89.46%
-- **Rebalances executed**: 182
+- **Rebalances executed**: 183
 
 Notes:
 

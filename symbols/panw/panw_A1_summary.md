@@ -1,11 +1,11 @@
 # PANW – Strategy A1 Summary
 
-- **Span**: 2012-07-20 → 2025-01-10 (12.48 years)
-- **Underlying (PANW price) CAGR**: 26.93%
+- **Span**: 2012-07-20 → 2025-09-19 (13.17 years)
+- **Underlying (PANW price) CAGR**: 27.10%
 - **Fitted curve CAGR**: 28.06%
-- **Strategy CAGR**: 21.10%
+- **Strategy CAGR**: 18.49%
 - **Max drawdown**: -89.52%
-- **Rebalances executed**: 65
+- **Rebalances executed**: 70
 
 Notes:
 

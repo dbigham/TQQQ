@@ -1,11 +1,11 @@
 # TSLA – Strategy A1g Summary
 
-- **Span**: 2010-06-29 → 2025-01-10 (14.54 years)
-- **Underlying (TSLA price) CAGR**: 46.12%
+- **Span**: 2010-06-29 → 2025-09-19 (15.23 years)
+- **Underlying (TSLA price) CAGR**: 44.35%
 - **Fitted curve CAGR**: 47.35%
-- **Strategy CAGR**: 66.06%
+- **Strategy CAGR**: 62.61%
 - **Max drawdown**: -95.41%
-- **Rebalances executed**: 59
+- **Rebalances executed**: 64
 
 Notes:
 

@@ -1,9 +1,9 @@
 # BA – Strategy A1 Summary
 
-- **Span**: 1962-01-02 → 2025-01-10 (63.02 years)
-- **Underlying (BA price) CAGR**: 11.40%
+- **Span**: 1962-01-02 → 2025-09-19 (63.71 years)
+- **Underlying (BA price) CAGR**: 11.66%
 - **Fitted curve CAGR**: 12.93%
-- **Strategy CAGR**: 12.94%
+- **Strategy CAGR**: 13.25%
 - **Max drawdown**: -99.69%
 - **Rebalances executed**: 179
 

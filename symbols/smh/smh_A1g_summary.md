@@ -1,9 +1,9 @@
 # SMH – Strategy A1g Summary
 
-- **Span**: 2000-06-05 → 2025-01-10 (24.60 years)
-- **Underlying (SMH price) CAGR**: 7.47%
+- **Span**: 2000-06-05 → 2025-09-19 (25.29 years)
+- **Underlying (SMH price) CAGR**: 8.30%
 - **Fitted curve CAGR**: 10.60%
-- **Strategy CAGR**: 13.05%
+- **Strategy CAGR**: 12.93%
 - **Max drawdown**: -95.26%
 - **Rebalances executed**: 121
 

@@ -1,11 +1,11 @@
 # AXP – Strategy A1 Summary
 
-- **Span**: 1972-06-01 → 2025-01-10 (52.61 years)
-- **Underlying (AXP price) CAGR**: 10.95%
+- **Span**: 1972-06-01 → 2025-09-19 (53.30 years)
+- **Underlying (AXP price) CAGR**: 11.13%
 - **Fitted curve CAGR**: 12.00%
-- **Strategy CAGR**: 10.68%
+- **Strategy CAGR**: 10.93%
 - **Max drawdown**: -97.90%
-- **Rebalances executed**: 204
+- **Rebalances executed**: 208
 
 Notes:
 

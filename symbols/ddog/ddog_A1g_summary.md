@@ -1,11 +1,11 @@
 # DDOG – Strategy A1g Summary
 
-- **Span**: 2019-09-19 → 2025-01-10 (5.31 years)
-- **Underlying (DDOG price) CAGR**: 28.19%
+- **Span**: 2019-09-19 → 2025-09-19 (6.00 years)
+- **Underlying (DDOG price) CAGR**: 24.34%
 - **Fitted curve CAGR**: 10.15%
-- **Strategy CAGR**: 19.18%
+- **Strategy CAGR**: 23.85%
 - **Max drawdown**: -90.16%
-- **Rebalances executed**: 33
+- **Rebalances executed**: 37
 
 Notes:
 

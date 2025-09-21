@@ -1,11 +1,11 @@
 # ISRG – Strategy A1 Summary
 
-- **Span**: 2000-06-16 → 2025-01-10 (24.57 years)
-- **Underlying (ISRG price) CAGR**: 25.59%
+- **Span**: 2000-06-16 → 2025-09-19 (25.26 years)
+- **Underlying (ISRG price) CAGR**: 23.72%
 - **Fitted curve CAGR**: 26.22%
-- **Strategy CAGR**: 21.81%
+- **Strategy CAGR**: 15.65%
 - **Max drawdown**: -99.90%
-- **Rebalances executed**: 92
+- **Rebalances executed**: 95
 
 Notes:
 

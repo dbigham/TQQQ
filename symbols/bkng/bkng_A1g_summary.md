@@ -1,11 +1,11 @@
 # BKNG – Strategy A1g Summary
 
-- **Span**: 1999-03-31 → 2025-01-10 (25.78 years)
-- **Underlying (BKNG price) CAGR**: 9.18%
+- **Span**: 1999-03-31 → 2025-09-19 (26.47 years)
+- **Underlying (BKNG price) CAGR**: 9.52%
 - **Fitted curve CAGR**: 23.98%
-- **Strategy CAGR**: 8.45%
+- **Strategy CAGR**: 9.09%
 - **Max drawdown**: -99.92%
-- **Rebalances executed**: 96
+- **Rebalances executed**: 101
 
 Notes:
 

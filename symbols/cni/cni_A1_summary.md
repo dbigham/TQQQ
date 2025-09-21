@@ -1,10 +1,10 @@
 # CNI – Strategy A1 Summary
 
-- **Span**: 1996-11-26 → 2025-01-10 (28.12 years)
-- **Underlying (CNI price) CAGR**: 15.06%
+- **Span**: 1996-11-26 → 2025-09-19 (28.81 years)
+- **Underlying (CNI price) CAGR**: 14.48%
 - **Fitted curve CAGR**: 17.21%
-- **Strategy CAGR**: 15.83%
-- **Max drawdown**: -77.15%
+- **Strategy CAGR**: 13.98%
+- **Max drawdown**: -84.46%
 - **Rebalances executed**: 133
 
 Notes:

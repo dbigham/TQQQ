@@ -1,9 +1,9 @@
 # V – Strategy A1 Summary
 
-- **Span**: 2008-03-19 → 2025-01-10 (16.81 years)
-- **Underlying (V price) CAGR**: 20.96%
+- **Span**: 2008-03-19 → 2025-09-19 (17.50 years)
+- **Underlying (V price) CAGR**: 20.81%
 - **Fitted curve CAGR**: 22.06%
-- **Strategy CAGR**: 32.52%
+- **Strategy CAGR**: 31.90%
 - **Max drawdown**: -89.85%
 - **Rebalances executed**: 73
 

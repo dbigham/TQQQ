@@ -1,11 +1,11 @@
 # AAPL – Strategy A1 Summary
 
-- **Span**: 1980-12-12 → 2025-01-10 (44.08 years)
-- **Underlying (AAPL price) CAGR**: 19.31%
+- **Span**: 1980-12-12 → 2025-09-19 (44.77 years)
+- **Underlying (AAPL price) CAGR**: 19.09%
 - **Fitted curve CAGR**: 22.26%
 - **Strategy CAGR**: nan%
 - **Max drawdown**: -16354.24%
-- **Rebalances executed**: 118
+- **Rebalances executed**: 119
 
 Notes:
 

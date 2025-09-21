@@ -1,9 +1,9 @@
 # AMGN – Strategy A1 Summary
 
-- **Span**: 1983-06-17 → 2025-01-10 (41.57 years)
-- **Underlying (AMGN price) CAGR**: 18.31%
+- **Span**: 1983-06-17 → 2025-09-19 (42.26 years)
+- **Underlying (AMGN price) CAGR**: 18.29%
 - **Fitted curve CAGR**: 17.17%
-- **Strategy CAGR**: 14.75%
+- **Strategy CAGR**: 14.70%
 - **Max drawdown**: -98.39%
 - **Rebalances executed**: 113
 

@@ -1,9 +1,9 @@
 # JNJ – Strategy A1 Summary
 
-- **Span**: 1962-01-02 → 2025-01-10 (63.02 years)
-- **Underlying (JNJ price) CAGR**: 13.05%
+- **Span**: 1962-01-02 → 2025-09-19 (63.71 years)
+- **Underlying (JNJ price) CAGR**: 13.32%
 - **Fitted curve CAGR**: 13.75%
-- **Strategy CAGR**: 9.37%
+- **Strategy CAGR**: 10.17%
 - **Max drawdown**: -95.04%
 - **Rebalances executed**: 236
 

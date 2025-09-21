@@ -1,11 +1,11 @@
 # NKE – Strategy A1 Summary
 
-- **Span**: 1980-12-02 → 2025-01-10 (44.11 years)
-- **Underlying (NKE price) CAGR**: 15.44%
+- **Span**: 1980-12-02 → 2025-09-19 (44.80 years)
+- **Underlying (NKE price) CAGR**: 15.22%
 - **Fitted curve CAGR**: 17.93%
-- **Strategy CAGR**: 18.77%
-- **Max drawdown**: -96.08%
-- **Rebalances executed**: 195
+- **Strategy CAGR**: 16.37%
+- **Max drawdown**: -98.83%
+- **Rebalances executed**: 197
 
 Notes:
 

@@ -1,11 +1,11 @@
 # JPM – Strategy A1 Summary
 
-- **Span**: 1980-03-17 → 2025-01-10 (44.82 years)
-- **Underlying (JPM price) CAGR**: 12.86%
+- **Span**: 1980-03-17 → 2025-09-19 (45.51 years)
+- **Underlying (JPM price) CAGR**: 13.36%
 - **Fitted curve CAGR**: 11.20%
-- **Strategy CAGR**: 8.84%
+- **Strategy CAGR**: 9.07%
 - **Max drawdown**: -99.05%
-- **Rebalances executed**: 184
+- **Rebalances executed**: 186
 
 Notes:
 

@@ -1,11 +1,11 @@
 # MSFT – Strategy A1g Summary
 
-- **Span**: 1986-03-13 → 2025-01-10 (38.83 years)
-- **Underlying (MSFT price) CAGR**: 25.61%
+- **Span**: 1986-03-13 → 2025-09-19 (39.52 years)
+- **Underlying (MSFT price) CAGR**: 25.80%
 - **Fitted curve CAGR**: 19.16%
-- **Strategy CAGR**: 32.75%
+- **Strategy CAGR**: 33.84%
 - **Max drawdown**: -97.05%
-- **Rebalances executed**: 180
+- **Rebalances executed**: 182
 
 Notes:
 

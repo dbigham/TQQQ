@@ -1,11 +1,11 @@
 # UNH – Strategy A1 Summary
 
-- **Span**: 1984-10-17 → 2025-01-10 (40.23 years)
-- **Underlying (UNH price) CAGR**: 23.29%
+- **Span**: 1984-10-17 → 2025-09-19 (40.92 years)
+- **Underlying (UNH price) CAGR**: 21.61%
 - **Fitted curve CAGR**: 21.81%
 - **Strategy CAGR**: nan%
 - **Max drawdown**: -601.10%
-- **Rebalances executed**: 132
+- **Rebalances executed**: 133
 
 Notes:
 

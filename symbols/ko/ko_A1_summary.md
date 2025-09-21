@@ -1,9 +1,9 @@
 # KO – Strategy A1 Summary
 
-- **Span**: 1962-01-02 → 2025-01-10 (63.02 years)
-- **Underlying (KO price) CAGR**: 12.07%
+- **Span**: 1962-01-02 → 2025-09-19 (63.71 years)
+- **Underlying (KO price) CAGR**: 12.12%
 - **Fitted curve CAGR**: 12.85%
-- **Strategy CAGR**: 13.01%
+- **Strategy CAGR**: 13.14%
 - **Max drawdown**: -83.89%
 - **Rebalances executed**: 202
 

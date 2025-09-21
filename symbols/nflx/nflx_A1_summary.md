@@ -1,11 +1,11 @@
 # NFLX – Strategy A1 Summary
 
-- **Span**: 2002-05-23 → 2025-01-10 (22.64 years)
-- **Underlying (NFLX price) CAGR**: 33.56%
+- **Span**: 2002-05-23 → 2025-09-19 (23.33 years)
+- **Underlying (NFLX price) CAGR**: 34.61%
 - **Fitted curve CAGR**: 35.98%
 - **Strategy CAGR**: nan%
-- **Max drawdown**: -138.14%
-- **Rebalances executed**: 67
+- **Max drawdown**: -177.74%
+- **Rebalances executed**: 73
 
 Notes:
 

@@ -1,11 +1,11 @@
 # GS – Strategy A1g Summary
 
-- **Span**: 1999-05-04 → 2025-01-10 (25.69 years)
-- **Underlying (GS price) CAGR**: 9.89%
+- **Span**: 1999-05-04 → 2025-09-19 (26.38 years)
+- **Underlying (GS price) CAGR**: 11.20%
 - **Fitted curve CAGR**: 7.81%
-- **Strategy CAGR**: 15.42%
+- **Strategy CAGR**: 15.57%
 - **Max drawdown**: -85.75%
-- **Rebalances executed**: 129
+- **Rebalances executed**: 131
 
 Notes:
 

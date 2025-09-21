@@ -1,11 +1,11 @@
 # DHR – Strategy A1g Summary
 
-- **Span**: 1978-12-29 → 2025-01-10 (46.03 years)
-- **Underlying (DHR price) CAGR**: 20.46%
+- **Span**: 1978-12-29 → 2025-09-19 (46.72 years)
+- **Underlying (DHR price) CAGR**: 19.64%
 - **Fitted curve CAGR**: 21.23%
-- **Strategy CAGR**: 30.06%
-- **Max drawdown**: -69.30%
-- **Rebalances executed**: 235
+- **Strategy CAGR**: 27.32%
+- **Max drawdown**: -76.20%
+- **Rebalances executed**: 238
 
 Notes:
 

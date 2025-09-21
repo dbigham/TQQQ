@@ -1,11 +1,11 @@
 # AMZN – Strategy A1g Summary
 
-- **Span**: 1997-05-15 → 2025-01-10 (27.66 years)
-- **Underlying (AMZN price) CAGR**: 32.16%
+- **Span**: 1997-05-15 → 2025-09-19 (28.35 years)
+- **Underlying (AMZN price) CAGR**: 31.53%
 - **Fitted curve CAGR**: 26.38%
-- **Strategy CAGR**: 38.22%
+- **Strategy CAGR**: 37.57%
 - **Max drawdown**: -98.41%
-- **Rebalances executed**: 116
+- **Rebalances executed**: 120
 
 Notes:
 

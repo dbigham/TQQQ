@@ -1,11 +1,11 @@
 # ARM – Strategy A1 Summary
 
-- **Span**: 2023-09-14 → 2025-01-10 (1.33 years)
-- **Underlying (ARM price) CAGR**: 81.88%
+- **Span**: 2023-09-14 → 2025-09-19 (2.02 years)
+- **Underlying (ARM price) CAGR**: 49.46%
 - **Fitted curve CAGR**: 53.92%
-- **Strategy CAGR**: 129.30%
-- **Max drawdown**: -60.99%
-- **Rebalances executed**: 10
+- **Strategy CAGR**: 68.88%
+- **Max drawdown**: -69.15%
+- **Rebalances executed**: 15
 
 Notes:
 

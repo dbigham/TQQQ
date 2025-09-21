@@ -1,11 +1,11 @@
 # CB – Strategy A1 Summary
 
-- **Span**: 1993-03-25 → 2025-01-10 (31.80 years)
-- **Underlying (CB price) CAGR**: 13.11%
+- **Span**: 1993-03-25 → 2025-09-19 (32.49 years)
+- **Underlying (CB price) CAGR**: 13.05%
 - **Fitted curve CAGR**: 12.38%
-- **Strategy CAGR**: 14.21%
+- **Strategy CAGR**: 13.84%
 - **Max drawdown**: -91.00%
-- **Rebalances executed**: 175
+- **Rebalances executed**: 180
 
 Notes:
 

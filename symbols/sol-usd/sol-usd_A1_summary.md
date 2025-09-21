@@ -1,11 +1,11 @@
 # SOL-USD – Strategy A1 Summary
 
-- **Span**: 2020-04-10 → 2025-01-10 (4.75 years)
-- **Underlying (SOL-USD price) CAGR**: 203.99%
+- **Span**: 2020-04-10 → 2025-09-19 (5.44 years)
+- **Underlying (SOL-USD price) CAGR**: 175.95%
 - **Fitted curve CAGR**: 104.40%
 - **Strategy CAGR**: nan%
 - **Max drawdown**: -100.07%
-- **Rebalances executed**: 21
+- **Rebalances executed**: 22
 
 Notes:
 

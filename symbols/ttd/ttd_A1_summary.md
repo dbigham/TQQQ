@@ -1,11 +1,11 @@
 # TTD – Strategy A1 Summary
 
-- **Span**: 2016-09-21 → 2025-01-10 (8.30 years)
-- **Underlying (TTD price) CAGR**: 55.68%
+- **Span**: 2016-09-21 → 2025-09-19 (8.99 years)
+- **Underlying (TTD price) CAGR**: 34.91%
 - **Fitted curve CAGR**: 47.25%
-- **Strategy CAGR**: 27.65%
-- **Max drawdown**: -83.47%
-- **Rebalances executed**: 32
+- **Strategy CAGR**: nan%
+- **Max drawdown**: -103.70%
+- **Rebalances executed**: 35
 
 Notes:
 

@@ -1,11 +1,11 @@
 # BRK-B – Strategy A1 Summary
 
-- **Span**: 1996-05-09 → 2025-01-10 (28.67 years)
-- **Underlying (BRK-B price) CAGR**: 10.83%
+- **Span**: 1996-05-09 → 2025-09-19 (29.36 years)
+- **Underlying (BRK-B price) CAGR**: 10.97%
 - **Fitted curve CAGR**: 9.68%
-- **Strategy CAGR**: 13.25%
+- **Strategy CAGR**: 13.31%
 - **Max drawdown**: -93.09%
-- **Rebalances executed**: 164
+- **Rebalances executed**: 167
 
 Notes:
 

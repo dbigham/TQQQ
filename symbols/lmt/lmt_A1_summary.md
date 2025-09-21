@@ -1,11 +1,11 @@
 # LMT – Strategy A1 Summary
 
-- **Span**: 1962-01-02 → 2025-01-10 (63.02 years)
-- **Underlying (LMT price) CAGR**: 10.50%
+- **Span**: 1962-01-02 → 2025-09-19 (63.71 years)
+- **Underlying (LMT price) CAGR**: 10.44%
 - **Fitted curve CAGR**: 13.18%
-- **Strategy CAGR**: 11.26%
+- **Strategy CAGR**: 10.86%
 - **Max drawdown**: -99.76%
-- **Rebalances executed**: 204
+- **Rebalances executed**: 210
 
 Notes:
 

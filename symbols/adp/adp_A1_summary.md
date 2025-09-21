@@ -1,11 +1,11 @@
 # ADP – Strategy A1 Summary
 
-- **Span**: 1980-03-17 → 2025-01-10 (44.82 years)
-- **Underlying (ADP price) CAGR**: 15.80%
+- **Span**: 1980-03-17 → 2025-09-19 (45.51 years)
+- **Underlying (ADP price) CAGR**: 15.63%
 - **Fitted curve CAGR**: 14.17%
-- **Strategy CAGR**: 20.65%
+- **Strategy CAGR**: 20.15%
 - **Max drawdown**: -84.69%
-- **Rebalances executed**: 184
+- **Rebalances executed**: 190
 
 Notes:
 

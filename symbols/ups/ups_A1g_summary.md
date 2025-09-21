@@ -1,11 +1,11 @@
 # UPS – Strategy A1g Summary
 
-- **Span**: 1999-11-10 → 2025-01-10 (25.17 years)
-- **Underlying (UPS price) CAGR**: 5.13%
+- **Span**: 1999-11-10 → 2025-09-19 (25.86 years)
+- **Underlying (UPS price) CAGR**: 3.64%
 - **Fitted curve CAGR**: 6.61%
-- **Strategy CAGR**: 5.77%
+- **Strategy CAGR**: 0.83%
 - **Max drawdown**: -90.96%
-- **Rebalances executed**: 144
+- **Rebalances executed**: 148
 
 Notes:
 

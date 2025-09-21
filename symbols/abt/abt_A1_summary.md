@@ -1,11 +1,11 @@
 # ABT – Strategy A1 Summary
 
-- **Span**: 1980-03-17 → 2025-01-10 (44.82 years)
-- **Underlying (ABT price) CAGR**: 15.38%
+- **Span**: 1980-03-17 → 2025-09-19 (45.51 years)
+- **Underlying (ABT price) CAGR**: 15.65%
 - **Fitted curve CAGR**: 13.40%
-- **Strategy CAGR**: 17.44%
+- **Strategy CAGR**: 18.22%
 - **Max drawdown**: -72.72%
-- **Rebalances executed**: 203
+- **Rebalances executed**: 210
 
 Notes:
 

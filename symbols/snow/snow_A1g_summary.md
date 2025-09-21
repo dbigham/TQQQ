@@ -1,11 +1,11 @@
 # SNOW – Strategy A1g Summary
 
-- **Span**: 2020-09-16 → 2025-01-10 (4.32 years)
-- **Underlying (SNOW price) CAGR**: -9.83%
+- **Span**: 2020-09-16 → 2025-09-19 (5.01 years)
+- **Underlying (SNOW price) CAGR**: -1.92%
 - **Fitted curve CAGR**: -14.01%
-- **Strategy CAGR**: -36.43%
+- **Strategy CAGR**: -27.46%
 - **Max drawdown**: -97.00%
-- **Rebalances executed**: 28
+- **Rebalances executed**: 31
 
 Notes:
 

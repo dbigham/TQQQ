@@ -1,11 +1,11 @@
 # INTC – Strategy A1 Summary
 
-- **Span**: 1980-03-17 → 2025-01-10 (44.82 years)
-- **Underlying (INTC price) CAGR**: 10.95%
+- **Span**: 1980-03-17 → 2025-09-19 (45.51 years)
+- **Underlying (INTC price) CAGR**: 11.84%
 - **Fitted curve CAGR**: 13.58%
-- **Strategy CAGR**: -7.20%
-- **Max drawdown**: -99.93%
-- **Rebalances executed**: 144
+- **Strategy CAGR**: -7.01%
+- **Max drawdown**: -99.97%
+- **Rebalances executed**: 145
 
 Notes:
 

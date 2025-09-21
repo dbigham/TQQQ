@@ -1,11 +1,11 @@
 # IWM – Strategy A1g Summary
 
-- **Span**: 2000-05-26 → 2025-01-10 (24.63 years)
-- **Underlying (IWM price) CAGR**: 7.93%
+- **Span**: 2000-05-26 → 2025-09-19 (25.32 years)
+- **Underlying (IWM price) CAGR**: 8.23%
 - **Fitted curve CAGR**: 8.20%
-- **Strategy CAGR**: 11.70%
+- **Strategy CAGR**: 12.46%
 - **Max drawdown**: -89.95%
-- **Rebalances executed**: 142
+- **Rebalances executed**: 145
 
 Notes:
 

@@ -1,11 +1,11 @@
 # OKTA – Strategy A1 Summary
 
-- **Span**: 2017-04-07 → 2025-01-10 (7.76 years)
-- **Underlying (OKTA price) CAGR**: 17.90%
+- **Span**: 2017-04-07 → 2025-09-19 (8.45 years)
+- **Underlying (OKTA price) CAGR**: 17.72%
 - **Fitted curve CAGR**: 5.98%
-- **Strategy CAGR**: 24.96%
+- **Strategy CAGR**: 21.82%
 - **Max drawdown**: -84.10%
-- **Rebalances executed**: 26
+- **Rebalances executed**: 31
 
 Notes:
 

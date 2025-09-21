@@ -1,11 +1,11 @@
 # ACN – Strategy A1g Summary
 
-- **Span**: 2001-07-19 → 2025-01-10 (23.48 years)
-- **Underlying (ACN price) CAGR**: 15.99%
+- **Span**: 2001-07-19 → 2025-09-19 (24.17 years)
+- **Underlying (ACN price) CAGR**: 13.77%
 - **Fitted curve CAGR**: 16.90%
-- **Strategy CAGR**: 28.70%
-- **Max drawdown**: -73.64%
-- **Rebalances executed**: 133
+- **Strategy CAGR**: 21.96%
+- **Max drawdown**: -76.93%
+- **Rebalances executed**: 137
 
 Notes:
 

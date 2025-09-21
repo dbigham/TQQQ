@@ -1,9 +1,9 @@
 # AMD – Strategy A1g Summary
 
-- **Span**: 1980-03-17 → 2025-01-10 (44.82 years)
-- **Underlying (AMD price) CAGR**: 8.38%
+- **Span**: 1980-03-17 → 2025-09-19 (45.51 years)
+- **Underlying (AMD price) CAGR**: 8.98%
 - **Fitted curve CAGR**: 4.21%
-- **Strategy CAGR**: 7.22%
+- **Strategy CAGR**: 7.18%
 - **Max drawdown**: -100.00%
 - **Rebalances executed**: 177
 

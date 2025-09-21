@@ -1,11 +1,11 @@
 # META – Strategy A1g Summary
 
-- **Span**: 2012-05-18 → 2025-01-10 (12.65 years)
-- **Underlying (META price) CAGR**: 24.61%
+- **Span**: 2012-05-18 → 2025-09-19 (13.34 years)
+- **Underlying (META price) CAGR**: 25.40%
 - **Fitted curve CAGR**: 22.46%
-- **Strategy CAGR**: 29.98%
+- **Strategy CAGR**: 31.46%
 - **Max drawdown**: -98.02%
-- **Rebalances executed**: 70
+- **Rebalances executed**: 74
 
 Notes:
 

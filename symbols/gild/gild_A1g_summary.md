@@ -1,11 +1,11 @@
 # GILD – Strategy A1g Summary
 
-- **Span**: 1992-01-22 → 2025-01-10 (32.97 years)
-- **Underlying (GILD price) CAGR**: 17.41%
+- **Span**: 1992-01-22 → 2025-09-19 (33.66 years)
+- **Underlying (GILD price) CAGR**: 17.93%
 - **Fitted curve CAGR**: 22.28%
-- **Strategy CAGR**: 2.90%
+- **Strategy CAGR**: 4.28%
 - **Max drawdown**: -99.06%
-- **Rebalances executed**: 139
+- **Rebalances executed**: 143
 
 Notes:
 

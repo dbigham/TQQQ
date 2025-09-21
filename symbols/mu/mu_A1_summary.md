@@ -1,11 +1,11 @@
 # MU – Strategy A1 Summary
 
-- **Span**: 1984-06-01 → 2025-01-10 (40.61 years)
-- **Underlying (MU price) CAGR**: 11.15%
+- **Span**: 1984-06-01 → 2025-09-19 (41.30 years)
+- **Underlying (MU price) CAGR**: 12.30%
 - **Fitted curve CAGR**: 10.25%
-- **Strategy CAGR**: -25.85%
+- **Strategy CAGR**: -23.45%
 - **Max drawdown**: -100.00%
-- **Rebalances executed**: 144
+- **Rebalances executed**: 146
 
 Notes:
 

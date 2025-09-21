@@ -1,11 +1,11 @@
 # CMCSA – Strategy A1g Summary
 
-- **Span**: 1980-03-17 → 2025-01-10 (44.82 years)
-- **Underlying (CMCSA price) CAGR**: 15.19%
+- **Span**: 1980-03-17 → 2025-09-19 (45.51 years)
+- **Underlying (CMCSA price) CAGR**: 14.63%
 - **Fitted curve CAGR**: 13.25%
-- **Strategy CAGR**: 15.66%
+- **Strategy CAGR**: 13.98%
 - **Max drawdown**: -96.06%
-- **Rebalances executed**: 237
+- **Rebalances executed**: 243
 
 Notes:
 

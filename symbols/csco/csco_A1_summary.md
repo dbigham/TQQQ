@@ -1,11 +1,11 @@
 # CSCO – Strategy A1 Summary
 
-- **Span**: 1990-02-16 → 2025-01-10 (34.90 years)
-- **Underlying (CSCO price) CAGR**: 22.37%
+- **Span**: 1990-02-16 → 2025-09-19 (35.59 years)
+- **Underlying (CSCO price) CAGR**: 22.45%
 - **Fitted curve CAGR**: 12.18%
-- **Strategy CAGR**: 27.06%
+- **Strategy CAGR**: 27.50%
 - **Max drawdown**: -93.09%
-- **Rebalances executed**: 100
+- **Rebalances executed**: 105
 
 Notes:
 

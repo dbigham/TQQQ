@@ -1,11 +1,11 @@
 # CHTR – Strategy A1g Summary
 
-- **Span**: 2010-01-05 → 2025-01-10 (15.01 years)
-- **Underlying (CHTR price) CAGR**: 16.23%
+- **Span**: 2010-01-05 → 2025-09-19 (15.70 years)
+- **Underlying (CHTR price) CAGR**: 13.69%
 - **Fitted curve CAGR**: 17.47%
-- **Strategy CAGR**: 16.70%
-- **Max drawdown**: -91.78%
-- **Rebalances executed**: 66
+- **Strategy CAGR**: 8.66%
+- **Max drawdown**: -95.65%
+- **Rebalances executed**: 70
 
 Notes:
 

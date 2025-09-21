@@ -1,11 +1,11 @@
 # BAC – Strategy A1g Summary
 
-- **Span**: 1973-02-21 → 2025-01-10 (51.89 years)
-- **Underlying (BAC price) CAGR**: 6.72%
+- **Span**: 1973-02-21 → 2025-09-19 (52.57 years)
+- **Underlying (BAC price) CAGR**: 6.97%
 - **Fitted curve CAGR**: 8.37%
-- **Strategy CAGR**: 8.40%
+- **Strategy CAGR**: 8.83%
 - **Max drawdown**: -98.25%
-- **Rebalances executed**: 207
+- **Rebalances executed**: 210
 
 Notes:
 

@@ -1,11 +1,11 @@
 # MDLZ – Strategy A1 Summary
 
-- **Span**: 2001-06-13 → 2025-01-10 (23.58 years)
-- **Underlying (MDLZ price) CAGR**: 6.92%
+- **Span**: 2001-06-13 → 2025-09-19 (24.27 years)
+- **Underlying (MDLZ price) CAGR**: 7.33%
 - **Fitted curve CAGR**: 9.74%
-- **Strategy CAGR**: 6.79%
+- **Strategy CAGR**: 7.39%
 - **Max drawdown**: -86.68%
-- **Rebalances executed**: 115
+- **Rebalances executed**: 116
 
 Notes:
 

@@ -1,11 +1,11 @@
 # ORCL – Strategy A1 Summary
 
-- **Span**: 1986-03-12 → 2025-01-10 (38.83 years)
-- **Underlying (ORCL price) CAGR**: 22.92%
+- **Span**: 1986-03-12 → 2025-09-19 (39.52 years)
+- **Underlying (ORCL price) CAGR**: 24.66%
 - **Fitted curve CAGR**: 17.16%
-- **Strategy CAGR**: 9.69%
+- **Strategy CAGR**: 13.45%
 - **Max drawdown**: -99.83%
-- **Rebalances executed**: 103
+- **Rebalances executed**: 107
 
 Notes:
 

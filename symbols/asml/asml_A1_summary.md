@@ -1,11 +1,11 @@
 # ASML – Strategy A1 Summary
 
-- **Span**: 1995-03-15 → 2025-01-10 (29.83 years)
-- **Underlying (ASML price) CAGR**: 22.39%
+- **Span**: 1995-03-15 → 2025-09-19 (30.52 years)
+- **Underlying (ASML price) CAGR**: 22.79%
 - **Fitted curve CAGR**: 19.25%
-- **Strategy CAGR**: 40.76%
+- **Strategy CAGR**: 40.88%
 - **Max drawdown**: -93.62%
-- **Rebalances executed**: 111
+- **Rebalances executed**: 116
 
 Notes:
 

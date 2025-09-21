@@ -1,11 +1,11 @@
 # CRWD – Strategy A1g Summary
 
-- **Span**: 2019-06-12 → 2025-01-10 (5.58 years)
-- **Underlying (CRWD price) CAGR**: 37.90%
+- **Span**: 2019-06-12 → 2025-09-19 (6.27 years)
+- **Underlying (CRWD price) CAGR**: 41.09%
 - **Fitted curve CAGR**: 33.35%
-- **Strategy CAGR**: 74.53%
+- **Strategy CAGR**: 79.65%
 - **Max drawdown**: -89.56%
-- **Rebalances executed**: 27
+- **Rebalances executed**: 31
 
 Notes:
 

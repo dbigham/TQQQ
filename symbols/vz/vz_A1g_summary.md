@@ -1,11 +1,11 @@
 # VZ – Strategy A1g Summary
 
-- **Span**: 1983-11-21 → 2025-01-10 (41.14 years)
-- **Underlying (VZ price) CAGR**: 8.96%
+- **Span**: 1983-11-21 → 2025-09-19 (41.83 years)
+- **Underlying (VZ price) CAGR**: 9.26%
 - **Fitted curve CAGR**: 7.88%
-- **Strategy CAGR**: 8.22%
+- **Strategy CAGR**: 8.84%
 - **Max drawdown**: -81.16%
-- **Rebalances executed**: 228
+- **Rebalances executed**: 233
 
 Notes:
 

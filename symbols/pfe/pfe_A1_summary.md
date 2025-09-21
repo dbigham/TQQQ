@@ -1,11 +1,11 @@
 # PFE – Strategy A1 Summary
 
-- **Span**: 1972-06-01 → 2025-01-10 (52.61 years)
-- **Underlying (PFE price) CAGR**: 10.23%
+- **Span**: 1972-06-01 → 2025-09-19 (53.30 years)
+- **Underlying (PFE price) CAGR**: 9.98%
 - **Fitted curve CAGR**: 12.63%
-- **Strategy CAGR**: 2.38%
-- **Max drawdown**: -95.48%
-- **Rebalances executed**: 194
+- **Strategy CAGR**: 1.48%
+- **Max drawdown**: -97.21%
+- **Rebalances executed**: 196
 
 Notes:
 

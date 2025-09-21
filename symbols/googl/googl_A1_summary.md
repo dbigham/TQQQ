@@ -1,11 +1,11 @@
 # GOOGL – Strategy A1 Summary
 
-- **Span**: 2004-08-19 → 2025-01-10 (20.39 years)
-- **Underlying (GOOGL price) CAGR**: 23.72%
+- **Span**: 2004-08-19 → 2025-09-19 (21.08 years)
+- **Underlying (GOOGL price) CAGR**: 24.54%
 - **Fitted curve CAGR**: 19.05%
-- **Strategy CAGR**: 55.93%
+- **Strategy CAGR**: 60.59%
 - **Max drawdown**: -68.02%
-- **Rebalances executed**: 99
+- **Rebalances executed**: 103
 
 Notes:
 

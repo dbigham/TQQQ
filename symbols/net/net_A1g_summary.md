@@ -1,11 +1,11 @@
 # NET – Strategy A1g Summary
 
-- **Span**: 2019-09-13 → 2025-01-10 (5.33 years)
-- **Underlying (NET price) CAGR**: 41.08%
+- **Span**: 2019-09-13 → 2025-09-19 (6.02 years)
+- **Underlying (NET price) CAGR**: 52.26%
 - **Fitted curve CAGR**: 26.45%
-- **Strategy CAGR**: 54.45%
+- **Strategy CAGR**: 69.77%
 - **Max drawdown**: -93.73%
-- **Rebalances executed**: 25
+- **Rebalances executed**: 29
 
 Notes:
 

@@ -1,11 +1,11 @@
 # PM – Strategy A1g Summary
 
-- **Span**: 2008-03-17 → 2025-01-10 (16.82 years)
-- **Underlying (PM price) CAGR**: 10.37%
+- **Span**: 2008-03-17 → 2025-09-19 (17.51 years)
+- **Underlying (PM price) CAGR**: 12.14%
 - **Fitted curve CAGR**: 8.87%
-- **Strategy CAGR**: 15.37%
+- **Strategy CAGR**: 17.06%
 - **Max drawdown**: -82.05%
-- **Rebalances executed**: 97
+- **Rebalances executed**: 100
 
 Notes:
 

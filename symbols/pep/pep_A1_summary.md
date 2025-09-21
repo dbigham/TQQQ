@@ -1,9 +1,9 @@
 # PEP – Strategy A1 Summary
 
-- **Span**: 1972-06-01 → 2025-01-10 (52.61 years)
-- **Underlying (PEP price) CAGR**: 11.86%
+- **Span**: 1972-06-01 → 2025-09-19 (53.30 years)
+- **Underlying (PEP price) CAGR**: 11.74%
 - **Fitted curve CAGR**: 13.53%
-- **Strategy CAGR**: 5.75%
+- **Strategy CAGR**: 5.40%
 - **Max drawdown**: -92.97%
 - **Rebalances executed**: 173
 

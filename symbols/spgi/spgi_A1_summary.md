@@ -1,11 +1,11 @@
 # SPGI – Strategy A1 Summary
 
-- **Span**: 1973-02-21 → 2025-01-10 (51.89 years)
-- **Underlying (SPGI price) CAGR**: 15.07%
+- **Span**: 1973-02-21 → 2025-09-19 (52.57 years)
+- **Underlying (SPGI price) CAGR**: 14.97%
 - **Fitted curve CAGR**: 15.52%
-- **Strategy CAGR**: 14.18%
+- **Strategy CAGR**: 13.93%
 - **Max drawdown**: -99.56%
-- **Rebalances executed**: 208
+- **Rebalances executed**: 213
 
 Notes:
 

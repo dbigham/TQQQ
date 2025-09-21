@@ -1,10 +1,10 @@
 # ZTS – Strategy A1 Summary
 
-- **Span**: 2013-02-01 → 2025-01-10 (11.94 years)
-- **Underlying (ZTS price) CAGR**: 15.78%
+- **Span**: 2013-02-01 → 2025-09-19 (12.63 years)
+- **Underlying (ZTS price) CAGR**: 13.92%
 - **Fitted curve CAGR**: 19.35%
-- **Strategy CAGR**: 23.10%
-- **Max drawdown**: -61.47%
+- **Strategy CAGR**: 16.41%
+- **Max drawdown**: -75.43%
 - **Rebalances executed**: 71
 
 Notes:

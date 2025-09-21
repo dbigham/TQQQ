@@ -1,11 +1,11 @@
 # GE – Strategy A1 Summary
 
-- **Span**: 1962-01-02 → 2025-01-10 (63.02 years)
-- **Underlying (GE price) CAGR**: 9.33%
+- **Span**: 1962-01-02 → 2025-09-19 (63.71 years)
+- **Underlying (GE price) CAGR**: 10.20%
 - **Fitted curve CAGR**: 10.42%
-- **Strategy CAGR**: 5.35%
+- **Strategy CAGR**: 7.54%
 - **Max drawdown**: -99.83%
-- **Rebalances executed**: 215
+- **Rebalances executed**: 216
 
 Notes:
 

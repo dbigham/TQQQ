@@ -1,11 +1,11 @@
 # ADBE – Strategy A1 Summary
 
-- **Span**: 1986-08-13 → 2025-01-10 (38.41 years)
-- **Underlying (ADBE price) CAGR**: 21.96%
+- **Span**: 1986-08-13 → 2025-09-19 (39.10 years)
+- **Underlying (ADBE price) CAGR**: 21.21%
 - **Fitted curve CAGR**: 18.04%
-- **Strategy CAGR**: 50.26%
+- **Strategy CAGR**: 44.70%
 - **Max drawdown**: -95.73%
-- **Rebalances executed**: 136
+- **Rebalances executed**: 139
 
 Notes:
 

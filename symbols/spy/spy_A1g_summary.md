@@ -1,11 +1,11 @@
 # SPY – Strategy A1g Summary
 
-- **Span**: 1993-01-29 → 2025-01-10 (31.95 years)
-- **Underlying (SPY price) CAGR**: 10.41%
+- **Span**: 1993-01-29 → 2025-09-19 (32.64 years)
+- **Underlying (SPY price) CAGR**: 10.66%
 - **Fitted curve CAGR**: 9.19%
-- **Strategy CAGR**: 14.40%
+- **Strategy CAGR**: 14.44%
 - **Max drawdown**: -90.76%
-- **Rebalances executed**: 169
+- **Rebalances executed**: 172
 
 Notes:
 

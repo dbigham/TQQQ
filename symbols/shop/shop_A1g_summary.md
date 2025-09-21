@@ -1,11 +1,11 @@
 # SHOP – Strategy A1g Summary
 
-- **Span**: 2015-05-20 → 2025-01-10 (9.65 years)
-- **Underlying (SHOP price) CAGR**: 53.14%
+- **Span**: 2015-05-20 → 2025-09-19 (10.34 years)
+- **Underlying (SHOP price) CAGR**: 54.58%
 - **Fitted curve CAGR**: 38.92%
-- **Strategy CAGR**: 75.83%
+- **Strategy CAGR**: 78.43%
 - **Max drawdown**: -91.86%
-- **Rebalances executed**: 44
+- **Rebalances executed**: 46
 
 Notes:
 

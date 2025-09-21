@@ -1,11 +1,11 @@
 # TEAM – Strategy A1 Summary
 
-- **Span**: 2015-12-09 → 2025-01-10 (9.09 years)
-- **Underlying (TEAM price) CAGR**: 30.88%
+- **Span**: 2015-12-09 → 2025-09-19 (9.78 years)
+- **Underlying (TEAM price) CAGR**: 23.77%
 - **Fitted curve CAGR**: 25.64%
-- **Strategy CAGR**: 13.32%
-- **Max drawdown**: -96.10%
-- **Rebalances executed**: 27
+- **Strategy CAGR**: -5.91%
+- **Max drawdown**: -97.54%
+- **Rebalances executed**: 30
 
 Notes:
 

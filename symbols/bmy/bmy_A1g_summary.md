@@ -1,11 +1,11 @@
 # BMY – Strategy A1g Summary
 
-- **Span**: 1972-06-01 → 2025-01-10 (52.61 years)
-- **Underlying (BMY price) CAGR**: 10.43%
+- **Span**: 1972-06-01 → 2025-09-19 (53.30 years)
+- **Underlying (BMY price) CAGR**: 9.89%
 - **Fitted curve CAGR**: 11.21%
-- **Strategy CAGR**: 7.56%
+- **Strategy CAGR**: 6.01%
 - **Max drawdown**: -87.24%
-- **Rebalances executed**: 269
+- **Rebalances executed**: 274
 
 Notes:
 

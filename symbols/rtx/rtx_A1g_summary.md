@@ -1,11 +1,11 @@
 # RTX – Strategy A1g Summary
 
-- **Span**: 1962-04-02 → 2025-01-10 (62.78 years)
-- **Underlying (RTX price) CAGR**: 12.02%
+- **Span**: 1962-04-02 → 2025-09-19 (63.47 years)
+- **Underlying (RTX price) CAGR**: 12.47%
 - **Fitted curve CAGR**: 13.22%
-- **Strategy CAGR**: 14.02%
+- **Strategy CAGR**: 15.04%
 - **Max drawdown**: -95.50%
-- **Rebalances executed**: 308
+- **Rebalances executed**: 312
 
 Notes:
 

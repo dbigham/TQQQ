@@ -1,11 +1,11 @@
 # IBM – Strategy A1g Summary
 
-- **Span**: 1962-01-02 → 2025-01-10 (63.02 years)
-- **Underlying (IBM price) CAGR**: 8.23%
+- **Span**: 1962-01-02 → 2025-09-19 (63.71 years)
+- **Underlying (IBM price) CAGR**: 8.50%
 - **Fitted curve CAGR**: 8.42%
-- **Strategy CAGR**: 10.81%
+- **Strategy CAGR**: 11.18%
 - **Max drawdown**: -96.73%
-- **Rebalances executed**: 333
+- **Rebalances executed**: 337
 
 Notes:
 

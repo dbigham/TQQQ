@@ -179,6 +179,23 @@ def load_symbol_history(pd, symbol: str, *, csv_override: Optional[str] = None):
     cache_path = os.path.join(SYMBOL_DATA_DIR, cache_name)
     if os.path.exists(cache_path):
         df = load_unified(pd, cache_path)
+        # Refresh cache if it's stale (e.g., missing recent months)
+        try:
+            latest_cached = pd.to_datetime(df.index.max())
+            refresh_cutoff = pd.Timestamp.today().normalize() - pd.Timedelta(days=2)
+            if latest_cached < refresh_cutoff:
+                df_new = download_symbol_history(pd, symbol_upper)
+                latest_new = pd.to_datetime(df_new.index.max())
+                if latest_new > latest_cached:
+                    # Overwrite cache with fresher data
+                    os.makedirs(SYMBOL_DATA_DIR, exist_ok=True)
+                    df_to_save = df_new.copy()
+                    df_to_save.index.name = "date"
+                    df_to_save.to_csv(cache_path)
+                    df = df_new
+        except Exception:
+            # Non-fatal: if refresh fails (e.g., offline), use cached data
+            pass
         return df, os.path.abspath(cache_path)
 
     df = download_symbol_history(pd, symbol_upper)

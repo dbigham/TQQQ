@@ -1,9 +1,9 @@
 # MMC – Strategy A1g Summary
 
-- **Span**: 1973-02-21 → 2025-01-10 (51.89 years)
-- **Underlying (MMC price) CAGR**: 11.02%
+- **Span**: 1973-02-21 → 2025-09-19 (52.57 years)
+- **Underlying (MMC price) CAGR**: 10.77%
 - **Fitted curve CAGR**: 10.16%
-- **Strategy CAGR**: 16.41%
+- **Strategy CAGR**: 16.18%
 - **Max drawdown**: -92.55%
 - **Rebalances executed**: 289
 

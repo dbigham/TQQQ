@@ -1,11 +1,11 @@
 # TSM – Strategy A1 Summary
 
-- **Span**: 1997-10-09 → 2025-01-10 (27.26 years)
-- **Underlying (TSM price) CAGR**: 16.58%
+- **Span**: 1997-10-09 → 2025-09-19 (27.95 years)
+- **Underlying (TSM price) CAGR**: 17.18%
 - **Fitted curve CAGR**: 16.54%
-- **Strategy CAGR**: 23.83%
+- **Strategy CAGR**: 22.73%
 - **Max drawdown**: -96.51%
-- **Rebalances executed**: 105
+- **Rebalances executed**: 107
 
 Notes:
 

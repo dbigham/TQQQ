@@ -1,11 +1,11 @@
 # SYK – Strategy A1g Summary
 
-- **Span**: 1980-03-17 → 2025-01-10 (44.82 years)
-- **Underlying (SYK price) CAGR**: 20.81%
+- **Span**: 1980-03-17 → 2025-09-19 (45.51 years)
+- **Underlying (SYK price) CAGR**: 20.56%
 - **Fitted curve CAGR**: 18.52%
-- **Strategy CAGR**: 21.89%
+- **Strategy CAGR**: 21.31%
 - **Max drawdown**: -87.94%
-- **Rebalances executed**: 196
+- **Rebalances executed**: 200
 
 Notes:
 

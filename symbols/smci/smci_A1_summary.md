@@ -1,7 +1,7 @@
 # SMCI – Strategy A1 Summary
 
-- **Span**: 2007-03-29 → 2025-01-10 (17.79 years)
-- **Underlying (SMCI price) CAGR**: 22.55%
+- **Span**: 2007-03-29 → 2025-09-19 (18.48 years)
+- **Underlying (SMCI price) CAGR**: 23.88%
 - **Fitted curve CAGR**: 18.51%
 - **Strategy CAGR**: nan%
 - **Max drawdown**: -405.75%

@@ -1,11 +1,11 @@
 # CRM – Strategy A1 Summary
 
-- **Span**: 2004-06-23 → 2025-01-10 (20.55 years)
-- **Underlying (CRM price) CAGR**: 23.33%
+- **Span**: 2004-06-23 → 2025-09-19 (21.24 years)
+- **Underlying (CRM price) CAGR**: 21.07%
 - **Fitted curve CAGR**: 22.39%
-- **Strategy CAGR**: 27.49%
-- **Max drawdown**: -92.66%
-- **Rebalances executed**: 120
+- **Strategy CAGR**: 18.26%
+- **Max drawdown**: -93.83%
+- **Rebalances executed**: 122
 
 Notes:
 

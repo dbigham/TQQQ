@@ -1,11 +1,11 @@
 # TMO – Strategy A1g Summary
 
-- **Span**: 1980-03-17 → 2025-01-10 (44.82 years)
-- **Underlying (TMO price) CAGR**: 13.75%
+- **Span**: 1980-03-17 → 2025-09-19 (45.51 years)
+- **Underlying (TMO price) CAGR**: 13.23%
 - **Fitted curve CAGR**: 13.58%
-- **Strategy CAGR**: 23.73%
+- **Strategy CAGR**: 23.16%
 - **Max drawdown**: -83.49%
-- **Rebalances executed**: 212
+- **Rebalances executed**: 216
 
 Notes:
 

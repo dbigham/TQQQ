@@ -1,9 +1,9 @@
 # CAT – Strategy A1 Summary
 
-- **Span**: 1962-01-02 → 2025-01-10 (63.02 years)
-- **Underlying (CAT price) CAGR**: 11.06%
+- **Span**: 1962-01-02 → 2025-09-19 (63.71 years)
+- **Underlying (CAT price) CAGR**: 11.46%
 - **Fitted curve CAGR**: 9.93%
-- **Strategy CAGR**: 12.62%
+- **Strategy CAGR**: 12.53%
 - **Max drawdown**: -97.49%
 - **Rebalances executed**: 215
 

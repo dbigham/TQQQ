@@ -1,11 +1,11 @@
 # WMT – Strategy A1g Summary
 
-- **Span**: 1972-08-25 → 2025-01-10 (52.38 years)
-- **Underlying (WMT price) CAGR**: 18.72%
+- **Span**: 1972-08-25 → 2025-09-19 (53.07 years)
+- **Underlying (WMT price) CAGR**: 18.68%
 - **Fitted curve CAGR**: 17.14%
-- **Strategy CAGR**: 17.80%
+- **Strategy CAGR**: 17.71%
 - **Max drawdown**: -96.55%
-- **Rebalances executed**: 187
+- **Rebalances executed**: 190
 
 Notes:
 

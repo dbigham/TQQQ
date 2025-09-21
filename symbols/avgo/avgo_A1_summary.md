@@ -1,11 +1,11 @@
 # AVGO – Strategy A1 Summary
 
-- **Span**: 2009-08-06 → 2025-01-10 (15.43 years)
-- **Underlying (AVGO price) CAGR**: 40.74%
+- **Span**: 2009-08-06 → 2025-09-19 (16.12 years)
+- **Underlying (AVGO price) CAGR**: 42.50%
 - **Fitted curve CAGR**: 36.24%
-- **Strategy CAGR**: 70.20%
+- **Strategy CAGR**: 74.08%
 - **Max drawdown**: -80.20%
-- **Rebalances executed**: 81
+- **Rebalances executed**: 84
 
 Notes:
 

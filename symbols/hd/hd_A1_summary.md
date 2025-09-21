@@ -1,11 +1,11 @@
 # HD – Strategy A1 Summary
 
-- **Span**: 1981-09-22 → 2025-01-10 (43.30 years)
-- **Underlying (HD price) CAGR**: 26.07%
+- **Span**: 1981-09-22 → 2025-09-19 (43.99 years)
+- **Underlying (HD price) CAGR**: 25.85%
 - **Fitted curve CAGR**: 18.79%
-- **Strategy CAGR**: 27.94%
+- **Strategy CAGR**: 27.55%
 - **Max drawdown**: -98.66%
-- **Rebalances executed**: 129
+- **Rebalances executed**: 130
 
 Notes:
 

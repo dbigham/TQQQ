@@ -1,11 +1,11 @@
 # BLK – Strategy A1 Summary
 
-- **Span**: 1999-10-01 → 2025-01-10 (25.28 years)
-- **Underlying (BLK price) CAGR**: 20.47%
+- **Span**: 1999-10-01 → 2025-09-19 (25.97 years)
+- **Underlying (BLK price) CAGR**: 20.78%
 - **Fitted curve CAGR**: 17.08%
-- **Strategy CAGR**: 32.43%
+- **Strategy CAGR**: 33.00%
 - **Max drawdown**: -78.08%
-- **Rebalances executed**: 125
+- **Rebalances executed**: 129
 
 Notes:
 

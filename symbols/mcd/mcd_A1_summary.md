@@ -1,11 +1,11 @@
 # MCD – Strategy A1 Summary
 
-- **Span**: 1966-07-05 → 2025-01-10 (58.52 years)
-- **Underlying (MCD price) CAGR**: 14.26%
+- **Span**: 1966-07-05 → 2025-09-19 (59.21 years)
+- **Underlying (MCD price) CAGR**: 14.25%
 - **Fitted curve CAGR**: 14.11%
-- **Strategy CAGR**: 20.24%
+- **Strategy CAGR**: 20.17%
 - **Max drawdown**: -102.39%
-- **Rebalances executed**: 259
+- **Rebalances executed**: 264
 
 Notes:
 

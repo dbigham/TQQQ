@@ -1,7 +1,7 @@
 # ENPH – Strategy A1 Summary
 
-- **Span**: 2012-03-30 → 2025-01-10 (12.78 years)
-- **Underlying (ENPH price) CAGR**: 18.85%
+- **Span**: 2012-03-30 → 2025-09-19 (13.47 years)
+- **Underlying (ENPH price) CAGR**: 13.07%
 - **Fitted curve CAGR**: 40.45%
 - **Strategy CAGR**: nan%
 - **Max drawdown**: -101.67%

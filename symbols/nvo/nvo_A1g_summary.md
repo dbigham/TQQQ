@@ -1,11 +1,11 @@
 # NVO – Strategy A1g Summary
 
-- **Span**: 1981-04-30 → 2025-01-10 (43.70 years)
-- **Underlying (NVO price) CAGR**: 17.05%
+- **Span**: 1981-04-30 → 2025-09-19 (44.39 years)
+- **Underlying (NVO price) CAGR**: 15.91%
 - **Fitted curve CAGR**: 19.18%
-- **Strategy CAGR**: 28.21%
+- **Strategy CAGR**: 24.80%
 - **Max drawdown**: -89.28%
-- **Rebalances executed**: 208
+- **Rebalances executed**: 212
 
 Notes:
 

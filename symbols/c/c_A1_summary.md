@@ -1,11 +1,11 @@
 # C – Strategy A1 Summary
 
-- **Span**: 1977-01-03 → 2025-01-10 (48.02 years)
-- **Underlying (C price) CAGR**: 5.00%
+- **Span**: 1977-01-03 → 2025-09-19 (48.71 years)
+- **Underlying (C price) CAGR**: 5.75%
 - **Fitted curve CAGR**: 4.81%
-- **Strategy CAGR**: -8.74%
+- **Strategy CAGR**: -7.20%
 - **Max drawdown**: -99.91%
-- **Rebalances executed**: 77
+- **Rebalances executed**: 78
 
 Notes:
 

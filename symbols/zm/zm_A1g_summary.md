@@ -1,11 +1,11 @@
 # ZM – Strategy A1g Summary
 
-- **Span**: 2019-04-18 → 2025-01-10 (5.73 years)
-- **Underlying (ZM price) CAGR**: 4.42%
+- **Span**: 2019-04-18 → 2025-09-19 (6.42 years)
+- **Underlying (ZM price) CAGR**: 4.87%
 - **Fitted curve CAGR**: -12.70%
-- **Strategy CAGR**: 3.62%
+- **Strategy CAGR**: 3.14%
 - **Max drawdown**: -93.26%
-- **Rebalances executed**: 24
+- **Rebalances executed**: 27
 
 Notes:
 

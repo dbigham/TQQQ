@@ -1,9 +1,9 @@
 # MA – Strategy A1 Summary
 
-- **Span**: 2006-05-25 → 2025-01-10 (18.63 years)
-- **Underlying (MA price) CAGR**: 29.31%
+- **Span**: 2006-05-25 → 2025-09-19 (19.32 years)
+- **Underlying (MA price) CAGR**: 29.12%
 - **Fitted curve CAGR**: 24.94%
-- **Strategy CAGR**: 57.54%
+- **Strategy CAGR**: 56.85%
 - **Max drawdown**: -83.90%
 - **Rebalances executed**: 88
 

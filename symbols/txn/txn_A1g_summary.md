@@ -1,11 +1,11 @@
 # TXN – Strategy A1g Summary
 
-- **Span**: 1972-06-01 → 2025-01-10 (52.61 years)
-- **Underlying (TXN price) CAGR**: 11.19%
+- **Span**: 1972-06-01 → 2025-09-19 (53.30 years)
+- **Underlying (TXN price) CAGR**: 10.96%
 - **Fitted curve CAGR**: 12.27%
-- **Strategy CAGR**: 12.89%
+- **Strategy CAGR**: 12.46%
 - **Max drawdown**: -98.53%
-- **Rebalances executed**: 276
+- **Rebalances executed**: 280
 
 Notes:
 

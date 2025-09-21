@@ -1,11 +1,11 @@
 # MO – Strategy A1g Summary
 
-- **Span**: 1962-01-02 → 2025-01-10 (63.02 years)
-- **Underlying (MO price) CAGR**: 16.98%
+- **Span**: 1962-01-02 → 2025-09-19 (63.71 years)
+- **Underlying (MO price) CAGR**: 17.32%
 - **Fitted curve CAGR**: 19.74%
-- **Strategy CAGR**: 21.26%
+- **Strategy CAGR**: 22.25%
 - **Max drawdown**: -89.67%
-- **Rebalances executed**: 316
+- **Rebalances executed**: 320
 
 Notes:
 

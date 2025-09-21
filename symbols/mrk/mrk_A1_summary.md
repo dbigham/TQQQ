@@ -1,11 +1,11 @@
 # MRK – Strategy A1 Summary
 
-- **Span**: 1962-01-02 → 2025-01-10 (63.02 years)
-- **Underlying (MRK price) CAGR**: 12.29%
+- **Span**: 1962-01-02 → 2025-09-19 (63.71 years)
+- **Underlying (MRK price) CAGR**: 11.85%
 - **Fitted curve CAGR**: 11.87%
-- **Strategy CAGR**: 13.63%
+- **Strategy CAGR**: 12.14%
 - **Max drawdown**: -89.58%
-- **Rebalances executed**: 199
+- **Rebalances executed**: 201
 
 Notes:
 
