@@ -1375,6 +1375,44 @@ EXPERIMENTS["A1g"] = {
 # Provide an uppercase alias for convenience when running CLI experiments.
 EXPERIMENTS["A1G"] = {**EXPERIMENTS["A1g"]}
 
+# GOOG2X retunes A1g specifically for Google with a 2x leveraged sleeve
+EXPERIMENTS["GOOG2X"] = {
+    "temperature_allocation": [
+        {"temp": 0.9112842466027813, "allocation": 1.5},
+        {"temp": 1.0, "allocation": 0.9996099084782909},
+        {"temp": 1.4141245147869759, "allocation": 0.08827971012283556},
+    ],
+    "momentum_filters": {
+        "buy": {
+            "ret3": -0.026263459101261304,
+            "ret6": -0.07754344137856113,
+            "ret12": -0.0047306564171121345,
+            "ret22": 0.0036625749604032062,
+            "temp": 1.2598906882419105,
+        },
+        "sell": {
+            "ret3": 0.007677675400901423,
+            "ret6": 0.020166327393426865,
+            "ret12": 0.015591788434369168,
+            "ret22": -0.0014547122384232657,
+        },
+    },
+    "rate_taper": {
+        "start": 9.99764995369902,
+        "end": 12.44076444138291,
+        "min_allocation": 0.17479564203226142,
+        "enabled": True,
+    },
+    "crash_derisk": {
+        "enabled": False,
+        "threshold": None,
+        "cooldown_days": 22,
+    },
+    "rebalance_days": 22,
+    "leverage_override": 2.0,
+}
+EXPERIMENTS["GOOG2x"] = {**EXPERIMENTS["GOOG2X"]}
+
 # A5 builds on A4 with a macro risk-off filter
 EXPERIMENTS["A5"] = {
     **EXPERIMENTS["A4"],
