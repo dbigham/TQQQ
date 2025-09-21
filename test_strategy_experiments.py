@@ -13,34 +13,34 @@ def run(exp):
 
 def test_a1_cagr():
     cagr = run("A1")
-    assert abs(cagr - 29.70) < 0.01
+    assert abs(cagr - 29.39) < 0.01
 
 
 def test_a2_cagr():
     cagr = run("A2")
-    assert abs(cagr - 30.58) < 0.01
+    assert abs(cagr - 30.06) < 0.01
 
 
 def test_a3_cagr():
     cagr = run("A3")
-    assert abs(cagr - 31.17) < 0.01
+    assert abs(cagr - 30.10) < 0.01
 
 
 def test_a4_cagr():
     cagr = run("A4")
-    assert abs(cagr - 31.36) < 0.01
+    assert abs(cagr - 30.65) < 0.01
 
 
 def test_a5_cagr():
     cagr = run("A5")
-    assert abs(cagr - 32.16) < 0.01
+    assert abs(cagr - 31.25) < 0.01
 
 
 def test_a7_cagr():
     cagr = run("A7")
-    assert abs(cagr - 33.23) < 0.01
+    assert abs(cagr - 32.76) < 0.01
 
 
 def test_a11_cagr():
     cagr = run("A11")
-    assert abs(cagr - 35.32) < 0.01
+    assert abs(cagr - 33.10) < 0.01

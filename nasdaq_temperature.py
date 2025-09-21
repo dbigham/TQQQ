@@ -43,73 +43,29 @@ python nasdaq_temperature.py [--csv unified_nasdaq.csv] [--thresh2 0.35] [--thre
 from __future__ import annotations
 
 import argparse
-from typing import Optional, Tuple
+from typing import Optional
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
-def import_libs():
-    import pandas as pd  # type: ignore
-    import numpy as np  # type: ignore
-    import matplotlib.pyplot as plt  # type: ignore
-    return pd, np, plt
-
-
-def load_series(pd, csv_path: str):
-    df = pd.read_csv(csv_path)
-    if "date" not in df.columns or "close" not in df.columns:
-        raise RuntimeError("Expected columns 'date' and 'close' in CSV")
-    df["date"] = pd.to_datetime(df["date"])
-    df = df.sort_values("date")
-    df = df.dropna(subset=["close"]).copy()
-    df = df[df["close"] > 0]
-    df = df.set_index("date")
-    start_ts = df.index.min()
-    t_years = (df.index - start_ts).days / 365.25
-    df["t_years"] = t_years
-    return df, start_ts
-
-
-def fit_log_linear(np, t_years, prices) -> Tuple[float, float]:
-    y = np.log(prices)
-    x = np.asarray(t_years)
-    slope, intercept = np.polyfit(x, y, 1)
-    import math
-    A = float(math.exp(intercept))
-    r = float(math.exp(slope) - 1.0)
-    return A, r
-
-
-def compute_relative_errors(np, A: float, r: float, t_years, prices):
-    pred = A * np.power(1.0 + r, t_years)
-    rel_err = np.abs((prices - pred) / pred)
-    return pred, rel_err
-
-
-def iterative_fit(np, t_years, prices, thresh2: float, thresh3: float):
-    A1, r1 = fit_log_linear(np, t_years, prices)
-    _, rel1 = compute_relative_errors(np, A1, r1, t_years, prices)
-
-    mask2 = rel1 <= thresh2
-    A2, r2 = fit_log_linear(np, t_years[mask2], prices[mask2])
-    _, rel2 = compute_relative_errors(np, A2, r2, t_years, prices)
-
-    mask3 = rel2 <= thresh3
-    A3, r3 = fit_log_linear(np, t_years[mask3], prices[mask3])
-    return A3, r3
+from tqqq import load_price_csv, iterative_constant_growth
 
 
 class NasdaqTemperature:
     def __init__(self, csv_path: str = "unified_nasdaq.csv", thresh2: float = 0.35, thresh3: float = 0.15):
-        pd, np, _ = import_libs()
-        self._pd = pd
-        self._np = np
-        self.df, self.start_ts = load_series(pd, csv_path)
-        t = self.df["t_years"].to_numpy()
-        p = self.df["close"].to_numpy()
-        self.A, self.r = iterative_fit(np, t, p, thresh2, thresh3)
+        df, start_ts = load_price_csv(csv_path, set_index=True, add_elapsed_years=True)
+        self.df = df
+        self.start_ts = start_ts
+        t = df["t_years"].to_numpy(dtype=float)
+        prices = df["close"].to_numpy(dtype=float)
+        result = iterative_constant_growth(t, prices, thresholds=[thresh2, thresh3])
+        final = result.final
+        self.A = float(final.A)
+        self.r = float(final.r)
+        self._predictions = final.predictions
 
     def get_temperature(self, date_input) -> float:
-        pd = self._pd
-        np = self._np
         ts = pd.to_datetime(date_input)
         # Use last available date on/before ts
         if ts not in self.df.index:
@@ -123,10 +79,10 @@ class NasdaqTemperature:
         return price / pred
 
 
-def plot_temperature(pd, np, plt, df, A: float, r: float, start_ts, save_plot: Optional[str], no_show: bool):
-    t_years = df["t_years"].to_numpy()
+def plot_temperature(df, A: float, r: float, save_plot: Optional[str], no_show: bool):
+    t_years = df["t_years"].to_numpy(dtype=float)
     pred = A * np.power(1.0 + r, t_years)
-    temp = df["close"].to_numpy() / pred
+    temp = df["close"].to_numpy(dtype=float) / pred
 
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(df.index, temp, label="Temperature", color="#1f77b4")
@@ -158,15 +114,13 @@ def main():
     parser.add_argument("--no-show", action="store_true", help="Do not display the plot")
     args = parser.parse_args()
 
-    pd, np, plt = import_libs()
-
     temp_model = NasdaqTemperature(csv_path=args.csv, thresh2=args.thresh2, thresh3=args.thresh3)
 
     if args.date:
         tval = temp_model.get_temperature(args.date)
         print(f"Temperature on {args.date}: {tval:.4f}")
 
-    plot_temperature(pd, np, plt, temp_model.df, temp_model.A, temp_model.r, temp_model.start_ts, args.save_plot, args.no_show)
+    plot_temperature(temp_model.df, temp_model.A, temp_model.r, args.save_plot, args.no_show)
 
 
 def get_nasdaq_temperature(date_input, csv_path: str = "unified_nasdaq.csv", thresh2: float = 0.35, thresh3: float = 0.15) -> float:

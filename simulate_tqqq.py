@@ -50,75 +50,14 @@ import argparse
 import os
 from typing import Optional
 
+import matplotlib.pyplot as plt
+import pandas as pd
+import yfinance as yf
 
-def import_libs():
-    import pandas as pd  # type: ignore
-    import numpy as np  # type: ignore
-    import matplotlib.pyplot as plt  # type: ignore
-    import yfinance as yf  # type: ignore
-    return pd, np, plt, yf
+from tqqq import fetch_fred_series, load_price_csv, simulate_leveraged_path
 
 
-def load_unified(pd, path: str):
-    df = pd.read_csv(path)
-    if "date" not in df.columns or "close" not in df.columns:
-        raise RuntimeError("Expected 'date' and 'close' in unified CSV")
-    df["date"] = pd.to_datetime(df["date"])
-    df = df.sort_values("date").dropna(subset=["close"]).copy()
-    df = df[df["close"] > 0]
-    df = df.set_index("date")
-    return df
-
-
-def fetch_fred_series(pd, series_id: str, start, end, api_key: Optional[str]):
-    # Try fredapi
-    if api_key:
-        try:
-            from fredapi import Fred  # type: ignore
-            fred = Fred(api_key=api_key)
-            s = fred.get_series(series_id, observation_start=start, observation_end=end)
-            s = s.rename("rate").to_frame()
-            s.index = pd.to_datetime(s.index)
-            return s
-        except Exception:
-            pass
-    # Try pandas_datareader
-    try:
-        from pandas_datareader import data as pdr  # type: ignore
-        s = pdr.DataReader(series_id, "fred", start, end)
-        s = s.rename(columns={series_id: "rate"})
-        return s
-    except Exception:
-        pass
-    # Try direct CSV from fredgraph (no key)
-    try:
-        import io
-        import urllib.request
-        url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
-        with urllib.request.urlopen(url) as resp:
-            csv_bytes = resp.read()
-        s = pd.read_csv(io.BytesIO(csv_bytes))
-        # Columns: typically DATE or observation_date, plus the series value column
-        value_col = series_id
-        if value_col not in s.columns and value_col.upper() in s.columns:
-            value_col = value_col.upper()
-        date_col = "DATE"
-        if date_col not in s.columns:
-            if "observation_date" in s.columns:
-                date_col = "observation_date"
-            elif "date" in s.columns:
-                date_col = "date"
-        s = s.rename(columns={date_col: "date", value_col: "rate"})
-        s["date"] = pd.to_datetime(s["date"])
-        s = s.set_index("date")["rate"].to_frame()
-        s = s.loc[(s.index >= pd.to_datetime(start)) & (s.index <= pd.to_datetime(end))]
-        return s
-    except Exception:
-        pass
-    raise RuntimeError("Failed to fetch FRED series via all methods")
-
-
-def fetch_tqqq_adjusted(pd, yf, start, end):
+def fetch_tqqq_adjusted(start, end):
     df = yf.download(
         tickers="TQQQ",
         start=str(start.date()),
@@ -146,51 +85,6 @@ def fetch_tqqq_adjusted(pd, yf, start, end):
     return s.to_frame()
 
 
-def simulate(pd, np, unified_df, rates_df, tqqq_df, leverage: float, annual_fee: float, trading_days: int, borrow_divisor: float):
-    # Align dates: intersection of unified and TQQQ
-    start = max(unified_df.index.min(), tqqq_df.index.min())
-    end = min(unified_df.index.max(), tqqq_df.index.max())
-    unified = unified_df.loc[(unified_df.index >= start) & (unified_df.index <= end)].copy()
-    tqqq = tqqq_df.loc[(tqqq_df.index >= start) & (tqqq_df.index <= end)].copy()
-
-    # Compute daily pct change from unified
-    unified["ret"] = unified["close"].pct_change()
-
-    # Rates: forward-fill to trading days
-    rates = rates_df.rename(columns={rates_df.columns[0]: "rate"}) if rates_df.shape[1] == 1 else rates_df.copy()
-    rates.index = pd.to_datetime(rates.index)
-    rates = rates.sort_index()
-    rates = rates.loc[(rates.index >= start) & (rates.index <= end)]
-    # Reindex to unified dates and ffill/backfill edges
-    rates = rates.reindex(unified.index).ffill().bfill()
-
-    # Prepare arrays
-    dates = unified.index.to_numpy()
-    rets = unified["ret"].to_numpy()
-    rates_annual = rates["rate"].to_numpy()
-
-    sim = np.empty_like(rets, dtype=float)
-    sim[:] = np.nan
-    # Initial simulated value equals actual
-    sim[0] = float(tqqq["TQQQ_actual"].iloc[0])
-
-    borrowed_fraction = leverage - 1.0
-    daily_fee = annual_fee / float(trading_days)
-
-    for i in range(1, len(rets)):
-        pct_change = rets[i] if np.isfinite(rets[i]) else 0.0
-        rate_ann = rates_annual[i]
-        daily_borrow_cost = borrowed_fraction * ((rate_ann / 100.0) / float(trading_days))
-        factor = (1.0 + leverage * pct_change) * (1.0 - daily_fee) * (1.0 - (daily_borrow_cost / borrow_divisor))
-        sim[i] = sim[i - 1] * factor
-
-    sim_df = pd.DataFrame({
-        "TQQQ_sim": sim,
-    }, index=unified.index)
-
-    # Merge with actual
-    merged = tqqq.join(sim_df, how="inner")
-    return merged
 
 
 def main():
@@ -207,17 +101,25 @@ def main():
     parser.add_argument("--no-show", action="store_true", help="Do not display the plot")
     args = parser.parse_args()
 
-    pd, np, plt, yf = import_libs()
-
-    unified = load_unified(pd, args.csv)
+    unified, _ = load_price_csv(args.csv, set_index=True)
     start = unified.index.min()
     end = unified.index.max()
 
     api_key = args.fred_api_key or os.environ.get("FRED_API_KEY")
-    rates = fetch_fred_series(pd, args.fred_series, start, end, api_key)
-    tqqq = fetch_tqqq_adjusted(pd, yf, start, end)
+    rates = fetch_fred_series(args.fred_series, start, end, api_key=api_key)
+    tqqq = fetch_tqqq_adjusted(start, end)
 
-    merged = simulate(pd, np, unified, rates, tqqq, args.leverage, args.annual_fee, args.trading_days, args.borrow_divisor)
+    merged = simulate_leveraged_path(
+        unified,
+        rates,
+        tqqq,
+        leverage=args.leverage,
+        annual_fee=args.annual_fee,
+        trading_days=args.trading_days,
+        borrow_divisor=args.borrow_divisor,
+        actual_column="TQQQ_actual",
+        output_column="TQQQ_sim",
+    )
 
     # Print start/end values for both actual and simulated
     s_date = merged.index.min().date()
