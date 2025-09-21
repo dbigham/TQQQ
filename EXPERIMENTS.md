@@ -39,6 +39,16 @@ heats up. Invoke it with `python optimize_leveraged_symbol.py --symbol TSLA --le
 
 - **CAGR**: ~91.9% on TSLA with 2x leverage (through 2025‑09‑19)
 
+## CRM2x – Salesforce 2x Baseline Optimiser
+Applies the leveraged optimiser to Salesforce (CRM) while emulating a 2x sleeve
+similar to geared single-stock ETFs. CRM’s steadier trend profile lets the
+search keep a relatively high mid-temperature allocation while leaning on a
+modest rate taper to control leverage costs. The tuned configuration lifts the
+2x CAGR from roughly 30.5% under the baseline A1g settings to just under 36.8%.
+Recreate the parameters with `python optimize_leveraged_symbol.py --symbol CRM --leverage 2.0`.
+
+- **CAGR**: ~36.8% on CRM with 2x leverage (through 2025‑09‑19)
+
 ## A2 – Cold Leverage Boost
 Adds a "cold leverage" rule that increases TQQQ exposure by 20% (capped at 120%) when
 market temperature is below 0.8, interest rates are under 5%, and the 22‑day return is
