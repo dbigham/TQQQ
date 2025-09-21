@@ -6,8 +6,10 @@
 - **Strategy CAGR**: 8.45%
 - **Max drawdown**: -95.78%
 - **Rebalances executed**: 307
+- **P/E ratio (as of 2025-09-21)**: 23.82
 
 Notes:
 
 - Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
 - Figures use simulated leveraged sleeve with fees and borrow costs.
+
