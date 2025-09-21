@@ -11,6 +11,15 @@ the original default behavior and remains available via `--experiment A1`.
 
 - **CAGR**: ~29.70% (through 2025‑01‑10)
 
+## A1g – Global Baseline Optimiser
+Re-tunes the original A1 heuristics with a global search across 100 tracked
+symbols.  The optimiser adjusts the temperature allocation curve, momentum
+filters, and rate tapering, and disables the crash derisk rule.  On the
+combined dataset the new configuration lifts the average CAGR from **18.82%**
+under A1 to **21.55%** while retaining the simple monthly rebalance cadence.
+
+- **CAGR**: varies by symbol; see `python optimize_a1_global.py` for the full table
+
 ## A2 – Cold Leverage Boost
 Adds a "cold leverage" rule that increases TQQQ exposure by 20% (capped at 120%) when
 market temperature is below 0.8, interest rates are under 5%, and the 22‑day return is

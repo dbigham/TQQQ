@@ -80,7 +80,7 @@ import json
 import math
 import os
 import re
-from typing import Optional
+from typing import Mapping, Optional, Sequence
 
 from fit_constant_growth import iterative_fit as curve_iterative_fit
 
@@ -437,8 +437,44 @@ def compute_temperature_series(
     return temp, A, r, start_ts
 
 
-def target_allocation_from_temperature(T: float) -> float:
-    # Piecewise-linear interpolation:
+def target_allocation_from_temperature(
+    T: float, anchors: Optional[Sequence[Mapping[str, float]]] = None
+) -> float:
+    """Return the baseline allocation as a function of temperature.
+
+    When ``anchors`` is provided it should contain temperature/allocation
+    pairs that define a piecewise-linear curve. Temperatures outside the
+    provided range clamp to the nearest endpoint. The default behaviour
+    reproduces the historical A1 settings (100% at T<=0.9, 80% at T=1.0,
+    20% at T>=1.5).
+    """
+
+    if anchors:
+        # Ensure the anchors are sorted by temperature to guarantee
+        # deterministic interpolation. Ignore entries missing either field.
+        cleaned = [
+            (float(entry["temp"]), float(entry["allocation"]))
+            for entry in anchors
+            if "temp" in entry and "allocation" in entry
+        ]
+        if cleaned:
+            cleaned.sort(key=lambda item: item[0])
+            temps = [item[0] for item in cleaned]
+            allocs = [item[1] for item in cleaned]
+            if T <= temps[0]:
+                return allocs[0]
+            if T >= temps[-1]:
+                return allocs[-1]
+            for idx in range(1, len(cleaned)):
+                if T <= temps[idx]:
+                    t0, a0 = cleaned[idx - 1]
+                    t1, a1 = cleaned[idx]
+                    if t1 == t0:
+                        return a1
+                    frac = (T - t0) / (t1 - t0)
+                    return a0 + frac * (a1 - a0)
+    # Piecewise-linear interpolation using legacy anchors when no override
+    # is provided.
     if T <= 0.9:
         return 1.0
     if T >= 1.5:
@@ -450,15 +486,37 @@ def target_allocation_from_temperature(T: float) -> float:
     return 0.8 - 1.2 * (T - 1.0)
 
 
-def apply_rate_taper(p: float, rate_annual_pct: float) -> float:
-    # Reduce allocation linearly to 0 by 12%. No change at 10%.
-    if rate_annual_pct <= 10.0:
+def apply_rate_taper(
+    p: float,
+    rate_annual_pct: float,
+    *,
+    start: Optional[float] = 10.0,
+    end: Optional[float] = 12.0,
+    min_allocation: float = 0.0,
+    enabled: bool = True,
+) -> float:
+    """Scale allocation lower as rates rise.
+
+    ``start`` marks the annual rate (in percent) at which tapering begins and
+    ``end`` marks the level where allocation reaches ``min_allocation``. If
+    ``enabled`` is False or the thresholds are omitted the incoming allocation
+    ``p`` is returned unchanged.
+    """
+
+    if not enabled:
         return p
-    if rate_annual_pct >= 12.0:
-        return 0.0
-    factor = (12.0 - rate_annual_pct) / 2.0  # 10%→1, 11%→0.5, 12%→0
-    factor = max(0.0, min(1.0, factor))
-    return p * factor
+    if start is None or end is None:
+        return p
+    if end <= start:
+        return p if rate_annual_pct <= start else min(min_allocation, p)
+    if rate_annual_pct <= start:
+        return p
+    if rate_annual_pct >= end:
+        return min_allocation
+    span = end - start
+    frac = (end - rate_annual_pct) / span
+    frac = max(0.0, min(1.0, frac))
+    return min_allocation + frac * (p - min_allocation)
 
 
 def apply_cold_leverage(
@@ -1305,6 +1363,45 @@ EXPERIMENTS = {
     },
 }
 
+# A1g replaces the classic A1 baseline with globally optimised parameters.
+EXPERIMENTS["A1g"] = {
+    "temperature_allocation": [
+        {"temp": 0.9273427469847189, "allocation": 0.9},
+        {"temp": 1.0, "allocation": 0.6914229615905205},
+        {"temp": 1.3895980060223487, "allocation": 0.12368716918997923},
+    ],
+    "momentum_filters": {
+        "buy": {
+            "ret3": -0.008451681554022185,
+            "ret6": -0.011054749523119571,
+            "ret12": -0.004966377981066122,
+            "ret22": 0.0024202479764357894,
+            "temp": 1.44541683706992,
+        },
+        "sell": {
+            "ret3": 0.07164233126484575,
+            "ret6": 0.007814235979734244,
+            "ret12": 0.003979505425800826,
+            "ret22": 0.003273221232861071,
+        },
+    },
+    "rate_taper": {
+        "start": 10.578485326034812,
+        "end": 11.648140801455359,
+        "min_allocation": 0.016819225490664724,
+        "enabled": True,
+    },
+    "crash_derisk": {
+        "enabled": False,
+        "threshold": None,
+        "cooldown_days": 22,
+    },
+    "rebalance_days": 22,
+}
+
+# Provide an uppercase alias for convenience when running CLI experiments.
+EXPERIMENTS["A1G"] = {**EXPERIMENTS["A1g"]}
+
 # A5 builds on A4 with a macro risk-off filter
 EXPERIMENTS["A5"] = {
     **EXPERIMENTS["A4"],
@@ -2138,6 +2235,55 @@ def main():
     experiment = args.experiment.upper()
     config = EXPERIMENTS[experiment]
 
+    # Optional configuration overrides shared across simulation logic
+    temp_allocation_cfg = None
+    if isinstance(config.get("temperature_allocation"), Sequence):
+        temp_allocation_cfg = list(config.get("temperature_allocation"))
+
+    momentum_cfg = config.get("momentum_filters") if isinstance(config.get("momentum_filters"), Mapping) else None
+    buy_filter_cfg = None
+    sell_filter_cfg = None
+    if momentum_cfg:
+        buy_cfg = momentum_cfg.get("buy")
+        sell_cfg = momentum_cfg.get("sell")
+        buy_filter_cfg = buy_cfg if isinstance(buy_cfg, Mapping) else None
+        sell_filter_cfg = sell_cfg if isinstance(sell_cfg, Mapping) else None
+
+    def _threshold(cfg: Optional[Mapping[str, object]], key: str, default: Optional[float]) -> Optional[float]:
+        if cfg is None or key not in cfg:
+            return default
+        value = cfg.get(key, default)
+        if value is None:
+            return None
+        return float(value)
+
+    buy_ret3_limit_default = _threshold(buy_filter_cfg, "ret3", -0.03)
+    buy_ret6_limit_default = _threshold(buy_filter_cfg, "ret6", -0.03)
+    buy_ret12_limit_default = _threshold(buy_filter_cfg, "ret12", -0.02)
+    buy_ret22_limit_default = _threshold(buy_filter_cfg, "ret22", 0.0)
+    buy_temp_limit_default = _threshold(buy_filter_cfg, "temp", 1.3)
+
+    sell_ret3_limit_default = _threshold(sell_filter_cfg, "ret3", 0.03)
+    sell_ret6_limit_default = _threshold(sell_filter_cfg, "ret6", 0.03)
+    sell_ret12_limit_default = _threshold(sell_filter_cfg, "ret12", 0.0225)
+    sell_ret22_limit_default = _threshold(sell_filter_cfg, "ret22", 0.0075)
+
+    rate_taper_cfg = config.get("rate_taper") if isinstance(config.get("rate_taper"), Mapping) else None
+
+    crash_cfg = config.get("crash_derisk") if isinstance(config.get("crash_derisk"), Mapping) else None
+    crash_enabled = True
+    crash_threshold = -0.1525
+    crash_cooldown_days = int(config.get("rebalance_days", 22))
+    if crash_cfg:
+        crash_enabled = bool(crash_cfg.get("enabled", True))
+        crash_threshold_value = crash_cfg.get("threshold", crash_threshold)
+        crash_threshold = float(crash_threshold_value) if crash_threshold_value is not None else None
+        crash_cooldown_days = int(crash_cfg.get("cooldown_days", crash_cooldown_days))
+
+    rebalance_cadence = int(config.get("rebalance_days", 22))
+    if rebalance_cadence <= 0:
+        rebalance_cadence = 22
+
     # Ensure saved plot filenames include unique tokens without duplication.
     # Accepts a root filename (no extension) and appends `token` with an underscore
     # only if the token is not already present as a delimited segment anywhere.
@@ -2273,7 +2419,7 @@ def main():
     # Rebalance scheduling
     next_rebalance_idx = 0  # day 0 is an eligible rebalance day after updates
     eps = 1e-6
-    last_rebalance_idx = -22
+    last_rebalance_idx = -rebalance_cadence
     peak_total = port_total[0]
 
     rebalance_entries = []
@@ -2326,7 +2472,7 @@ def main():
 
         T = df["temp"].iloc[i]
         rate_today = float(rate_ann[i])
-        base_p = target_allocation_from_temperature(T)
+        base_p = target_allocation_from_temperature(T, temp_allocation_cfg)
         tcurve_cfg = config.get("temperature_curve_boost")
         if tcurve_cfg:
             base_p = apply_temperature_curve_boost(base_p, T, **tcurve_cfg)
@@ -2361,7 +2507,14 @@ def main():
         guard_cfg = config.get("momentum_guard")
         if guard_cfg:
             base_p = apply_momentum_guard(base_p, r6, r22, **guard_cfg)
-        target_p = apply_rate_taper(base_p, rate_today)
+        if rate_taper_cfg:
+            rt_kwargs = {}
+            for key in ("start", "end", "min_allocation", "enabled"):
+                if key in rate_taper_cfg:
+                    rt_kwargs[key] = rate_taper_cfg[key]
+            target_p = apply_rate_taper(base_p, rate_today, **rt_kwargs)
+        else:
+            target_p = apply_rate_taper(base_p, rate_today)
         shock_cfg = config.get("shock_guard")
         if shock_cfg:
             target_p = apply_shock_guard(
@@ -2532,7 +2685,13 @@ def main():
             # First, check the 22d crash de-risk. If triggered, act immediately and skip momentum filters.
             ret22 = r22
             forced_today = False
-            if not math.isnan(ret22) and ret22 <= -0.1525 and port_tqqq[i] > 0:
+            if (
+                crash_enabled
+                and crash_threshold is not None
+                and not math.isnan(ret22)
+                and ret22 <= crash_threshold
+                and port_tqqq[i] > 0
+            ):
                 prev_tqqq = port_tqqq[i]
                 prev_cash = port_cash[i]
                 # Capture debug BEFORE action
@@ -2549,8 +2708,8 @@ def main():
                             "price_22d_ago": float(prev_close_22) if not math.isnan(prev_close_22) else float('nan'),
                             "change_22d_abs": float(df["close"].iloc[i] - prev_close_22) if not math.isnan(prev_close_22) else float('nan'),
                             "change_22d_rel": float(ret22),
-                            "sell_all_threshold": -0.1525,
-                            "sell_all_ratio": (float(ret22) / -0.1525) if -0.1525 != 0 else float('nan'),
+                            "sell_all_threshold": float(crash_threshold),
+                            "sell_all_ratio": (float(ret22) / float(crash_threshold)) if crash_threshold not in (0, None) else float('nan'),
                             "temp_T": float(df["temp"].iloc[i]) if not math.isnan(df["temp"].iloc[i]) else float('nan'),
                             "rate_annual_pct": float(rate_ann[i]),
                             "curr_p_before": float(0.0 if (port_tqqq[i] + port_cash[i]) <= 0 else port_tqqq[i] / (port_tqqq[i] + port_cash[i])),
@@ -2560,7 +2719,7 @@ def main():
                 port_tqqq[i] = 0.0
                 total = port_tqqq[i] + port_cash[i]
                 curr_p = 0.0
-                next_rebalance_idx = i + 22
+                next_rebalance_idx = i + crash_cooldown_days
                 forced_derisk_series[i] = 1
                 acted = True
                 forced_today = True
@@ -2581,27 +2740,39 @@ def main():
                 block_buy = False
                 # Thresholds can be relaxed when the market is very cold
                 buy_relax_cfg = config.get("buy_block_relax")
-                limit_r3 = -0.03
-                limit_r6 = -0.03
-                limit_r12 = -0.02
-                limit_r22 = 0.0
-                temp_limit = 1.3
+                limit_r3 = buy_ret3_limit_default
+                limit_r6 = buy_ret6_limit_default
+                limit_r12 = buy_ret12_limit_default
+                limit_r22 = buy_ret22_limit_default
+                temp_limit = buy_temp_limit_default
                 if buy_relax_cfg:
                     temp_threshold_relax = float(buy_relax_cfg.get("temp_threshold", 0.85))
                     if T <= temp_threshold_relax:
-                        limit_r3 = float(buy_relax_cfg.get("r3_limit", limit_r3))
-                        limit_r6 = float(buy_relax_cfg.get("r6_limit", limit_r6))
-                        limit_r12 = float(buy_relax_cfg.get("r12_limit", limit_r12))
-                        limit_r22 = float(buy_relax_cfg.get("r22_limit", limit_r22))
-                        temp_limit = float(buy_relax_cfg.get("temp_limit_cold", temp_limit))
+                        if "r3_limit" in buy_relax_cfg:
+                            value = buy_relax_cfg.get("r3_limit")
+                            limit_r3 = None if value is None else float(value)
+                        if "r6_limit" in buy_relax_cfg:
+                            value = buy_relax_cfg.get("r6_limit")
+                            limit_r6 = None if value is None else float(value)
+                        if "r12_limit" in buy_relax_cfg:
+                            value = buy_relax_cfg.get("r12_limit")
+                            limit_r12 = None if value is None else float(value)
+                        if "r22_limit" in buy_relax_cfg:
+                            value = buy_relax_cfg.get("r22_limit")
+                            limit_r22 = None if value is None else float(value)
+                        if "temp_limit_cold" in buy_relax_cfg:
+                            value = buy_relax_cfg.get("temp_limit_cold")
+                            temp_limit = None if value is None else float(value)
                     else:
-                        temp_limit = float(buy_relax_cfg.get("temp_limit_default", temp_limit))
+                        if "temp_limit_default" in buy_relax_cfg:
+                            value = buy_relax_cfg.get("temp_limit_default")
+                            temp_limit = None if value is None else float(value)
                 # r3, r6, r12, r22 already computed above
-                trig_buy_r3 = (not math.isnan(r3) and r3 <= limit_r3)
-                trig_buy_r6 = (not math.isnan(r6) and r6 <= limit_r6)
-                trig_buy_r12 = (not math.isnan(r12) and r12 <= limit_r12)
-                trig_buy_r22 = (not math.isnan(r22) and r22 <= limit_r22)
-                trig_buy_T = (T > temp_limit)
+                trig_buy_r3 = (limit_r3 is not None and not math.isnan(r3) and r3 <= limit_r3)
+                trig_buy_r6 = (limit_r6 is not None and not math.isnan(r6) and r6 <= limit_r6)
+                trig_buy_r12 = (limit_r12 is not None and not math.isnan(r12) and r12 <= limit_r12)
+                trig_buy_r22 = (limit_r22 is not None and not math.isnan(r22) and r22 <= limit_r22)
+                trig_buy_T = (temp_limit is not None and T > temp_limit)
                 if trig_buy_r3 or trig_buy_r6 or trig_buy_r12 or trig_buy_r22 or trig_buy_T:
                     block_buy = True
                 block_buy_series[i] = 1 if block_buy else 0
@@ -2621,7 +2792,7 @@ def main():
                             "blocked_reason_buy_r6_le_-3pct": bool(trig_buy_r6),
                             "blocked_reason_buy_r12_le_-2pct": bool(trig_buy_r12),
                             "blocked_reason_buy_r22_le_0pct": bool(trig_buy_r22),
-                            "blocked_reason_buy_T_gt_1.3": bool(trig_buy_T),
+                            "blocked_reason_buy_T_gt_limit": bool(trig_buy_T),
                             "price": float(df["close"].iloc[i]),
                             "ref_date_22d": prev_date_22,
                             "price_22d_ago": float(prev_close_22) if not math.isnan(prev_close_22) else float('nan'),
@@ -2631,14 +2802,14 @@ def main():
                             "ret_6": float(r6) if not math.isnan(r6) else float('nan'),
                             "ret_12": float(r12) if not math.isnan(r12) else float('nan'),
                             "ret_22": float(r22) if not math.isnan(r22) else float('nan'),
-                            "limit_buy_r3": float(limit_r3),
-                            "limit_buy_r6": float(limit_r6),
-                            "limit_buy_r12": float(limit_r12),
-                            "limit_buy_r22": float(limit_r22),
-                            "ratio_buy_r3": (float(r3) / float(limit_r3)) if (not math.isnan(r3) and limit_r3 != 0.0) else float('nan'),
-                            "ratio_buy_r6": (float(r6) / float(limit_r6)) if (not math.isnan(r6) and limit_r6 != 0.0) else float('nan'),
-                            "ratio_buy_r12": (float(r12) / float(limit_r12)) if (not math.isnan(r12) and limit_r12 != 0.0) else float('nan'),
-                            "ratio_buy_r22": (float(r22) / float(limit_r22)) if (not math.isnan(r22) and limit_r22 != 0.0) else float('nan'),
+                            "limit_buy_r3": float(limit_r3) if limit_r3 is not None else float('nan'),
+                            "limit_buy_r6": float(limit_r6) if limit_r6 is not None else float('nan'),
+                            "limit_buy_r12": float(limit_r12) if limit_r12 is not None else float('nan'),
+                            "limit_buy_r22": float(limit_r22) if limit_r22 is not None else float('nan'),
+                            "ratio_buy_r3": (float(r3) / float(limit_r3)) if (limit_r3 is not None and not math.isnan(r3) and limit_r3 != 0.0) else float('nan'),
+                            "ratio_buy_r6": (float(r6) / float(limit_r6)) if (limit_r6 is not None and not math.isnan(r6) and limit_r6 != 0.0) else float('nan'),
+                            "ratio_buy_r12": (float(r12) / float(limit_r12)) if (limit_r12 is not None and not math.isnan(r12) and limit_r12 != 0.0) else float('nan'),
+                            "ratio_buy_r22": (float(r22) / float(limit_r22)) if (limit_r22 is not None and not math.isnan(r22) and limit_r22 != 0.0) else float('nan'),
                             "temp_T": float(T),
                             "base_p": float(base_p),
                             "rate_annual_pct": float(rate_today),
@@ -2652,7 +2823,7 @@ def main():
                     port_cash[i] = total - port_tqqq[i]
                     total = port_tqqq[i] + port_cash[i]
                     curr_p = target_p
-                    next_rebalance_idx = i + 22
+                    next_rebalance_idx = i + rebalance_cadence
                     last_rebalance_idx = i
                     acted = True
                     add_rebalance_entry(i, port_tqqq[i], port_cash[i], prev_tqqq, prev_cash)
@@ -2664,10 +2835,26 @@ def main():
                 # Sell-side filters
                 block_sell = False
                 # r3, r6, r12, r22 already computed above
-                trig_sell_r3 = (not math.isnan(r3) and r3 >= 0.03)
-                trig_sell_r6 = (not math.isnan(r6) and r6 >= 0.03)
-                trig_sell_r12 = (not math.isnan(r12) and r12 >= 0.0225)
-                trig_sell_r22 = (not math.isnan(r22) and r22 >= 0.0075)
+                trig_sell_r3 = (
+                    sell_ret3_limit_default is not None
+                    and not math.isnan(r3)
+                    and r3 >= sell_ret3_limit_default
+                )
+                trig_sell_r6 = (
+                    sell_ret6_limit_default is not None
+                    and not math.isnan(r6)
+                    and r6 >= sell_ret6_limit_default
+                )
+                trig_sell_r12 = (
+                    sell_ret12_limit_default is not None
+                    and not math.isnan(r12)
+                    and r12 >= sell_ret12_limit_default
+                )
+                trig_sell_r22 = (
+                    sell_ret22_limit_default is not None
+                    and not math.isnan(r22)
+                    and r22 >= sell_ret22_limit_default
+                )
                 if trig_sell_r3 or trig_sell_r6 or trig_sell_r12 or trig_sell_r22:
                     block_sell = True
                 block_sell_series[i] = 1 if block_sell else 0
@@ -2696,14 +2883,14 @@ def main():
                             "ret_6": float(r6) if not math.isnan(r6) else float('nan'),
                             "ret_12": float(r12) if not math.isnan(r12) else float('nan'),
                             "ret_22": float(r22) if not math.isnan(r22) else float('nan'),
-                            "limit_sell_r3": 0.03,
-                            "limit_sell_r6": 0.03,
-                            "limit_sell_r12": 0.0225,
-                            "limit_sell_r22": 0.0075,
-                            "ratio_sell_r3": (float(r3) / 0.03) if (not math.isnan(r3)) else float('nan'),
-                            "ratio_sell_r6": (float(r6) / 0.03) if (not math.isnan(r6)) else float('nan'),
-                            "ratio_sell_r12": (float(r12) / 0.0225) if (not math.isnan(r12)) else float('nan'),
-                            "ratio_sell_r22": (float(r22) / 0.0075) if (not math.isnan(r22)) else float('nan'),
+                            "limit_sell_r3": float(sell_ret3_limit_default) if sell_ret3_limit_default is not None else float('nan'),
+                            "limit_sell_r6": float(sell_ret6_limit_default) if sell_ret6_limit_default is not None else float('nan'),
+                            "limit_sell_r12": float(sell_ret12_limit_default) if sell_ret12_limit_default is not None else float('nan'),
+                            "limit_sell_r22": float(sell_ret22_limit_default) if sell_ret22_limit_default is not None else float('nan'),
+                            "ratio_sell_r3": (float(r3) / float(sell_ret3_limit_default)) if (sell_ret3_limit_default is not None and not math.isnan(r3) and sell_ret3_limit_default != 0.0) else float('nan'),
+                            "ratio_sell_r6": (float(r6) / float(sell_ret6_limit_default)) if (sell_ret6_limit_default is not None and not math.isnan(r6) and sell_ret6_limit_default != 0.0) else float('nan'),
+                            "ratio_sell_r12": (float(r12) / float(sell_ret12_limit_default)) if (sell_ret12_limit_default is not None and not math.isnan(r12) and sell_ret12_limit_default != 0.0) else float('nan'),
+                            "ratio_sell_r22": (float(r22) / float(sell_ret22_limit_default)) if (sell_ret22_limit_default is not None and not math.isnan(r22) and sell_ret22_limit_default != 0.0) else float('nan'),
                             "temp_T": float(T),
                             "base_p": float(base_p),
                             "rate_annual_pct": float(rate_today),
@@ -2717,7 +2904,7 @@ def main():
                     port_cash[i] = total - port_tqqq[i]
                     total = port_tqqq[i] + port_cash[i]
                     curr_p = target_p
-                    next_rebalance_idx = i + 22
+                    next_rebalance_idx = i + rebalance_cadence
                     last_rebalance_idx = i
                     acted = True
                     add_rebalance_entry(i, port_tqqq[i], port_cash[i], prev_tqqq, prev_cash)
@@ -2727,7 +2914,7 @@ def main():
                             debug_rows[-1]["curr_p_after"] = float(curr_p)
             else:
                 # No significant change, but treat as a completed rebalance to keep cadence
-                next_rebalance_idx = i + 22
+                next_rebalance_idx = i + rebalance_cadence
                 last_rebalance_idx = i
                 acted = True
                 if debug_start_ts is not None:
