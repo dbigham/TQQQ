@@ -269,8 +269,6 @@ def _write_payload(
 def _metrics_are_fresh(fundamentals: Fundamentals, today_iso: str, *, stale_after_days: int) -> bool:
     metrics = [fundamentals.pe_ratio, fundamentals.peg_ratio, fundamentals.growth_rate]
     for metric in metrics:
-        if metric.value is None:
-            return False
         if metric.as_of is None:
             return False
         age = _days_between(metric.as_of, today_iso)
@@ -419,13 +417,15 @@ def ensure_fundamentals(
         pe_metric = FundamentalMetric("P/E ratio", float(pe_value), today_iso)
     else:
         pe_metric = cached.pe_ratio
-        if pe_metric.as_of is None and pe_metric.value is None:
+        if pe_metric.value is None:
             pe_metric = FundamentalMetric("P/E ratio", None, today_iso)
 
     if peg_value is not None:
         peg_metric = FundamentalMetric("PEG ratio", float(peg_value), today_iso)
     else:
         peg_metric = cached.peg_ratio
+        if peg_metric.value is None:
+            peg_metric = FundamentalMetric("PEG ratio", None, today_iso)
 
     if growth_value is not None:
         growth_metric = FundamentalMetric(
@@ -433,6 +433,10 @@ def ensure_fundamentals(
         )
     else:
         growth_metric = cached.growth_rate
+        if growth_metric.value is None:
+            growth_metric = FundamentalMetric(
+                "Current growth rate", None, today_iso, percent=True
+            )
 
     refreshed = Fundamentals(pe_metric, peg_metric, growth_metric)
     metadata_updates = {
