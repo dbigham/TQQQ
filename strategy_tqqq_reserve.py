@@ -82,7 +82,8 @@ import os
 import re
 from typing import Mapping, Optional, Sequence
 
-from fit_constant_growth import iterative_fit as curve_iterative_fit
+from tqqq import fetch_fred_series as download_fred_series
+from tqqq import iterative_constant_growth, load_price_csv
 
 
 TEMPERATURE_CACHE_DIR = "temperature_cache"
@@ -96,58 +97,12 @@ def import_libs():
     return pd, np, plt
 
 
-def fetch_fred_series(pd, series_id: str, start, end):
-    # Try fredapi with env key if available
-    import os
-    api_key = os.environ.get("FRED_API_KEY")
-    if api_key:
-        try:
-            from fredapi import Fred  # type: ignore
-            fred = Fred(api_key=api_key)
-            s = fred.get_series(series_id, observation_start=start, observation_end=end)
-            s = s.rename("rate").to_frame()
-            s.index = pd.to_datetime(s.index)
-            return s
-        except Exception:
-            pass
-    # Try pandas_datareader
-    try:
-        from pandas_datareader import data as pdr  # type: ignore
-        s = pdr.DataReader(series_id, "fred", start, end)
-        s = s.rename(columns={series_id: "rate"})
-        return s
-    except Exception:
-        pass
-    # Fallback to fredgraph CSV
-    try:
-        import io
-        import urllib.request
-        url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
-        with urllib.request.urlopen(url) as resp:
-            csv_bytes = resp.read()
-        s = pd.read_csv(io.BytesIO(csv_bytes))
-        # fredgraph currently uses 'observation_date' for the date column but older
-        # exports used 'DATE'. Support either for robustness.
-        date_col = "DATE" if "DATE" in s.columns else "observation_date"
-        value_col = series_id if series_id in s.columns else series_id.upper()
-        s = s.rename(columns={date_col: "date", value_col: "rate"})
-        s["date"] = pd.to_datetime(s["date"])
-        s = s.set_index("date")["rate"].to_frame()
-        s = s.loc[(s.index >= pd.to_datetime(start)) & (s.index <= pd.to_datetime(end))]
-        return s
-    except Exception as exc:
-        raise RuntimeError("Failed to fetch FRED series") from exc
+def get_fred_series(series_id: str, start, end):
+    return download_fred_series(series_id, start, end, api_key=os.environ.get("FRED_API_KEY"))
 
 
 def load_unified(pd, csv_path: str):
-    df = pd.read_csv(csv_path)
-    if "date" not in df.columns or "close" not in df.columns:
-        raise RuntimeError("Expected columns 'date' and 'close'")
-    df["date"] = pd.to_datetime(df["date"])
-    df = df.sort_values("date")
-    df = df.dropna(subset=["close"]).copy()
-    df = df[df["close"] > 0]
-    df = df.set_index("date")
+    df, _ = load_price_csv(csv_path, set_index=True)
     return df
 
 
@@ -321,10 +276,10 @@ def ensure_temperature_assets(pd, np, plt, symbol: str, df_full, *, thresh2=0.35
     prices = df_full["close"].to_numpy()
 
     t_array = t_years.to_numpy() if hasattr(t_years, "to_numpy") else t_years
-    _, _, step3 = curve_iterative_fit(np, t_array, prices, thresholds=[thresh2, thresh3])
-    A3, r3, _ = step3
-    A = float(A3)
-    r = float(r3)
+    result = iterative_constant_growth(t_array, prices, thresholds=[thresh2, thresh3])
+    final = result.final
+    A = float(final.A)
+    r = float(final.r)
 
     curve_png, temp_png = save_temperature_plots(
         pd,
@@ -2359,18 +2314,15 @@ def main():
     df["vol_66"] = df["ret"].rolling(window=66).std()
 
     # Rates
-    rates = fetch_fred_series(pd, args.fred_series, start_ts, end_ts)
+    rates = get_fred_series(args.fred_series, start_ts, end_ts)
     rates = rates.rename(columns={rates.columns[0]: "rate"}) if rates.shape[1] == 1 else rates
-    rates.index = pd.to_datetime(rates.index)
     rates = rates.sort_index()
     rates = rates.reindex(df.index).ffill().bfill()
 
     # Macro indicators: yield-curve spread (T10Y2Y) and credit spread (BAA10Y)
-    yc = fetch_fred_series(pd, "T10Y2Y", start_ts, end_ts)
-    yc.index = pd.to_datetime(yc.index)
+    yc = get_fred_series("T10Y2Y", start_ts, end_ts)
     yc = yc.sort_index()
-    cs = fetch_fred_series(pd, "BAA10Y", start_ts, end_ts)
-    cs.index = pd.to_datetime(cs.index)
+    cs = get_fred_series("BAA10Y", start_ts, end_ts)
     cs = cs.sort_index()
     macro = pd.DataFrame({
         "yc_spread": yc["rate"],
