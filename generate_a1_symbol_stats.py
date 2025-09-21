@@ -45,8 +45,6 @@ class ExperimentSpec:
     identifier: str
     output_path: str
     variable_name: str
-    cagr_key: str
-    include_strategy_alias: bool = True
 
 
 SYMBOLS: List[SymbolInfo] = [
@@ -155,9 +153,14 @@ SYMBOLS: List[SymbolInfo] = [
 
 assert len(SYMBOLS) == 100, f"Expected 100 symbols, got {len(SYMBOLS)}"
 
+LEGACY_CAGR_KEYS = {
+    "A1": "A1_CAGR",
+    "A1g": "A1G_CAGR",
+}
+
 EXPERIMENT_SPECS: List[ExperimentSpec] = [
-    ExperimentSpec("A1", "a1_symbol_stats.py", "A1_SYMBOL_STATS", "A1_CAGR", True),
-    ExperimentSpec("A1g", "a1g_symbol_stats.py", "A1G_SYMBOL_STATS", "A1G_CAGR", True),
+    ExperimentSpec("A1", "a1_symbol_stats.py", "A1_SYMBOL_STATS"),
+    ExperimentSpec("A1g", "a1g_symbol_stats.py", "A1G_SYMBOL_STATS"),
 ]
 
 EXPERIMENT_LOOKUP = {spec.identifier: spec for spec in EXPERIMENT_SPECS}
@@ -441,6 +444,7 @@ def build_stats(
     if baseline_stats is None:
         baseline_stats = {}
     stats_rows = []
+    legacy_cagr_key = LEGACY_CAGR_KEYS.get(spec.identifier)
     for info in SYMBOLS:
         metrics = ensure_assets(info.symbol, spec.identifier)
         baseline_entry = baseline_stats.get(info.symbol, {})
@@ -471,9 +475,9 @@ def build_stats(
             fit_quality = baseline_entry.get("Fit_Quality")
         strategy_cagr = metrics.get("strategy_cagr")
         if strategy_cagr is None:
-            strategy_cagr = baseline_entry.get(spec.cagr_key)
-        if strategy_cagr is None:
             strategy_cagr = baseline_entry.get("Strategy_CAGR")
+        if strategy_cagr is None and legacy_cagr_key:
+            strategy_cagr = baseline_entry.get(legacy_cagr_key)
         metrics["strategy_cagr"] = strategy_cagr
         chart_path = metrics.get("strategy_chart_path")
         if (not chart_path) and baseline_entry.get("Strategy_Chart_Path"):
@@ -513,7 +517,6 @@ def build_stats(
             },
             "Symbol_CAGR": metrics.get("symbol_cagr"),
             "Fitted_CAGR": metrics.get("fitted_cagr"),
-            spec.cagr_key: metrics.get("strategy_cagr"),
             "Strategy_CAGR": metrics.get("strategy_cagr"),
             "Max_Drawdown": metrics.get("max_drawdown"),
             "Rebalances": metrics.get("rebalances"),
@@ -524,8 +527,6 @@ def build_stats(
             "PEG_Ratio_As_Of": metrics.get("peg_ratio_as_of"),
             "Strategy_Chart_Path": metrics.get("strategy_chart_path"),
         }
-        if not spec.include_strategy_alias:
-            ordered[info.symbol].pop("Strategy_CAGR", None)
     return ordered
 
 
@@ -556,10 +557,8 @@ def write_output(spec: ExperimentSpec, stats: OrderedDict) -> None:
         value_keys = [
             "Symbol_CAGR",
             "Fitted_CAGR",
-            spec.cagr_key,
+            "Strategy_CAGR",
         ]
-        if spec.include_strategy_alias and spec.cagr_key != "Strategy_CAGR":
-            value_keys.append("Strategy_CAGR")
         value_keys.extend(
             [
                 "Max_Drawdown",
