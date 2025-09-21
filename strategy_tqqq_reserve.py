@@ -1451,6 +1451,44 @@ EXPERIMENTS["TESLA2X"] = {
 }
 EXPERIMENTS["TESLA2x"] = {**EXPERIMENTS["TESLA2X"]}
 
+# CRM2X tunes the leveraged optimiser for Salesforce with a 2x sleeve
+EXPERIMENTS["CRM2X"] = {
+    "temperature_allocation": [
+        {"temp": 0.943276238479186, "allocation": 1.300935182207879},
+        {"temp": 1.0, "allocation": 1.1},
+        {"temp": 1.2851226598530594, "allocation": 0.07214073410116358},
+    ],
+    "momentum_filters": {
+        "buy": {
+            "ret3": -0.009934536318049225,
+            "ret6": 0.0010685452318550104,
+            "ret12": 0.006707013120519407,
+            "ret22": -0.0033135814935658452,
+            "temp": 1.3449941220997192,
+        },
+        "sell": {
+            "ret3": 0.09028928135700337,
+            "ret6": 0.013594010399651791,
+            "ret12": -0.026122410893363583,
+            "ret22": 0.004031251686438176,
+        },
+    },
+    "rate_taper": {
+        "start": 10.63726107519519,
+        "end": 13.207353213335777,
+        "min_allocation": 0.17858434211873486,
+        "enabled": True,
+    },
+    "crash_derisk": {
+        "enabled": False,
+        "threshold": None,
+        "cooldown_days": 22,
+    },
+    "rebalance_days": 22,
+    "leverage_override": 2.0,
+}
+EXPERIMENTS["CRM2x"] = {**EXPERIMENTS["CRM2X"]}
+
 # A5 builds on A4 with a macro risk-off filter
 EXPERIMENTS["A5"] = {
     **EXPERIMENTS["A4"],
