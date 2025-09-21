@@ -3,7 +3,10 @@
 from .dataset import PriceDataError, load_price_csv
 from .fitting import FitResult, FitStep, fit_constant_growth, iterative_constant_growth
 from .fred import fetch_fred_series
-from .fundamentals import PERatio, ensure_pe_ratio
+from .fundamentals import FundamentalMetric, Fundamentals, ensure_fundamentals, ensure_pe_ratio
+
+# Backwards compatibility: expose ``PERatio`` as an alias for ``FundamentalMetric``.
+PERatio = FundamentalMetric
 from .simulation import simulate_leveraged_path
 
 __all__ = [
@@ -14,6 +17,9 @@ __all__ = [
     "fit_constant_growth",
     "iterative_constant_growth",
     "fetch_fred_series",
+    "FundamentalMetric",
+    "Fundamentals",
+    "ensure_fundamentals",
     "PERatio",
     "ensure_pe_ratio",
     "simulate_leveraged_path",

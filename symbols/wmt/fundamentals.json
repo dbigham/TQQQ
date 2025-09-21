@@ -1,6 +1,15 @@
 {
-  "as_of": "2025-09-21",
+  "growth_rate": 0.09811243711570711,
+  "growth_rate_as_of": "2025-09-21",
+  "growth_rate_basis": "Next_5Y_EPS_CAGR",
+  "growth_rate_source": "derived_from_pe_and_peg",
+  "growth_rate_units": "percent",
   "pe_ratio": 38.615093,
+  "pe_ratio_as_of": "2025-09-21",
+  "pe_ratio_basis": "Forward_NTM",
+  "peg_ratio": 3.9358,
+  "peg_ratio_as_of": "2025-09-21",
+  "peg_ratio_basis": "Forward_NTM / Next_5Y_EPS_CAGR (percent)",
   "source": "yfinance",
   "symbol": "WMT"
 }

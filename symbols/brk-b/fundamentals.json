@@ -1,6 +1,15 @@
 {
-  "as_of": "2025-09-21",
+  "growth_rate": -0.592,
+  "growth_rate_as_of": "2025-09-21",
+  "growth_rate_basis": "Next_5Y_EPS_CAGR",
+  "growth_rate_units": "percent",
   "pe_ratio": 16.889994,
+  "pe_ratio_as_of": "2025-09-21",
+  "pe_ratio_basis": "Forward_NTM",
+  "peg_ratio": null,
+  "peg_ratio_as_of": "2025-09-21",
+  "peg_ratio_basis": "Forward_NTM / Next_5Y_EPS_CAGR (percent)",
+  "peg_ratio_note": "PEG not meaningful for non-positive growth",
   "source": "yfinance",
   "symbol": "BRK-B"
 }
