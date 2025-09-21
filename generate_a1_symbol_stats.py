@@ -19,7 +19,7 @@ from typing import Any, Dict, List
 import numpy as np
 import pandas as pd
 
-from tqqq import PERatio, ensure_pe_ratio
+from tqqq import PEGRatio, PERatio, ensure_fundamental_ratios
 
 try:
     from a1_symbol_stats import A1_SYMBOL_STATS as EXISTING_A1_STATS
@@ -165,7 +165,13 @@ SPAN_RE = re.compile(r"\- \*\*Span\*\*: (?P<start>\d{4}-\d{2}-\d{2}) → (?P<end
 NUMBER_RE = re.compile(r"-?\d+(?:\.\d+)?")
 
 
-def ensure_summary_pe_line(summary_path: str, pe_ratio: PERatio) -> None:
+def _ensure_summary_ratio_line(
+    summary_path: str,
+    *,
+    desired_line: str,
+    label_prefix: str,
+    insert_after_prefixes: tuple[str, ...],
+) -> None:
     if not os.path.exists(summary_path):
         return
     try:
@@ -174,37 +180,58 @@ def ensure_summary_pe_line(summary_path: str, pe_ratio: PERatio) -> None:
     except FileNotFoundError:
         return
 
-    desired = pe_ratio.as_summary_line().strip()
     existing_idx = None
     for idx, line in enumerate(lines):
-        if line.strip().startswith("- **P/E ratio"):
+        if line.strip().startswith(label_prefix):
             existing_idx = idx
             break
-
     if existing_idx is not None:
         lines.pop(existing_idx)
-    line_to_insert = desired
 
     insert_idx = None
-    for idx, line in enumerate(lines):
-        if line.strip().startswith("- **Rebalances executed"):
-            insert_idx = idx + 1
+    for prefix in insert_after_prefixes:
+        for idx, line in enumerate(lines):
+            if line.strip().startswith(prefix):
+                insert_idx = idx + 1
+                break
+        if insert_idx is not None:
             break
     if insert_idx is None:
         for idx, line in enumerate(lines):
             if line.strip() == "":
                 insert_idx = idx
                 break
+
     if insert_idx is None or insert_idx >= len(lines):
-        lines.append(line_to_insert)
+        lines.append(desired_line)
     else:
-        lines.insert(insert_idx, line_to_insert)
+        lines.insert(insert_idx, desired_line)
 
     if lines and lines[-1] != "":
         lines.append("")
 
     with open(summary_path, "w", encoding="utf-8") as fh:
         fh.write("\n".join(lines) + "\n")
+
+
+def ensure_summary_pe_line(summary_path: str, pe_ratio: PERatio) -> None:
+    desired = pe_ratio.as_summary_line().strip()
+    _ensure_summary_ratio_line(
+        summary_path,
+        desired_line=desired,
+        label_prefix="- **P/E ratio",
+        insert_after_prefixes=("- **Rebalances executed",),
+    )
+
+
+def ensure_summary_peg_line(summary_path: str, peg_ratio: PEGRatio) -> None:
+    desired = peg_ratio.as_summary_line().strip()
+    _ensure_summary_ratio_line(
+        summary_path,
+        desired_line=desired,
+        label_prefix="- **PEG ratio",
+        insert_after_prefixes=("- **P/E ratio", "- **Rebalances executed"),
+    )
 
 
 def run_strategy(
@@ -255,6 +282,11 @@ def parse_summary(summary_path: str) -> Dict[str, float]:
                     if date_match:
                         metrics["pe_ratio_as_of"] = date_match.group(1)
                     metrics["pe_ratio"] = None
+                elif "PEG ratio" in label:
+                    date_match = re.search(r"(\d{4}-\d{2}-\d{2})", label)
+                    if date_match:
+                        metrics["peg_ratio_as_of"] = date_match.group(1)
+                    metrics["peg_ratio"] = None
                 continue
             value = float(number_match.group(0))
             if "Underlying" in label:
@@ -272,6 +304,11 @@ def parse_summary(summary_path: str) -> Dict[str, float]:
                 if date_match:
                     metrics["pe_ratio_as_of"] = date_match.group(1)
                 metrics["pe_ratio"] = value
+            elif "PEG ratio" in label:
+                date_match = re.search(r"(\d{4}-\d{2}-\d{2})", label)
+                if date_match:
+                    metrics["peg_ratio_as_of"] = date_match.group(1)
+                metrics["peg_ratio"] = value
     if span_info:
         metrics["span_start"] = span_info["start"]
         metrics["span_end"] = span_info["end"]
@@ -373,12 +410,15 @@ def ensure_assets(symbol: str, experiment: str) -> Dict[str, float]:
         else:
             print(f"Assets already exist for {symbol}, skipping strategy rerun.")
 
-    pe_ratio = ensure_pe_ratio(symbol_upper, symbol_dir)
-    ensure_summary_pe_line(summary_path, pe_ratio)
+    ratios = ensure_fundamental_ratios(symbol_upper, symbol_dir)
+    ensure_summary_pe_line(summary_path, ratios.pe_ratio)
+    ensure_summary_peg_line(summary_path, ratios.peg_ratio)
 
     metrics = parse_summary(summary_path)
-    metrics.setdefault("pe_ratio", pe_ratio.value)
-    metrics.setdefault("pe_ratio_as_of", pe_ratio.as_of)
+    metrics.setdefault("pe_ratio", ratios.pe_ratio.value)
+    metrics.setdefault("pe_ratio_as_of", ratios.pe_ratio.as_of)
+    metrics.setdefault("peg_ratio", ratios.peg_ratio.value)
+    metrics.setdefault("peg_ratio_as_of", ratios.peg_ratio.as_of)
     return metrics
 
 
@@ -430,6 +470,10 @@ def build_stats(
             metrics.setdefault("underlying_cagr", symbol_cagr)
         metrics["symbol_cagr"] = symbol_cagr
         metrics["fit_quality"] = fit_quality
+        metrics.setdefault("pe_ratio", baseline_entry.get("PE_Ratio"))
+        metrics.setdefault("pe_ratio_as_of", baseline_entry.get("PE_Ratio_As_Of"))
+        metrics.setdefault("peg_ratio", baseline_entry.get("PEG_Ratio"))
+        metrics.setdefault("peg_ratio_as_of", baseline_entry.get("PEG_Ratio_As_Of"))
         stats_rows.append((info, metrics))
 
     def sort_key(item):
@@ -461,6 +505,8 @@ def build_stats(
             "Fit_Quality": metrics.get("fit_quality"),
             "PE_Ratio": metrics.get("pe_ratio"),
             "PE_Ratio_As_Of": metrics.get("pe_ratio_as_of"),
+            "PEG_Ratio": metrics.get("peg_ratio"),
+            "PEG_Ratio_As_Of": metrics.get("peg_ratio_as_of"),
         }
     return ordered
 
@@ -497,6 +543,8 @@ def write_output(stats: OrderedDict, path: str, variable_name: str) -> None:
             "Fit_Quality",
             "PE_Ratio",
             "PE_Ratio_As_Of",
+            "PEG_Ratio",
+            "PEG_Ratio_As_Of",
         ]:
             val = data.get(key)
             if isinstance(val, (int, float)) and not isinstance(val, bool):

@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 17.069008,
+  "peg_ratio": 1.65,
   "source": "yfinance",
   "symbol": "ABT"
 }

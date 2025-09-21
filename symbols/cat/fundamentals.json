@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 23.754583,
+  "peg_ratio": 5.25,
   "source": "yfinance",
   "symbol": "CAT"
 }

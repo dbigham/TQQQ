@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 29.782946,
+  "peg_ratio": 10.06,
   "source": "yfinance",
   "symbol": "ENPH"
 }

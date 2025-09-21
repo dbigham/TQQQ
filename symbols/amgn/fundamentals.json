@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 23.317812,
+  "peg_ratio": 5.59,
   "source": "yfinance",
   "symbol": "AMGN"
 }

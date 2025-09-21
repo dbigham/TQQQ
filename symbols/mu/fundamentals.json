@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 29.320719,
+  "peg_ratio": 0.23,
   "source": "yfinance",
   "symbol": "MU"
 }

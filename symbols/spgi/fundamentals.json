@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 38.92249,
+  "peg_ratio": 3.51,
   "source": "yfinance",
   "symbol": "SPGI"
 }

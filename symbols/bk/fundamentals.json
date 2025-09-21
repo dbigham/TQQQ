@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 16.622324,
+  "peg_ratio": 1.14,
   "source": "yfinance",
   "symbol": "BK"
 }

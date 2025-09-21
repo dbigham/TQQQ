@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 50.190342,
+  "peg_ratio": 1.44,
   "source": "yfinance",
   "symbol": "NVDA"
 }

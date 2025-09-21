@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 12.559322,
+  "peg_ratio": 1.13,
   "source": "yfinance",
   "symbol": "MRK"
 }

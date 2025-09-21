@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 52.345135,
+  "peg_ratio": 2.04,
   "source": "yfinance",
   "symbol": "NFLX"
 }

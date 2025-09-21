@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 49.97745,
+  "peg_ratio": 4.48,
   "source": "yfinance",
   "symbol": "SYK"
 }

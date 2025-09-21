@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 32.787548,
+  "peg_ratio": 1.73,
   "source": "yfinance",
   "symbol": "ASML"
 }

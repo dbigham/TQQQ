@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 22.82595,
+  "peg_ratio": 1.81,
   "source": "yfinance",
   "symbol": "ADBE"
 }

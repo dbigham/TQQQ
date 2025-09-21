@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 42.89855,
+  "peg_ratio": 6.04,
   "source": "yfinance",
   "symbol": "IBM"
 }

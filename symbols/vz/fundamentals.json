@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 10.111628,
+  "peg_ratio": 2.9,
   "source": "yfinance",
   "symbol": "VZ"
 }

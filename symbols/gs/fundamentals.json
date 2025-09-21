@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 17.731277,
+  "peg_ratio": 1.28,
   "source": "yfinance",
   "symbol": "GS"
 }

@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 25.910883,
+  "peg_ratio": 3.54,
   "source": "yfinance",
   "symbol": "MCD"
 }

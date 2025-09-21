@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": null,
+  "peg_ratio": null,
   "source": "yfinance",
   "symbol": "BTC-USD"
 }

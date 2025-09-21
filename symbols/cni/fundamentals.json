@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 17.741444,
+  "peg_ratio": 1.96,
   "source": "yfinance",
   "symbol": "CNI"
 }

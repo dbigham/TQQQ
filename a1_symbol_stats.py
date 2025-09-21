@@ -16,6 +16,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.445459,
         "PE_Ratio": 628.93,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 15.05,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "AVGO": {
         "Symbol": "AVGO",
@@ -34,6 +36,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.792856,
         "PE_Ratio": 88.45,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.63,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "SHOP": {
         "Symbol": "SHOP",
@@ -52,6 +56,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.449149,
         "PE_Ratio": 85.64,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 3.67,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "ARM": {
         "Symbol": "ARM",
@@ -70,6 +76,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.764505,
         "PE_Ratio": 216.53,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 10.62,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "NET": {
         "Symbol": "NET",
@@ -88,6 +96,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.549776,
         "PE_Ratio": 262.72,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 10.45,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "GOOGL": {
         "Symbol": "GOOGL",
@@ -106,6 +116,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.78531,
         "PE_Ratio": 27.18,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.84,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "MA": {
         "Symbol": "MA",
@@ -124,6 +136,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.819381,
         "PE_Ratio": 39.36,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.64,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "NVDA": {
         "Symbol": "NVDA",
@@ -142,6 +156,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.385269,
         "PE_Ratio": 50.19,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.44,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "NOW": {
         "Symbol": "NOW",
@@ -160,6 +176,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.783125,
         "PE_Ratio": 120.44,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 5.99,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "CRWD": {
         "Symbol": "CRWD",
@@ -178,6 +196,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.712175,
         "PE_Ratio": 117.69,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 7.24,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "ADBE": {
         "Symbol": "ADBE",
@@ -196,6 +216,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.637063,
         "PE_Ratio": 22.83,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.81,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "ASML": {
         "Symbol": "ASML",
@@ -214,6 +236,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.496898,
         "PE_Ratio": 32.79,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.73,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "TSLA": {
         "Symbol": "TSLA",
@@ -232,6 +256,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.548662,
         "PE_Ratio": 256.67,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 17.65,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "AMZN": {
         "Symbol": "AMZN",
@@ -250,6 +276,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.441889,
         "PE_Ratio": 35.34,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.9,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "BLK": {
         "Symbol": "BLK",
@@ -268,6 +296,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.771588,
         "PE_Ratio": 27.63,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.47,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "V": {
         "Symbol": "V",
@@ -286,6 +316,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.846725,
         "PE_Ratio": 33.33,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.59,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "MSFT": {
         "Symbol": "MSFT",
@@ -304,6 +336,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.44649,
         "PE_Ratio": 38.03,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.28,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "NVO": {
         "Symbol": "NVO",
@@ -322,6 +356,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.626291,
         "PE_Ratio": 15.54,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.34,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "HD": {
         "Symbol": "HD",
@@ -340,6 +376,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.457783,
         "PE_Ratio": 28.24,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 5.35,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "CSCO": {
         "Symbol": "CSCO",
@@ -358,6 +396,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.327551,
         "PE_Ratio": 26.75,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 4.68,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "DHR": {
         "Symbol": "DHR",
@@ -376,6 +416,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.680363,
         "PE_Ratio": 40.95,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 5.01,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "TMO": {
         "Symbol": "TMO",
@@ -394,6 +436,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.652472,
         "PE_Ratio": 27.71,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 3.88,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "META": {
         "Symbol": "META",
@@ -412,6 +456,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.79007,
         "PE_Ratio": 28.25,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.2,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "TSM": {
         "Symbol": "TSM",
@@ -430,6 +476,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.524152,
         "PE_Ratio": 28.67,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.21,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "MO": {
         "Symbol": "MO",
@@ -448,6 +496,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.665692,
         "PE_Ratio": 12.55,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.91,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "INTU": {
         "Symbol": "INTU",
@@ -466,6 +516,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.6749,
         "PE_Ratio": 50.25,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 3.45,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "OKTA": {
         "Symbol": "OKTA",
@@ -484,6 +536,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.49095,
         "PE_Ratio": 111.15,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 8.9,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "MCD": {
         "Symbol": "MCD",
@@ -502,6 +556,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.732731,
         "PE_Ratio": 25.91,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 3.54,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "ADP": {
         "Symbol": "ADP",
@@ -520,6 +576,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.687156,
         "PE_Ratio": 29.23,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 3.09,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "SYK": {
         "Symbol": "SYK",
@@ -538,6 +596,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.576481,
         "PE_Ratio": 49.98,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 4.48,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "ACN": {
         "Symbol": "ACN",
@@ -556,6 +616,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.845391,
         "PE_Ratio": 19.08,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.49,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "PM": {
         "Symbol": "PM",
@@ -574,6 +636,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.830041,
         "PE_Ratio": 24.11,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.62,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "PANW": {
         "Symbol": "PANW",
@@ -592,6 +656,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.784412,
         "PE_Ratio": 130.12,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 9.69,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "CRM": {
         "Symbol": "CRM",
@@ -610,6 +676,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.797486,
         "PE_Ratio": 35.97,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.88,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "ABT": {
         "Symbol": "ABT",
@@ -628,6 +696,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.725136,
         "PE_Ratio": 17.07,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.65,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "MMC": {
         "Symbol": "MMC",
@@ -646,6 +716,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.692973,
         "PE_Ratio": 23.65,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.71,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "SBUX": {
         "Symbol": "SBUX",
@@ -664,6 +736,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.735602,
         "PE_Ratio": 36.61,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 110.82,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "COST": {
         "Symbol": "COST",
@@ -682,6 +756,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.656105,
         "PE_Ratio": 54.04,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 5.27,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "ZTS": {
         "Symbol": "ZTS",
@@ -700,6 +776,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.802914,
         "PE_Ratio": 25.11,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.97,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "NKE": {
         "Symbol": "NKE",
@@ -718,6 +796,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.662665,
         "PE_Ratio": 32.82,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 3.33,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "RTX": {
         "Symbol": "RTX",
@@ -736,6 +816,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.68452,
         "PE_Ratio": 34.7,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 3.77,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "T": {
         "Symbol": "T",
@@ -754,6 +836,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.677408,
         "PE_Ratio": 16.58,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 4.71,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "SCHW": {
         "Symbol": "SCHW",
@@ -772,6 +856,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.35699,
         "PE_Ratio": 25.36,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.04,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "ISRG": {
         "Symbol": "ISRG",
@@ -790,6 +876,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.626793,
         "PE_Ratio": 61.36,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 4.49,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "LLY": {
         "Symbol": "LLY",
@@ -808,6 +896,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.556678,
         "PE_Ratio": 49.25,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.2,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "LIN": {
         "Symbol": "LIN",
@@ -826,6 +916,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.822908,
         "PE_Ratio": 34.02,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 4.15,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "DE": {
         "Symbol": "DE",
@@ -844,6 +936,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.712026,
         "PE_Ratio": 24.51,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.73,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "AMGN": {
         "Symbol": "AMGN",
@@ -862,6 +956,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.467223,
         "PE_Ratio": 23.32,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 5.59,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "SPGI": {
         "Symbol": "SPGI",
@@ -880,6 +976,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.728385,
         "PE_Ratio": 38.92,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 3.51,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "CB": {
         "Symbol": "CB",
@@ -898,6 +996,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.810835,
         "PE_Ratio": 12.09,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.64,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "WMT": {
         "Symbol": "WMT",
@@ -916,6 +1016,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.431049,
         "PE_Ratio": 38.62,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 4.12,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "SO": {
         "Symbol": "SO",
@@ -934,6 +1036,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.799691,
         "PE_Ratio": 23.72,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 3.51,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "ORCL": {
         "Symbol": "ORCL",
@@ -952,6 +1056,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.414956,
         "PE_Ratio": 71.45,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 3.11,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "BA": {
         "Symbol": "BA",
@@ -970,6 +1076,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.616811,
         "PE_Ratio": 458.83,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.91,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "KO": {
         "Symbol": "KO",
@@ -988,6 +1096,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.529744,
         "PE_Ratio": 23.56,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 3.76,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "CAT": {
         "Symbol": "CAT",
@@ -1006,6 +1116,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.690914,
         "PE_Ratio": 23.75,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 5.25,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "GS": {
         "Symbol": "GS",
@@ -1024,6 +1136,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.758195,
         "PE_Ratio": 17.73,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.28,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "DIS": {
         "Symbol": "DIS",
@@ -1042,6 +1156,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.569032,
         "PE_Ratio": 17.83,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.31,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "AMAT": {
         "Symbol": "AMAT",
@@ -1060,6 +1176,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.350814,
         "PE_Ratio": 22.68,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 3.18,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "MRK": {
         "Symbol": "MRK",
@@ -1078,6 +1196,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.518787,
         "PE_Ratio": 12.56,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.13,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "IBM": {
         "Symbol": "IBM",
@@ -1096,6 +1216,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.721534,
         "PE_Ratio": 42.9,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 6.04,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "AXP": {
         "Symbol": "AXP",
@@ -1114,6 +1236,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.657569,
         "PE_Ratio": 23.99,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.06,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "LMT": {
         "Symbol": "LMT",
@@ -1132,6 +1256,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.417777,
         "PE_Ratio": 26.52,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.18,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "BK": {
         "Symbol": "BK",
@@ -1150,6 +1276,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.501072,
         "PE_Ratio": 16.62,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.14,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "TXN": {
         "Symbol": "TXN",
@@ -1168,6 +1296,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.576156,
         "PE_Ratio": 32.79,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.27,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "JNJ": {
         "Symbol": "JNJ",
@@ -1186,6 +1316,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.637569,
         "PE_Ratio": 18.86,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.85,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "CHTR": {
         "Symbol": "CHTR",
@@ -1204,6 +1336,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.705278,
         "PE_Ratio": 7.19,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 0.59,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "JPM": {
         "Symbol": "JPM",
@@ -1222,6 +1356,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.698793,
         "PE_Ratio": 16.16,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.47,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "CMCSA": {
         "Symbol": "CMCSA",
@@ -1240,6 +1376,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.64801,
         "PE_Ratio": 5.24,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.16,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "USB": {
         "Symbol": "USB",
@@ -1258,6 +1396,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.579229,
         "PE_Ratio": 12.06,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.0,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "PG": {
         "Symbol": "PG",
@@ -1276,6 +1416,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.706906,
         "PE_Ratio": 23.97,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 4.78,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "GE": {
         "Symbol": "GE",
@@ -1294,6 +1436,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.465063,
         "PE_Ratio": 42.9,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.13,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "XOM": {
         "Symbol": "XOM",
@@ -1312,6 +1456,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.676927,
         "PE_Ratio": 16.03,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.81,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "MDLZ": {
         "Symbol": "MDLZ",
@@ -1330,6 +1476,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.83711,
         "PE_Ratio": 23.34,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 8.28,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "MS": {
         "Symbol": "MS",
@@ -1348,6 +1496,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.555252,
         "PE_Ratio": 18.11,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.84,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "HON": {
         "Symbol": "HON",
@@ -1366,6 +1516,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.665022,
         "PE_Ratio": 23.82,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 3.06,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "VZ": {
         "Symbol": "VZ",
@@ -1384,6 +1536,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.763904,
         "PE_Ratio": 10.11,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.9,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "PEP": {
         "Symbol": "PEP",
@@ -1402,6 +1556,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.620871,
         "PE_Ratio": 25.82,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 7.74,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "AMD": {
         "Symbol": "AMD",
@@ -1420,6 +1576,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.415663,
         "PE_Ratio": 94.25,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.93,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "ZM": {
         "Symbol": "ZM",
@@ -1438,6 +1596,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.468646,
         "PE_Ratio": 22.15,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 5.28,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "BAC": {
         "Symbol": "BAC",
@@ -1456,6 +1616,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.479547,
         "PE_Ratio": 15.32,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.02,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "BMY": {
         "Symbol": "BMY",
@@ -1474,6 +1636,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.540563,
         "PE_Ratio": 18.08,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 0.25,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "BKNG": {
         "Symbol": "BKNG",
@@ -1492,6 +1656,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.168853,
         "PE_Ratio": 37.88,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.26,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "PFE": {
         "Symbol": "PFE",
@@ -1510,6 +1676,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.443779,
         "PE_Ratio": 12.71,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 106.52,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "QCOM": {
         "Symbol": "QCOM",
@@ -1528,6 +1696,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.50312,
         "PE_Ratio": 16.11,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.9,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "GILD": {
         "Symbol": "GILD",
@@ -1546,6 +1716,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.605332,
         "PE_Ratio": 22.64,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 0.85,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "PYPL": {
         "Symbol": "PYPL",
@@ -1564,6 +1736,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.544042,
         "PE_Ratio": 14.61,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.17,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "UPS": {
         "Symbol": "UPS",
@@ -1582,6 +1756,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.819558,
         "PE_Ratio": 12.51,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 10.16,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "TEAM": {
         "Symbol": "TEAM",
@@ -1600,6 +1776,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.591834,
         "PE_Ratio": 41.13,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.9,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "INTC": {
         "Symbol": "INTC",
@@ -1618,6 +1796,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.3689,
         "PE_Ratio": 30.49,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 0.07,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "C": {
         "Symbol": "C",
@@ -1636,6 +1816,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.239356,
         "PE_Ratio": 15.17,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 0.59,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "MU": {
         "Symbol": "MU",
@@ -1654,6 +1836,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.347573,
         "PE_Ratio": 29.32,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 0.23,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "DDOG": {
         "Symbol": "DDOG",
@@ -1672,6 +1856,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.753746,
         "PE_Ratio": 385.61,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 29.02,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "SNOW": {
         "Symbol": "SNOW",
@@ -1690,6 +1876,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.76019,
         "PE_Ratio": 247.83,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 5.9,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "AAPL": {
         "Symbol": "AAPL",
@@ -1708,6 +1896,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.481752,
         "PE_Ratio": 37.31,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 4.11,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "UNH": {
         "Symbol": "UNH",
@@ -1726,6 +1916,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.555614,
         "PE_Ratio": 14.58,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.29,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "NFLX": {
         "Symbol": "NFLX",
@@ -1744,6 +1936,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.621519,
         "PE_Ratio": 52.35,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.04,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "TTD": {
         "Symbol": "TTD",
@@ -1762,6 +1956,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.578926,
         "PE_Ratio": 53.58,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 2.84,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "SMCI": {
         "Symbol": "SMCI",
@@ -1780,6 +1976,8 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.388124,
         "PE_Ratio": 27.27,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 1.51,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
     "ENPH": {
         "Symbol": "ENPH",
@@ -1798,5 +1996,7 @@ A1_SYMBOL_STATS = {
         "Fit_Quality": 0.389706,
         "PE_Ratio": 29.78,
         "PE_Ratio_As_Of": '2025-09-21',
+        "PEG_Ratio": 10.06,
+        "PEG_Ratio_As_Of": '2025-09-21',
     },
 }

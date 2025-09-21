@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 40.95127,
+  "peg_ratio": 5.01,
   "source": "yfinance",
   "symbol": "DHR"
 }

@@ -1,6 +1,7 @@
 {
   "as_of": "2025-09-21",
   "pe_ratio": 17.83072,
+  "peg_ratio": 1.31,
   "source": "yfinance",
   "symbol": "DIS"
 }
