@@ -18,6 +18,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 15.05,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/pltr/strategy_pltr_reserve_A1g.png',
     },
     "CRWD": {
         "Symbol": "CRWD",
@@ -38,6 +39,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 7.24,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/crwd/strategy_crwd_reserve_A1g.png',
     },
     "SHOP": {
         "Symbol": "SHOP",
@@ -58,6 +60,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 3.67,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/shop/strategy_shop_reserve_A1g.png',
     },
     "ARM": {
         "Symbol": "ARM",
@@ -78,6 +81,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 10.62,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/arm/strategy_arm_reserve_A1g.png',
     },
     "NET": {
         "Symbol": "NET",
@@ -98,6 +102,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 10.45,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/net/strategy_net_reserve_A1g.png',
     },
     "AVGO": {
         "Symbol": "AVGO",
@@ -118,6 +123,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.63,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/avgo/strategy_avgo_reserve_A1g.png',
     },
     "TSLA": {
         "Symbol": "TSLA",
@@ -138,6 +144,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 17.65,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/tsla/strategy_tsla_reserve_A1g.png',
     },
     "GOOGL": {
         "Symbol": "GOOGL",
@@ -158,6 +165,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.84,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/googl/strategy_googl_reserve_A1g.png',
     },
     "NVDA": {
         "Symbol": "NVDA",
@@ -178,6 +186,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.44,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/nvda/strategy_nvda_reserve_A1g.png',
     },
     "MA": {
         "Symbol": "MA",
@@ -198,6 +207,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.64,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/ma/strategy_ma_reserve_A1g.png',
     },
     "NOW": {
         "Symbol": "NOW",
@@ -218,6 +228,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 5.99,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/now/strategy_now_reserve_A1g.png',
     },
     "ADBE": {
         "Symbol": "ADBE",
@@ -238,6 +249,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.81,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/adbe/strategy_adbe_reserve_A1g.png',
     },
     "NFLX": {
         "Symbol": "NFLX",
@@ -258,6 +270,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.04,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/nflx/strategy_nflx_reserve_A1g.png',
     },
     "AMZN": {
         "Symbol": "AMZN",
@@ -278,6 +291,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.9,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/amzn/strategy_amzn_reserve_A1g.png',
     },
     "PANW": {
         "Symbol": "PANW",
@@ -298,6 +312,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 9.69,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/panw/strategy_panw_reserve_A1g.png',
     },
     "CSCO": {
         "Symbol": "CSCO",
@@ -318,6 +333,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 4.68,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/csco/strategy_csco_reserve_A1g.png',
     },
     "ASML": {
         "Symbol": "ASML",
@@ -338,6 +354,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.73,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/asml/strategy_asml_reserve_A1g.png',
     },
     "BLK": {
         "Symbol": "BLK",
@@ -358,6 +375,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.47,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/blk/strategy_blk_reserve_A1g.png',
     },
     "MSFT": {
         "Symbol": "MSFT",
@@ -378,6 +396,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.28,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/msft/strategy_msft_reserve_A1g.png',
     },
     "META": {
         "Symbol": "META",
@@ -398,6 +417,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.2,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/meta/strategy_meta_reserve_A1g.png',
     },
     "V": {
         "Symbol": "V",
@@ -418,6 +438,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.59,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/v/strategy_v_reserve_A1g.png',
     },
     "CRM": {
         "Symbol": "CRM",
@@ -438,6 +459,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.88,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/crm/strategy_crm_reserve_A1g.png',
     },
     "HD": {
         "Symbol": "HD",
@@ -458,6 +480,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 5.35,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/hd/strategy_hd_reserve_A1g.png',
     },
     "OKTA": {
         "Symbol": "OKTA",
@@ -478,6 +501,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 8.9,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/okta/strategy_okta_reserve_A1g.png',
     },
     "DHR": {
         "Symbol": "DHR",
@@ -498,6 +522,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 5.01,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/dhr/strategy_dhr_reserve_A1g.png',
     },
     "INTU": {
         "Symbol": "INTU",
@@ -518,6 +543,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 3.45,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/intu/strategy_intu_reserve_A1g.png',
     },
     "NVO": {
         "Symbol": "NVO",
@@ -538,6 +564,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.34,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/nvo/strategy_nvo_reserve_A1g.png',
     },
     "DDOG": {
         "Symbol": "DDOG",
@@ -558,6 +585,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 29.02,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/ddog/strategy_ddog_reserve_A1g.png',
     },
     "TSM": {
         "Symbol": "TSM",
@@ -578,6 +606,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.21,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/tsm/strategy_tsm_reserve_A1g.png',
     },
     "TMO": {
         "Symbol": "TMO",
@@ -598,6 +627,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 3.88,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/tmo/strategy_tmo_reserve_A1g.png',
     },
     "ISRG": {
         "Symbol": "ISRG",
@@ -618,6 +648,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 4.49,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/isrg/strategy_isrg_reserve_A1g.png',
     },
     "MO": {
         "Symbol": "MO",
@@ -638,6 +669,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.91,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/mo/strategy_mo_reserve_A1g.png',
     },
     "ACN": {
         "Symbol": "ACN",
@@ -658,6 +690,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.49,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/acn/strategy_acn_reserve_A1g.png',
     },
     "ORCL": {
         "Symbol": "ORCL",
@@ -678,6 +711,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 3.11,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/orcl/strategy_orcl_reserve_A1g.png',
     },
     "SYK": {
         "Symbol": "SYK",
@@ -698,6 +732,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 4.48,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/syk/strategy_syk_reserve_A1g.png',
     },
     "SBUX": {
         "Symbol": "SBUX",
@@ -718,6 +753,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 110.82,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/sbux/strategy_sbux_reserve_A1g.png',
     },
     "MCD": {
         "Symbol": "MCD",
@@ -738,6 +774,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 3.54,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/mcd/strategy_mcd_reserve_A1g.png',
     },
     "ABT": {
         "Symbol": "ABT",
@@ -758,6 +795,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.65,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/abt/strategy_abt_reserve_A1g.png',
     },
     "SPGI": {
         "Symbol": "SPGI",
@@ -778,6 +816,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 3.51,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/spgi/strategy_spgi_reserve_A1g.png',
     },
     "LIN": {
         "Symbol": "LIN",
@@ -798,6 +837,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 4.15,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/lin/strategy_lin_reserve_A1g.png',
     },
     "ADP": {
         "Symbol": "ADP",
@@ -818,6 +858,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 3.09,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/adp/strategy_adp_reserve_A1g.png',
     },
     "AMGN": {
         "Symbol": "AMGN",
@@ -838,6 +879,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 5.59,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/amgn/strategy_amgn_reserve_A1g.png',
     },
     "SCHW": {
         "Symbol": "SCHW",
@@ -858,6 +900,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.04,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/schw/strategy_schw_reserve_A1g.png',
     },
     "WMT": {
         "Symbol": "WMT",
@@ -878,6 +921,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 4.12,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/wmt/strategy_wmt_reserve_A1g.png',
     },
     "PM": {
         "Symbol": "PM",
@@ -898,6 +942,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.62,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/pm/strategy_pm_reserve_A1g.png',
     },
     "COST": {
         "Symbol": "COST",
@@ -918,6 +963,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 5.27,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/cost/strategy_cost_reserve_A1g.png',
     },
     "ZTS": {
         "Symbol": "ZTS",
@@ -938,6 +984,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.97,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/zts/strategy_zts_reserve_A1g.png',
     },
     "MMC": {
         "Symbol": "MMC",
@@ -958,6 +1005,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.71,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/mmc/strategy_mmc_reserve_A1g.png',
     },
     "LLY": {
         "Symbol": "LLY",
@@ -978,6 +1026,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.2,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/lly/strategy_lly_reserve_A1g.png',
     },
     "GS": {
         "Symbol": "GS",
@@ -998,6 +1047,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.28,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/gs/strategy_gs_reserve_A1g.png',
     },
     "NKE": {
         "Symbol": "NKE",
@@ -1018,6 +1068,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 3.33,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/nke/strategy_nke_reserve_A1g.png',
     },
     "DIS": {
         "Symbol": "DIS",
@@ -1038,6 +1089,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.31,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/dis/strategy_dis_reserve_A1g.png',
     },
     "DE": {
         "Symbol": "DE",
@@ -1058,6 +1110,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.73,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/de/strategy_de_reserve_A1g.png',
     },
     "RTX": {
         "Symbol": "RTX",
@@ -1078,6 +1131,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 3.77,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/rtx/strategy_rtx_reserve_A1g.png',
     },
     "AMAT": {
         "Symbol": "AMAT",
@@ -1098,6 +1152,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 3.18,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/amat/strategy_amat_reserve_A1g.png',
     },
     "TEAM": {
         "Symbol": "TEAM",
@@ -1118,6 +1173,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.9,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/team/strategy_team_reserve_A1g.png',
     },
     "SO": {
         "Symbol": "SO",
@@ -1138,6 +1194,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 3.51,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/so/strategy_so_reserve_A1g.png',
     },
     "T": {
         "Symbol": "T",
@@ -1158,6 +1215,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 4.71,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/t/strategy_t_reserve_A1g.png',
     },
     "CB": {
         "Symbol": "CB",
@@ -1178,6 +1236,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.64,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/cb/strategy_cb_reserve_A1g.png',
     },
     "CMCSA": {
         "Symbol": "CMCSA",
@@ -1198,6 +1257,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.16,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/cmcsa/strategy_cmcsa_reserve_A1g.png',
     },
     "MRK": {
         "Symbol": "MRK",
@@ -1218,6 +1278,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.13,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/mrk/strategy_mrk_reserve_A1g.png',
     },
     "KO": {
         "Symbol": "KO",
@@ -1238,6 +1299,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 3.76,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/ko/strategy_ko_reserve_A1g.png',
     },
     "QCOM": {
         "Symbol": "QCOM",
@@ -1258,6 +1320,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.9,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/qcom/strategy_qcom_reserve_A1g.png',
     },
     "AXP": {
         "Symbol": "AXP",
@@ -1278,6 +1341,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.06,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/axp/strategy_axp_reserve_A1g.png',
     },
     "JNJ": {
         "Symbol": "JNJ",
@@ -1298,6 +1362,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.85,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/jnj/strategy_jnj_reserve_A1g.png',
     },
     "TXN": {
         "Symbol": "TXN",
@@ -1318,6 +1383,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.27,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/txn/strategy_txn_reserve_A1g.png',
     },
     "BA": {
         "Symbol": "BA",
@@ -1338,6 +1404,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.91,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/ba/strategy_ba_reserve_A1g.png',
     },
     "CAT": {
         "Symbol": "CAT",
@@ -1358,6 +1425,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 5.25,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/cat/strategy_cat_reserve_A1g.png',
     },
     "JPM": {
         "Symbol": "JPM",
@@ -1378,6 +1446,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.47,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/jpm/strategy_jpm_reserve_A1g.png',
     },
     "IBM": {
         "Symbol": "IBM",
@@ -1398,6 +1467,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 6.04,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/ibm/strategy_ibm_reserve_A1g.png',
     },
     "UNH": {
         "Symbol": "UNH",
@@ -1418,6 +1488,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.29,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/unh/strategy_unh_reserve_A1g.png',
     },
     "BK": {
         "Symbol": "BK",
@@ -1438,6 +1509,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.14,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/bk/strategy_bk_reserve_A1g.png',
     },
     "PYPL": {
         "Symbol": "PYPL",
@@ -1458,6 +1530,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.17,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/pypl/strategy_pypl_reserve_A1g.png',
     },
     "MS": {
         "Symbol": "MS",
@@ -1478,6 +1551,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.84,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/ms/strategy_ms_reserve_A1g.png',
     },
     "PG": {
         "Symbol": "PG",
@@ -1498,6 +1572,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 4.78,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/pg/strategy_pg_reserve_A1g.png',
     },
     "USB": {
         "Symbol": "USB",
@@ -1518,6 +1593,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.0,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/usb/strategy_usb_reserve_A1g.png',
     },
     "BKNG": {
         "Symbol": "BKNG",
@@ -1538,6 +1614,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.26,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/bkng/strategy_bkng_reserve_A1g.png',
     },
     "VZ": {
         "Symbol": "VZ",
@@ -1558,6 +1635,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.9,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/vz/strategy_vz_reserve_A1g.png',
     },
     "BAC": {
         "Symbol": "BAC",
@@ -1578,6 +1656,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.02,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/bac/strategy_bac_reserve_A1g.png',
     },
     "MDLZ": {
         "Symbol": "MDLZ",
@@ -1598,6 +1677,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 8.28,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/mdlz/strategy_mdlz_reserve_A1g.png',
     },
     "CHTR": {
         "Symbol": "CHTR",
@@ -1618,6 +1698,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 0.59,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/chtr/strategy_chtr_reserve_A1g.png',
     },
     "GE": {
         "Symbol": "GE",
@@ -1638,6 +1719,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.13,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/ge/strategy_ge_reserve_A1g.png',
     },
     "HON": {
         "Symbol": "HON",
@@ -1658,6 +1740,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 3.06,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/hon/strategy_hon_reserve_A1g.png',
     },
     "PEP": {
         "Symbol": "PEP",
@@ -1678,6 +1761,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 7.74,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/pep/strategy_pep_reserve_A1g.png',
     },
     "XOM": {
         "Symbol": "XOM",
@@ -1698,6 +1782,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.81,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/xom/strategy_xom_reserve_A1g.png',
     },
     "AMD": {
         "Symbol": "AMD",
@@ -1718,6 +1803,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.93,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/amd/strategy_amd_reserve_A1g.png',
     },
     "LMT": {
         "Symbol": "LMT",
@@ -1738,6 +1824,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.18,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/lmt/strategy_lmt_reserve_A1g.png',
     },
     "BMY": {
         "Symbol": "BMY",
@@ -1758,6 +1845,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 0.25,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/bmy/strategy_bmy_reserve_A1g.png',
     },
     "GILD": {
         "Symbol": "GILD",
@@ -1778,6 +1866,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 0.85,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/gild/strategy_gild_reserve_A1g.png',
     },
     "INTC": {
         "Symbol": "INTC",
@@ -1798,6 +1887,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 0.07,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/intc/strategy_intc_reserve_A1g.png',
     },
     "PFE": {
         "Symbol": "PFE",
@@ -1818,6 +1908,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 106.52,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/pfe/strategy_pfe_reserve_A1g.png',
     },
     "ZM": {
         "Symbol": "ZM",
@@ -1838,6 +1929,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 5.28,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/zm/strategy_zm_reserve_A1g.png',
     },
     "UPS": {
         "Symbol": "UPS",
@@ -1858,6 +1950,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 10.16,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/ups/strategy_ups_reserve_A1g.png',
     },
     "C": {
         "Symbol": "C",
@@ -1878,6 +1971,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 0.59,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/c/strategy_c_reserve_A1g.png',
     },
     "MU": {
         "Symbol": "MU",
@@ -1898,6 +1992,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 0.23,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/mu/strategy_mu_reserve_A1g.png',
     },
     "SNOW": {
         "Symbol": "SNOW",
@@ -1918,6 +2013,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 5.9,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/snow/strategy_snow_reserve_A1g.png',
     },
     "ENPH": {
         "Symbol": "ENPH",
@@ -1938,6 +2034,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 10.06,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/enph/strategy_enph_reserve_A1g.png',
     },
     "AAPL": {
         "Symbol": "AAPL",
@@ -1958,6 +2055,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 4.11,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/aapl/strategy_aapl_reserve_A1g.png',
     },
     "TTD": {
         "Symbol": "TTD",
@@ -1978,6 +2076,7 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 2.84,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/ttd/strategy_ttd_reserve_A1g.png',
     },
     "SMCI": {
         "Symbol": "SMCI",
@@ -1998,5 +2097,6 @@ A1G_SYMBOL_STATS = {
         "PE_Ratio_As_Of": '2025-09-21',
         "PEG_Ratio": 1.51,
         "PEG_Ratio_As_Of": '2025-09-21',
+        "Strategy_Chart_Path": 'symbols/smci/strategy_smci_reserve_A1g.png',
     },
 }
