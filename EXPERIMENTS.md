@@ -62,6 +62,8 @@ temperature series aligned with that future reference point instead of relying
 on the iterative best fit. Invoke it with `--experiment TESLA2X_B2` (aliases:
 TESLA2XB2, TESLA2X.B2, TESLA2X.B.2, TESLA2x.b.2).
 
+- **CAGR**: ~94.8% on TSLA with 2x leverage (through 2025-09-19)
+
 ## CRM2x – Salesforce 2x Baseline Optimiser
 Applies the leveraged optimiser to Salesforce (CRM) while emulating a 2x sleeve
 similar to geared single-stock ETFs. CRM’s steadier trend profile lets the

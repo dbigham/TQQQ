@@ -1557,7 +1557,40 @@ EXPERIMENTS["TESLA2X_B"] = {
 EXPERIMENTS["TESLA2XB"] = {**EXPERIMENTS["TESLA2X_B"]}
 EXPERIMENTS["TESLA2X.B"] = {**EXPERIMENTS["TESLA2X_B"]}
 EXPERIMENTS["TESLA2X_B2"] = {
-    **EXPERIMENTS["TESLA2X_B"],
+    "temperature_allocation": [
+        {"temp": 0.96, "allocation": 1.4127335097450804},
+        {"temp": 1.0, "allocation": 0.6235814915136063},
+        {"temp": 1.415107584436503, "allocation": 0.36725481379369734},
+    ],
+    "momentum_filters": {
+        "buy": {
+            "ret3": -0.00331388609681018,
+            "ret6": -0.07879806096063681,
+            "ret12": -0.019793671351911266,
+            "ret22": None,
+            "temp": 1.2705193487109943,
+        },
+        "sell": {
+            "ret3": 0.014474113635472498,
+            "ret6": 0.03219641555473544,
+            "ret12": 0.018856549318460862,
+            "ret22": -0.006053415800481365,
+        },
+    },
+    "rate_taper": {
+        "start": 10.71788387408976,
+        "end": 11.500051848273712,
+        "min_allocation": 0.17682479689547168,
+        "enabled": True,
+    },
+    "crash_derisk": {
+        "enabled": False,
+        "threshold": None,
+        "cooldown_days": 22,
+    },
+    "rebalance_days": 22,
+    "leverage_override": 2.0,
+    "base_symbol": "TSLA",
     "temperature_model": {
         "growth_rate": 0.42,
         "anchor_date": "2025-09-18",

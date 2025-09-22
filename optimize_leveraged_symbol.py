@@ -110,6 +110,7 @@ class OptimiserSettings:
     fit_threshold_2: float
     fit_threshold_3: float
     csv_override: Optional[str] = None
+    manual_temperature_model: Optional[Mapping[str, object]] = None
 
 
 def _anchors_to_payload(anchors: Sequence[tuple[float, float]]) -> List[Mapping[str, float]]:
@@ -228,16 +229,31 @@ def prepare_symbol_environment(symbol: str, settings: OptimiserSettings) -> Symb
 
     if settings.use_temperature_cache:
         A_fit, r_fit, fit_start = strategy.ensure_temperature_assets(
-            pd, np_local, plt, symbol, df_full_raw
-        )
-    else:
-        A_fit, r_fit, fit_start = _fit_temperature_parameters(
             pd,
+            np_local,
+            plt,
             symbol,
             df_full_raw,
-            thresh2=settings.fit_threshold_2,
-            thresh3=settings.fit_threshold_3,
+            manual_model=settings.manual_temperature_model,
         )
+    else:
+        if settings.manual_temperature_model is not None:
+            A_fit, r_fit, fit_start = strategy.ensure_temperature_assets(
+                pd,
+                np_local,
+                plt,
+                symbol,
+                df_full_raw,
+                manual_model=settings.manual_temperature_model,
+            )
+        else:
+            A_fit, r_fit, fit_start = _fit_temperature_parameters(
+                pd,
+                symbol,
+                df_full_raw,
+                thresh2=settings.fit_threshold_2,
+                thresh3=settings.fit_threshold_3,
+            )
     temp, *_ = strategy.compute_temperature_series(
         pd,
         np_local,
@@ -629,6 +645,16 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     args = parser.parse_args(argv)
 
     symbol = args.symbol.upper()
+    baseline_key = str(args.baseline)
+    baseline_cfg = strategy.EXPERIMENTS.get(baseline_key)
+    if baseline_cfg is None:
+        known = ", ".join(sorted(strategy.EXPERIMENTS))
+        raise KeyError(f"Experiment '{baseline_key}' not found; known keys: {known}")
+    manual_model_cfg = baseline_cfg.get("temperature_model")
+    if isinstance(manual_model_cfg, Mapping):
+        manual_model = dict(manual_model_cfg)
+    else:
+        manual_model = None
     settings = OptimiserSettings(
         symbol=symbol,
         leverage=float(args.leverage),
@@ -641,11 +667,12 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         fit_threshold_2=float(args.fit_threshold_2),
         fit_threshold_3=float(args.fit_threshold_3),
         csv_override=args.csv,
+        manual_temperature_model=manual_model,
     )
 
     print(f"Preparing data for {symbol} with {settings.leverage:.2f}x leverage ...")
     env = prepare_symbol_environment(symbol, settings)
-    baseline_params = _load_baseline_params(str(args.baseline))
+    baseline_params = _load_baseline_params(baseline_key)
     baseline_result = evaluate_params(env, baseline_params)
     print(f"Baseline {args.baseline} CAGR ({settings.leverage:.1f}x): {format_percent(baseline_result.cagr)}")
     print("Running optimisation ...")
