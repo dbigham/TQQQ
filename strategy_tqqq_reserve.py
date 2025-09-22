@@ -90,6 +90,12 @@ from tqqq import iterative_constant_growth, load_price_csv
 TEMPERATURE_CACHE_DIR = "temperature_cache"
 SYMBOL_DATA_DIR = "symbol_data"
 
+# Global default controlling whether the simulator automatically replaces
+# "leveraged ETF + cash" allocations with the low-drag replication described in
+# ``docs/leverage_exposure_replication.md``. Experiments may override this on a
+# per-profile basis via the ``use_leverage_replication`` flag.
+DEFAULT_USE_LEVERAGE_REPLICATION = False
+
 
 def import_libs():
     import pandas as pd  # type: ignore
@@ -538,6 +544,51 @@ def target_allocation_from_temperature(
         return 1.0 - 2.0 * (T - 0.9)
     # from (1.0,0.8) to (1.5,0.2)
     return 0.8 - 1.2 * (T - 1.0)
+
+
+def compute_deployment_weights(
+    target_allocation: float,
+    leverage: float,
+    *,
+    use_replication: bool,
+    eps: float = 1e-9,
+) -> tuple[float, float, float]:
+    """Return capital weights for (1× sleeve, leveraged sleeve, cash).
+
+    The helper keeps backwards compatibility with the legacy behaviour when
+    ``use_replication`` is False by returning ``(0, target_allocation,
+    1-target_allocation)``. When replication is enabled the routine follows the
+    construction laid out in ``docs/leverage_exposure_replication.md``: match the
+    desired exposure to the underlying while minimising how much capital is held
+    in the daily-reset leveraged ETF. The implementation only applies the
+    low-drag mix when the target allocation does not exceed 100% of capital,
+    which preserves the original borrowing profile for higher leverage targets.
+    """
+
+    if target_allocation <= eps:
+        return 0.0, 0.0, 1.0
+    if not use_replication:
+        return 0.0, target_allocation, 1.0 - target_allocation
+    if leverage <= 1.0 + eps:
+        return 0.0, target_allocation, 1.0 - target_allocation
+
+    exposure = leverage * target_allocation
+    if exposure <= 1.0 + eps:
+        weight_1x = max(0.0, exposure)
+        weight_leveraged = 0.0
+        weight_cash = 1.0 - weight_1x
+    elif target_allocation <= 1.0 + eps:
+        denom = leverage - 1.0
+        if denom <= eps:
+            return 0.0, target_allocation, 1.0 - target_allocation
+        weight_leveraged = max(0.0, min(1.0, (exposure - 1.0) / denom))
+        weight_1x = 1.0 - weight_leveraged
+        weight_cash = 0.0
+    else:
+        return 0.0, target_allocation, 1.0 - target_allocation
+
+    weight_cash = 1.0 - weight_1x - weight_leveraged
+    return weight_1x, weight_leveraged, weight_cash
 
 
 def apply_rate_taper(
@@ -1370,7 +1421,12 @@ def apply_volatility_adjustment(
 # parameters to explore different behaviours without littering conditional
 # logic throughout the simulation.
 EXPERIMENTS = {
-    "A1": {},  # Baseline strategy with no extra features
+    "A1": {
+        # Enable the leverage replication mix that maps partial TQQQ allocations to
+        # unlevered exposure + a smaller leveraged sleeve. See
+        # docs/leverage_exposure_replication.md for a walkthrough.
+        "use_leverage_replication": True,
+    },  # Baseline strategy with no extra features beyond the replication mix
     "A2": {
         "cold_leverage": {
             "boost": 0.2,
@@ -2558,6 +2614,10 @@ def main():
     if rebalance_cadence <= 0:
         rebalance_cadence = 22
 
+    use_leverage_replication = bool(
+        config.get("use_leverage_replication", DEFAULT_USE_LEVERAGE_REPLICATION)
+    )
+
     # Ensure saved plot filenames include unique tokens without duplication.
     # Accepts a root filename (no extension) and appends `token` with an underscore
     # only if the token is not already present as a delimited segment anywhere.
@@ -2666,10 +2726,12 @@ def main():
     cash_factor = 1.0 + (rate_ann / 100.0) / float(args.trading_days)
     daily_borrow = borrowed_fraction * ((rate_ann / 100.0) / float(args.trading_days))
     tqqq_factor = (1.0 + leverage * rets) * (1.0 - daily_fee) * (1.0 - (daily_borrow / borrow_divisor))
+    underlying_factor = 1.0 + rets
 
     # Simulation state
     dates = df.index.to_numpy()
     num_days = len(df)
+    port_unlevered = np.zeros(num_days, dtype=float)
     port_tqqq = np.zeros(num_days, dtype=float)
     port_cash = np.zeros(num_days, dtype=float)
     port_total = np.zeros(num_days, dtype=float)
@@ -2689,9 +2751,10 @@ def main():
 
     # Start with all in cash
     initial_capital = float(args.initial_capital)
+    port_unlevered[0] = 0.0
     port_tqqq[0] = 0.0
     port_cash[0] = initial_capital
-    port_total[0] = port_cash[0] + port_tqqq[0]
+    port_total[0] = port_cash[0] + port_tqqq[0] + port_unlevered[0]
     deployed_p[0] = 0.0
 
     # Rebalance scheduling
@@ -2704,30 +2767,45 @@ def main():
 
     def add_rebalance_entry(
         index: int,
+        new_unlevered: float,
         new_tqqq: float,
         new_cash: float,
+        prev_unlevered: float,
         prev_tqqq: float,
         prev_cash: float,
         *,
         reason: str = "rebalance",
     ) -> None:
         trade_eps = 1e-9
+        delta_unlevered = float(new_unlevered - prev_unlevered)
         delta_tqqq = float(new_tqqq - prev_tqqq)
         delta_cash = float(new_cash - prev_cash)
-        if abs(delta_tqqq) < trade_eps and abs(delta_cash) < trade_eps:
+        if (
+            abs(delta_unlevered) < trade_eps
+            and abs(delta_tqqq) < trade_eps
+            and abs(delta_cash) < trade_eps
+        ):
             return
-        total_after = float(new_tqqq + new_cash)
-        p_tqqq = 0.0 if total_after <= 0 else float(new_tqqq / total_after)
+        total_after = float(new_unlevered + new_tqqq + new_cash)
+        if total_after <= 0:
+            p_tqqq = 0.0
+            p_unlevered = 0.0
+        else:
+            p_tqqq = float(new_tqqq / total_after)
+            p_unlevered = float(new_unlevered / total_after)
         entry_date = pd.Timestamp(dates[index])
         rebalance_entries.append(
             {
                 "index": int(index),
                 "date": entry_date,
+                "p_unlevered": p_unlevered,
                 "p_tqqq": p_tqqq,
-                "p_cash": 1.0 - p_tqqq,
+                "p_cash": 1.0 - p_unlevered - p_tqqq,
+                "delta_unlevered": delta_unlevered,
                 "delta_tqqq": delta_tqqq,
                 "delta_cash": delta_cash,
                 "total_after": total_after,
+                "unlevered_value": float(new_unlevered),
                 "tqqq_value": float(new_tqqq),
                 "cash_value": float(new_cash),
                 "reason": reason,
@@ -2735,17 +2813,21 @@ def main():
         )
 
     for i in range(num_days):
-        # Update holdings based on previous day growth (for i=0 this applies one day of cash growth)
+        # Update holdings based on previous day growth (for i=0 this applies one day of growth)
         if i > 0:
-            base_factor = tqqq_factor[i]
-            port_tqqq[i] = port_tqqq[i - 1] * base_factor
+            port_unlevered[i] = port_unlevered[i - 1] * underlying_factor[i]
+            port_tqqq[i] = port_tqqq[i - 1] * tqqq_factor[i]
             port_cash[i] = port_cash[i - 1] * cash_factor[i]
         else:
+            port_unlevered[i] = port_unlevered[0] * underlying_factor[0]
             port_tqqq[i] = port_tqqq[0] * tqqq_factor[0]
             port_cash[i] = port_cash[0] * cash_factor[0]
 
-        total = port_tqqq[i] + port_cash[i]
-        curr_p = 0.0 if total <= 0 else port_tqqq[i] / total
+        total = port_unlevered[i] + port_tqqq[i] + port_cash[i]
+        if total <= 0:
+            curr_p = 0.0
+        else:
+            curr_p = (port_unlevered[i] + leverage * port_tqqq[i]) / (leverage * total)
         drawdown = 0.0 if peak_total <= 0 else (total / peak_total) - 1.0
 
         T = df["temp"].iloc[i]
@@ -2968,10 +3050,12 @@ def main():
                 and crash_threshold is not None
                 and not math.isnan(ret22)
                 and ret22 <= crash_threshold
-                and port_tqqq[i] > 0
+                and curr_p > 0.0
             ):
+                prev_unlevered = port_unlevered[i]
                 prev_tqqq = port_tqqq[i]
                 prev_cash = port_cash[i]
+                curr_p_before_force = curr_p
                 # Capture debug BEFORE action
                 if debug_start_ts is not None:
                     ts_i = dates[i]
@@ -2990,26 +3074,37 @@ def main():
                             "sell_all_ratio": (float(ret22) / float(crash_threshold)) if crash_threshold not in (0, None) else float('nan'),
                             "temp_T": float(df["temp"].iloc[i]) if not math.isnan(df["temp"].iloc[i]) else float('nan'),
                             "rate_annual_pct": float(rate_ann[i]),
-                            "curr_p_before": float(0.0 if (port_tqqq[i] + port_cash[i]) <= 0 else port_tqqq[i] / (port_tqqq[i] + port_cash[i])),
+                            "curr_p_before": float(curr_p_before_force),
                             "action": "sell_all_to_cash"
                         })
-                port_cash[i] = total
+                prev_total = total
+                port_unlevered[i] = 0.0
                 port_tqqq[i] = 0.0
-                total = port_tqqq[i] + port_cash[i]
+                port_cash[i] = prev_total
+                total = prev_total
                 curr_p = 0.0
                 next_rebalance_idx = i + crash_cooldown_days
                 forced_derisk_series[i] = 1
                 acted = True
                 forced_today = True
                 last_rebalance_idx = i
-                add_rebalance_entry(i, port_tqqq[i], port_cash[i], prev_tqqq, prev_cash, reason="forced_derisk")
+                add_rebalance_entry(
+                    i,
+                    port_unlevered[i],
+                    port_tqqq[i],
+                    port_cash[i],
+                    prev_unlevered,
+                    prev_tqqq,
+                    prev_cash,
+                    reason="forced_derisk",
+                )
                 # Update debug AFTER action
                 if debug_start_ts is not None:
                     ts_i = dates[i]
                     if ts_i >= debug_start_ts and ts_i <= debug_end_ts:
                         debug_rows[-1]["curr_p_after"] = float(curr_p)
             if forced_today:
-                port_total[i] = port_tqqq[i] + port_cash[i]
+                port_total[i] = port_unlevered[i] + port_tqqq[i] + port_cash[i]
                 deployed_p[i] = curr_p
                 continue
             # Determine direction
@@ -3095,16 +3190,36 @@ def main():
                             "curr_p_before": float(curr_p)
                         })
                 if not block_buy:
+                    prev_unlevered = port_unlevered[i]
                     prev_tqqq = port_tqqq[i]
                     prev_cash = port_cash[i]
-                    port_tqqq[i] = total * target_p
-                    port_cash[i] = total - port_tqqq[i]
-                    total = port_tqqq[i] + port_cash[i]
-                    curr_p = target_p
+                    weight_1x, weight_leveraged, weight_cash = compute_deployment_weights(
+                        target_p,
+                        leverage,
+                        use_replication=use_leverage_replication,
+                    )
+                    port_unlevered[i] = total * weight_1x
+                    port_tqqq[i] = total * weight_leveraged
+                    port_cash[i] = total * weight_cash
+                    total = port_unlevered[i] + port_tqqq[i] + port_cash[i]
+                    if total <= 0:
+                        curr_p = 0.0
+                    else:
+                        curr_p = (
+                            port_unlevered[i] + leverage * port_tqqq[i]
+                        ) / (leverage * total)
                     next_rebalance_idx = i + rebalance_cadence
                     last_rebalance_idx = i
                     acted = True
-                    add_rebalance_entry(i, port_tqqq[i], port_cash[i], prev_tqqq, prev_cash)
+                    add_rebalance_entry(
+                        i,
+                        port_unlevered[i],
+                        port_tqqq[i],
+                        port_cash[i],
+                        prev_unlevered,
+                        prev_tqqq,
+                        prev_cash,
+                    )
                     if debug_start_ts is not None:
                         ts_i = dates[i]
                         if ts_i >= debug_start_ts and ts_i <= debug_end_ts:
@@ -3176,16 +3291,36 @@ def main():
                             "curr_p_before": float(curr_p)
                         })
                 if not block_sell:
+                    prev_unlevered = port_unlevered[i]
                     prev_tqqq = port_tqqq[i]
                     prev_cash = port_cash[i]
-                    port_tqqq[i] = total * target_p
-                    port_cash[i] = total - port_tqqq[i]
-                    total = port_tqqq[i] + port_cash[i]
-                    curr_p = target_p
+                    weight_1x, weight_leveraged, weight_cash = compute_deployment_weights(
+                        target_p,
+                        leverage,
+                        use_replication=use_leverage_replication,
+                    )
+                    port_unlevered[i] = total * weight_1x
+                    port_tqqq[i] = total * weight_leveraged
+                    port_cash[i] = total * weight_cash
+                    total = port_unlevered[i] + port_tqqq[i] + port_cash[i]
+                    if total <= 0:
+                        curr_p = 0.0
+                    else:
+                        curr_p = (
+                            port_unlevered[i] + leverage * port_tqqq[i]
+                        ) / (leverage * total)
                     next_rebalance_idx = i + rebalance_cadence
                     last_rebalance_idx = i
                     acted = True
-                    add_rebalance_entry(i, port_tqqq[i], port_cash[i], prev_tqqq, prev_cash)
+                    add_rebalance_entry(
+                        i,
+                        port_unlevered[i],
+                        port_tqqq[i],
+                        port_cash[i],
+                        prev_unlevered,
+                        prev_tqqq,
+                        prev_cash,
+                    )
                     if debug_start_ts is not None:
                         ts_i = dates[i]
                         if ts_i >= debug_start_ts and ts_i <= debug_end_ts:
@@ -3226,7 +3361,7 @@ def main():
                             "curr_p_after": float(curr_p)
                         })
 
-        port_total[i] = port_tqqq[i] + port_cash[i]
+        port_total[i] = port_unlevered[i] + port_tqqq[i] + port_cash[i]
         deployed_p[i] = curr_p
         peak_total = max(peak_total, port_total[i])
 
@@ -3279,12 +3414,23 @@ def main():
             display_df = rebalance_df.copy()
             display_df["date"] = display_df["date"].dt.date
             display_df["tqqq_pct"] = display_df["p_tqqq"] * 100.0
+            display_df["unlevered_pct"] = display_df["p_unlevered"] * 100.0
             display_df["tbill_pct"] = display_df["p_cash"] * 100.0
             display_df["portfolio_value"] = display_df["total_after"]
             display_df["cagr_pct"] = display_df["cagr"] * 100.0
-            display_df["action"] = display_df["delta_tqqq"].apply(
-                lambda x: "Buy" if x > 0 else ("Sell" if x < 0 else "Hold")
-            )
+            trade_eps = 1e-9
+
+            def classify_action(row: pd.Series) -> str:
+                exposure_delta = float(row.get("delta_unlevered", 0.0)) + leverage * float(
+                    row.get("delta_tqqq", 0.0)
+                )
+                if exposure_delta > trade_eps:
+                    return "Buy"
+                if exposure_delta < -trade_eps:
+                    return "Sell"
+                return "Hold"
+
+            display_df["action"] = display_df.apply(classify_action, axis=1)
 
             def fmt_pct(val: float) -> str:
                 if pd.isna(val):
@@ -3298,7 +3444,9 @@ def main():
                 "date",
                 "action",
                 "tqqq_pct",
+                "unlevered_pct",
                 "tbill_pct",
+                "delta_unlevered",
                 "delta_tqqq",
                 "delta_cash",
                 "portfolio_value",
@@ -3306,7 +3454,9 @@ def main():
             ]
             formatters = {
                 "tqqq_pct": fmt_pct,
+                "unlevered_pct": fmt_pct,
                 "tbill_pct": fmt_pct,
+                "delta_unlevered": fmt_amt,
                 "delta_tqqq": fmt_amt,
                 "delta_cash": fmt_amt,
                 "portfolio_value": fmt_amt,
@@ -3368,6 +3518,7 @@ def main():
         out["credit_spread"] = macro["credit_spread"].to_numpy()
         out["yc_change_22"] = macro["yc_change_22"].to_numpy()
         out["credit_change_22"] = macro["credit_change_22"].to_numpy()
+        out["port_unlevered"] = port_unlevered
         out["port_tqqq"] = port_tqqq
         out["port_cash"] = port_cash
         out["port_total"] = port_total

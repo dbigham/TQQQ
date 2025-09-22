@@ -9,6 +9,9 @@ through 2025‑01‑10.
 Baseline dynamic allocation strategy with temperature and momentum filters.  This was
 the original default behavior and remains available via `--experiment A1`.
 
+- Uses the [leverage replication mix](docs/leverage_exposure_replication.md) to
+  deploy unlevered capital instead of TQQQ whenever the target allocation is at
+  or below 100%, reducing volatility drag and financing costs.
 - **CAGR**: ~29.70% (through 2025‑01‑10)
 
 ## A1g – Global Baseline Optimiser
