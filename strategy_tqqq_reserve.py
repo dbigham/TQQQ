@@ -2488,6 +2488,15 @@ def main():
     disable_buy_temp_limit = bool(args.disable_buy_temp_limit)
     experiment = args.experiment.upper()
     config = EXPERIMENTS[experiment]
+    normalized_experiment_token = re.sub(r"[^A-Z0-9]+", "", experiment)
+    artifact_experiment = None
+    for candidate_key in EXPERIMENTS.keys():
+        candidate_normalized = re.sub(r"[^A-Z0-9]+", "", candidate_key.upper())
+        if candidate_normalized == normalized_experiment_token:
+            artifact_experiment = candidate_key
+            break
+    if artifact_experiment is None:
+        artifact_experiment = experiment
     if args.base_symbol:
         base_symbol = args.base_symbol.upper()
     else:
@@ -2572,11 +2581,11 @@ def main():
             root = os.path.join(symbol_dir, os.path.basename(root))
         if base_symbol != "QQQ":
             root = ensure_suffix(root, base_symbol)
-        root = ensure_suffix(root, experiment)
+        root = ensure_suffix(root, artifact_experiment)
         args.save_plot = f"{root}{ext}"
     else:
         prefix = "strategy_qqq_reserve" if base_symbol == "QQQ" else f"strategy_{base_symbol.lower()}_reserve"
-        args.save_plot = os.path.join(symbol_dir, f"{prefix}_{experiment}.png")
+        args.save_plot = os.path.join(symbol_dir, f"{prefix}_{artifact_experiment}.png")
 
     # If a CSV path is provided without a directory, write it under the per-symbol dir
     if args.save_csv:
@@ -3377,7 +3386,7 @@ def main():
         symbol_upper = base_symbol.upper()
         symbol_dir = os.path.join("symbols", ("qqq" if base_symbol == "QQQ" else base_symbol.lower()))
         os.makedirs(symbol_dir, exist_ok=True)
-        default_summary_name = f"{base_symbol.lower()}_{args.experiment}_summary.md"
+        default_summary_name = f"{base_symbol.lower()}_{artifact_experiment}_summary.md"
         summary_path = args.save_summary if args.save_summary else os.path.join(symbol_dir, default_summary_name)
 
         # Fitted curve CAGR comes from r (annualised growth of fitted curve)
