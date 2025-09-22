@@ -217,8 +217,24 @@ def download_symbol_history(pd, symbol: str):
     return df
 
 
-def ensure_temperature_assets(pd, np, plt, symbol: str, df_full, *, thresh2=0.35, thresh3=0.15):
-    """Return temperature fit parameters, caching them alongside diagnostic plots."""
+def ensure_temperature_assets(
+    pd,
+    np,
+    plt,
+    symbol: str,
+    df_full,
+    *,
+    thresh2=0.35,
+    thresh3=0.15,
+    manual_model: Optional[Mapping[str, object]] = None,
+):
+    """Return temperature fit parameters, caching them alongside diagnostic plots.
+
+    When ``manual_model`` is provided the usual iterative fit is bypassed and the
+    constant-growth curve is solved from the supplied growth rate and
+    temperature/date anchor instead. The resolved parameters are cached with the
+    manual metadata so subsequent runs reuse the same curve.
+    """
 
     os.makedirs(TEMPERATURE_CACHE_DIR, exist_ok=True)
     symbol_upper = symbol.upper()
@@ -228,18 +244,62 @@ def ensure_temperature_assets(pd, np, plt, symbol: str, df_full, *, thresh2=0.35
     data_end = pd.Timestamp(df_full.index.max()).normalize().date().isoformat()
     rows = int(df_full.shape[0])
 
+    manual_spec: Optional[dict[str, object]] = None
+    manual_anchor_ts = None
+    desired_fit_method = "manual_override" if manual_model else "iterative_fit"
+    if manual_model is not None:
+        if not isinstance(manual_model, Mapping):
+            raise TypeError("manual_model must be a mapping when provided")
+        if "growth_rate" not in manual_model:
+            raise KeyError("manual_model requires a 'growth_rate' field")
+        if "anchor_date" not in manual_model or "anchor_temperature" not in manual_model:
+            raise KeyError("manual_model requires 'anchor_date' and 'anchor_temperature' fields")
+
+        growth_rate_raw = float(manual_model["growth_rate"])
+        if not math.isfinite(growth_rate_raw):
+            raise ValueError("Manual growth rate must be finite")
+        growth_rate = growth_rate_raw / 100.0 if abs(growth_rate_raw) > 1.0 else growth_rate_raw
+        if growth_rate <= -1.0:
+            raise ValueError("Manual growth rate must keep 1 + r positive")
+
+        anchor_temperature = float(manual_model["anchor_temperature"])
+        if not math.isfinite(anchor_temperature) or anchor_temperature <= 0:
+            raise ValueError("Manual anchor temperature must be positive")
+
+        anchor_ts_candidate = pd.to_datetime(manual_model["anchor_date"])
+        if pd.isna(anchor_ts_candidate):
+            raise ValueError("Manual anchor date is not parseable")
+        manual_anchor_ts = pd.Timestamp(anchor_ts_candidate).normalize()
+
+        manual_spec = {
+            "growth_rate": growth_rate,
+            "anchor_temperature": anchor_temperature,
+            "anchor_date": manual_anchor_ts.date().isoformat(),
+        }
+
     cached = None
     if os.path.exists(cache_path):
         try:
             with open(cache_path, "r", encoding="utf-8") as fh:
                 cached = json.load(fh)
-            if not (
+            data_matches = (
                 cached.get("data_start") == data_start
                 and cached.get("data_end") == data_end
                 and cached.get("rows") == rows
-                and float(cached.get("thresh2", thresh2)) == float(thresh2)
-                and float(cached.get("thresh3", thresh3)) == float(thresh3)
-            ):
+            )
+            thresholds_match = True
+            if manual_spec is None:
+                thresholds_match = (
+                    float(cached.get("thresh2", thresh2)) == float(thresh2)
+                    and float(cached.get("thresh3", thresh3)) == float(thresh3)
+                )
+            cached_manual = cached.get("manual_model")
+            if manual_spec is None:
+                manual_match = cached_manual in (None, {})
+            else:
+                manual_match = cached_manual == manual_spec
+            method_match = cached.get("fit_method", "iterative_fit") == desired_fit_method
+            if not (data_matches and thresholds_match and manual_match and method_match):
                 cached = None
         except Exception:
             cached = None
@@ -273,14 +333,33 @@ def ensure_temperature_assets(pd, np, plt, symbol: str, df_full, *, thresh2=0.35
         return A, r, start_ts
 
     start_ts = pd.Timestamp(df_full.index.min())
-    t_years = (df_full.index - start_ts).days / 365.25
-    prices = df_full["close"].to_numpy()
+    if manual_spec is not None:
+        assert manual_anchor_ts is not None  # for mypy/static reasoning
+        eligible = df_full.index[df_full.index <= manual_anchor_ts]
+        if len(eligible) == 0:
+            raise RuntimeError(
+                f"Price history for {symbol_upper} does not cover anchor date {manual_spec['anchor_date']}"
+            )
+        anchor_ts = pd.Timestamp(eligible.max())
+        anchor_price = float(df_full.loc[anchor_ts, "close"])
+        t_anchor = (anchor_ts - start_ts).days / 365.25
+        growth_rate = float(manual_spec["growth_rate"])
+        anchor_temperature = float(manual_spec["anchor_temperature"])
+        base = 1.0 + growth_rate
+        if base <= 0:
+            raise ValueError("Manual growth rate results in non-positive base for exponential model")
+        predicted_anchor = anchor_price / anchor_temperature
+        A = float(predicted_anchor / math.pow(base, t_anchor))
+        r = growth_rate
+    else:
+        t_years = (df_full.index - start_ts).days / 365.25
+        prices = df_full["close"].to_numpy()
 
-    t_array = t_years.to_numpy() if hasattr(t_years, "to_numpy") else t_years
-    result = iterative_constant_growth(t_array, prices, thresholds=[thresh2, thresh3])
-    final = result.final
-    A = float(final.A)
-    r = float(final.r)
+        t_array = t_years.to_numpy() if hasattr(t_years, "to_numpy") else t_years
+        result = iterative_constant_growth(t_array, prices, thresholds=[thresh2, thresh3])
+        final = result.final
+        A = float(final.A)
+        r = float(final.r)
 
     curve_png, temp_png = save_temperature_plots(
         pd,
@@ -305,6 +384,8 @@ def ensure_temperature_assets(pd, np, plt, symbol: str, df_full, *, thresh2=0.35
         "thresh3": float(thresh3),
         "curve_plot": curve_png,
         "temperature_plot": temp_png,
+        "fit_method": desired_fit_method,
+        "manual_model": manual_spec,
     }
     with open(cache_path, "w", encoding="utf-8") as fh:
         json.dump(payload, fh, indent=2, sort_keys=True)
@@ -1473,6 +1554,18 @@ EXPERIMENTS["TESLA2X_B"] = {
 }
 EXPERIMENTS["TESLA2XB"] = {**EXPERIMENTS["TESLA2X_B"]}
 EXPERIMENTS["TESLA2X.B"] = {**EXPERIMENTS["TESLA2X_B"]}
+EXPERIMENTS["TESLA2X_B2"] = {
+    **EXPERIMENTS["TESLA2X_B"],
+    "temperature_model": {
+        "growth_rate": 0.42,
+        "anchor_date": "2025-09-18",
+        "anchor_temperature": 1.26,
+    },
+}
+EXPERIMENTS["TESLA2XB2"] = {**EXPERIMENTS["TESLA2X_B2"]}
+EXPERIMENTS["TESLA2X.B2"] = {**EXPERIMENTS["TESLA2X_B2"]}
+EXPERIMENTS["TESLA2X.B.2"] = {**EXPERIMENTS["TESLA2X_B2"]}
+EXPERIMENTS["TESLA2x.b.2"] = {**EXPERIMENTS["TESLA2X_B2"]}
 # CRM2X tunes the leveraged optimiser for Salesforce with a 2x sleeve
 EXPERIMENTS["CRM2X"] = {
     "temperature_allocation": [
@@ -2366,6 +2459,10 @@ def main():
     if isinstance(config.get("temperature_allocation"), Sequence):
         temp_allocation_cfg = list(config.get("temperature_allocation"))
 
+    temperature_model_cfg = config.get("temperature_model")
+    if not isinstance(temperature_model_cfg, Mapping):
+        temperature_model_cfg = None
+
     momentum_cfg = config.get("momentum_filters") if isinstance(config.get("momentum_filters"), Mapping) else None
     buy_filter_cfg = None
     sell_filter_cfg = None
@@ -2489,7 +2586,14 @@ def main():
     macro["credit_change_22"] = macro["credit_spread"].diff(22)
 
     # Temperature series (fit cached per symbol)
-    A_fit, r_fit, fit_start_ts_full = ensure_temperature_assets(pd, np, plt, base_symbol, df_full)
+    A_fit, r_fit, fit_start_ts_full = ensure_temperature_assets(
+        pd,
+        np,
+        plt,
+        base_symbol,
+        df_full,
+        manual_model=temperature_model_cfg,
+    )
     temp, A, r, fit_start_ts = compute_temperature_series(
         pd,
         np,

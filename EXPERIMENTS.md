@@ -55,6 +55,13 @@ portfolio never borrows on top of the 2x instrument. Run with
 
 - **CAGR**: ~76.4% on TSLA with 2x leverage (through 2025-09-19)
 
+## TESLA2x.b.2 – Tesla 2x Manual Temperature Anchor
+Builds on TESLA2x.b but pins the constant-growth curve to a 42% annual rate
+and enforces a temperature of 1.26 on 2025‑09‑18. The manual anchor keeps the
+temperature series aligned with that future reference point instead of relying
+on the iterative best fit. Invoke it with `--experiment TESLA2X_B2` (aliases:
+TESLA2XB2, TESLA2X.B2, TESLA2X.B.2, TESLA2x.b.2).
+
 ## CRM2x – Salesforce 2x Baseline Optimiser
 Applies the leveraged optimiser to Salesforce (CRM) while emulating a 2x sleeve
 similar to geared single-stock ETFs. CRM’s steadier trend profile lets the
