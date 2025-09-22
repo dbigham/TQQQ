@@ -1491,6 +1491,7 @@ EXPERIMENTS["GOOG2X"] = {
     },
     "rebalance_days": 22,
     "leverage_override": 2.0,
+    "base_symbol": "GOOGL",
 }
 EXPERIMENTS["GOOG2x"] = {**EXPERIMENTS["GOOG2X"]}
 
@@ -1540,6 +1541,7 @@ EXPERIMENTS["TESLA2X"] = {
     },
     "rebalance_days": 22,
     "leverage_override": 2.0,
+    "base_symbol": "TSLA",
 }
 EXPERIMENTS["TESLA2x"] = {**EXPERIMENTS["TESLA2X"]}
 
@@ -1601,6 +1603,7 @@ EXPERIMENTS["CRM2X"] = {
     },
     "rebalance_days": 22,
     "leverage_override": 2.0,
+    "base_symbol": "CRM",
 }
 EXPERIMENTS["CRM2x"] = {**EXPERIMENTS["CRM2X"]}
 
@@ -2396,8 +2399,8 @@ def main():
     parser = argparse.ArgumentParser(description="Simulate TQQQ+reserve strategy with temperature & filters")
     parser.add_argument(
         "--base-symbol",
-        default="QQQ",
-        help="Underlying symbol/index used for the leverage sleeve (default QQQ)",
+        default=None,
+        help="Underlying symbol/index used for the leverage sleeve (defaults to the experiment base symbol or QQQ)",
     )
     parser.add_argument(
         "--csv",
@@ -2450,9 +2453,13 @@ def main():
     parser.add_argument("--no-show", action="store_true")
     args = parser.parse_args()
     disable_buy_temp_limit = bool(args.disable_buy_temp_limit)
-    base_symbol = args.base_symbol.upper()
     experiment = args.experiment.upper()
     config = EXPERIMENTS[experiment]
+    if args.base_symbol:
+        base_symbol = args.base_symbol.upper()
+    else:
+        config_base_symbol = config.get("base_symbol")
+        base_symbol = config_base_symbol.upper() if isinstance(config_base_symbol, str) else "QQQ"
 
     # Optional configuration overrides shared across simulation logic
     temp_allocation_cfg = None
