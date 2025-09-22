@@ -2624,9 +2624,17 @@ def main():
     def ensure_suffix(root: str, token: str) -> str:
         lower_root = root.lower()
         token_lower = token.lower()
+        # Prevent duplicate suffix when the token already appears at the end (e.g. _TESLA2X_B2)
+        if lower_root.endswith(token_lower):
+            return root
         # Split on common delimiters to identify existing segments
         segments = re.split(r"[_\-.]", lower_root)
         if token_lower in segments:
+            return root
+        # Fall back to compact comparison (strip punctuation) to catch tokens embedded with separators
+        compact_root = re.sub(r"[^a-z0-9]", "", lower_root)
+        compact_token = re.sub(r"[^a-z0-9]", "", token_lower)
+        if compact_token and compact_root.endswith(compact_token):
             return root
         return f"{root}_{token}"
 
