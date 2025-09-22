@@ -1657,6 +1657,86 @@ EXPERIMENTS["TESLA2XB2"] = {**EXPERIMENTS["TESLA2X_B2"]}
 EXPERIMENTS["TESLA2X.B2"] = {**EXPERIMENTS["TESLA2X_B2"]}
 EXPERIMENTS["TESLA2X.B.2"] = {**EXPERIMENTS["TESLA2X_B2"]}
 EXPERIMENTS["TESLA2x.b.2"] = {**EXPERIMENTS["TESLA2X_B2"]}
+# NVO2X calibrates the framework for Novo Nordisk with a capped 2x sleeve
+EXPERIMENTS["NVO2X"] = {
+    "temperature_allocation": [
+        {"temp": 0.8984416801609626, "allocation": 1.0},
+        {"temp": 1.0, "allocation": 0.95},
+        {"temp": 1.497507050680301, "allocation": 0.4086301114909626},
+    ],
+    "momentum_filters": {
+        "buy": {
+            "ret3": -0.025131689216477286,
+            "ret6": -0.03650006016108482,
+            "ret12": -0.02812133710851794,
+            "ret22": -0.005307618290302894,
+            "temp": 1.3972242652862956,
+        },
+        "sell": {
+            "ret3": 0.044852597318979635,
+            "ret6": 0.043290074554433386,
+            "ret12": 0.03706280886495161,
+            "ret22": 0.008198915878496797,
+        },
+    },
+    "rate_taper": {
+        "start": 9.517112458404418,
+        "end": 11.997857547235874,
+        "min_allocation": 0.14293027329761693,
+        "enabled": True,
+    },
+    "crash_derisk": {
+        "enabled": True,
+        "threshold": -0.16401176630222195,
+        "cooldown_days": 22,
+    },
+    "rebalance_days": 22,
+    "leverage_override": 2.0,
+    "base_symbol": "NVO",
+}
+EXPERIMENTS["NVO2x"] = {**EXPERIMENTS["NVO2X"]}
+
+# NVO2X.2 extends the capped sleeve with a deeper optimisation targeting higher CAGR
+EXPERIMENTS["NVO2X_2"] = {
+    "temperature_allocation": [
+        {"temp": 0.8774810008781476, "allocation": 1.0},
+        {"temp": 1.0, "allocation": 0.95},
+        {"temp": 1.4015603028284525, "allocation": 0.32008861109291975},
+    ],
+    "momentum_filters": {
+        "buy": {
+            "ret3": -0.010295322074438017,
+            "ret6": -0.05913489587817235,
+            "ret12": -0.010917988842765671,
+            "ret22": -0.012764839241930998,
+            "temp": 1.3511908872511116,
+        },
+        "sell": {
+            "ret3": 0.018548609049147437,
+            "ret6": 0.029285948640151997,
+            "ret12": 0.04955456287579909,
+            "ret22": 0.006684911928154994,
+        },
+    },
+    "rate_taper": {
+        "start": 10.195737864640867,
+        "end": 11.86690845202112,
+        "min_allocation": 0.2580078722987174,
+        "enabled": True,
+    },
+    "crash_derisk": {
+        "enabled": True,
+        "threshold": -0.15757980384829479,
+        "cooldown_days": 22,
+    },
+    "rebalance_days": 22,
+    "leverage_override": 2.0,
+    "base_symbol": "NVO",
+}
+EXPERIMENTS["NVO2X2"] = {**EXPERIMENTS["NVO2X_2"]}
+EXPERIMENTS["NVO2X.2"] = {**EXPERIMENTS["NVO2X_2"]}
+EXPERIMENTS["NVO2x.2"] = {**EXPERIMENTS["NVO2X_2"]}
+
 # CRM2X tunes the leveraged optimiser for Salesforce with a 2x sleeve
 EXPERIMENTS["CRM2X"] = {
     "temperature_allocation": [

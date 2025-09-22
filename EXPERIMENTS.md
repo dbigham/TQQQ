@@ -82,6 +82,18 @@ unlevered capital base while still trading a 2x CRM product. Call it via
 
 - **CAGR**: ~35.43% on CRM with 2x leverage (through 2025-09-19)
 
+## NVO2x - Novo Nordisk 2x Capped Sleeve
+Adapts the leveraged framework to Novo Nordisk (NVO) with a 2x synthetic sleeve while clamping the temperature
+anchors at 100% so the strategy never borrows beyond the product. Invoke with `--experiment NVO2X` (alias `NVO2x`).
+
+- **CAGR**: ~26.72% on NVO with 2x leverage (through 2025-09-19)
+
+## NVO2x.2 - Novo Nordisk 2x Optimised Sleeve
+Builds on NVO2x with a deeper parameter search that tilts the allocation curve, momentum gates, and rate taper to
+maximise simulated CAGR while retaining the 100% cap. Run via `--experiment NVO2X_2` (aliases `NVO2X.2`, `NVO2x.2`).
+
+- **CAGR**: ~27.24% on NVO with 2x leverage (through 2025-09-19)
+
 ## A2 – Cold Leverage Boost
 Adds a "cold leverage" rule that increases TQQQ exposure by 20% (capped at 120%) when
 market temperature is below 0.8, interest rates are under 5%, and the 22‑day return is
