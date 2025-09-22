@@ -14,7 +14,7 @@ import argparse
 import json
 import math
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Dict, Iterable, List, Mapping, Optional, Sequence
 
 import numpy as np
@@ -417,6 +417,30 @@ def evaluate_params(env: SymbolEnvironment, params: GlobalParams) -> SimulationR
     return simulate_symbol(env, params)
 
 
+ANCHOR_ALLOC_CAP = 1.5
+
+
+def set_anchor_allocation_cap(max_allocation: float) -> None:
+    global ANCHOR_ALLOC_CAP
+    if max_allocation <= 0:
+        raise ValueError("Maximum allocation must be positive")
+    ANCHOR_ALLOC_CAP = max_allocation
+
+
+def _uniform_range(rng: np.random.Generator, low: float, high: float) -> float:
+    if high <= low:
+        return float(low)
+    return float(rng.uniform(low, high))
+
+
+def apply_allocation_cap(params: GlobalParams, max_allocation: float) -> GlobalParams:
+    capped = [
+        (temp, min(float(allocation), max_allocation))
+        for temp, allocation in params.anchors
+    ]
+    return replace(params, anchors=capped)
+
+
 def _clamp(value: float, low: float, high: float) -> float:
     return max(low, min(high, value))
 
@@ -424,11 +448,18 @@ def _clamp(value: float, low: float, high: float) -> float:
 def perturb_parameters(base: GlobalParams, rng: np.random.Generator) -> GlobalParams:
     low_temp = _clamp(base.anchors[0][0] + rng.normal(0.0, 0.01), 0.82, 0.96)
     high_temp = _clamp(base.anchors[-1][0] + rng.normal(0.0, 0.02), 1.28, 1.65)
-    low_alloc = _clamp(base.anchors[0][1] + rng.normal(0.0, 0.05), 0.9, 1.5)
+    low_alloc_cap = min(ANCHOR_ALLOC_CAP, 1.5)
+    low_alloc_floor = min(0.9, low_alloc_cap)
+    base_low_alloc = min(base.anchors[0][1], low_alloc_cap)
+    low_alloc = _clamp(base_low_alloc + rng.normal(0.0, 0.05), low_alloc_floor, low_alloc_cap)
     mid_alloc = base.anchors[1][1] + rng.normal(0.0, 0.05)
-    mid_alloc = _clamp(mid_alloc, 0.45, min(low_alloc - 0.05, 1.1))
+    mid_cap = min(low_alloc - 0.05, 1.1, ANCHOR_ALLOC_CAP)
+    mid_floor = min(0.45, mid_cap)
+    mid_alloc = _clamp(mid_alloc, mid_floor, mid_cap)
     high_alloc = base.anchors[-1][1] + rng.normal(0.0, 0.04)
-    high_alloc = _clamp(high_alloc, 0.05, min(mid_alloc - 0.05, 0.6))
+    high_cap = min(mid_alloc - 0.05, 0.6, ANCHOR_ALLOC_CAP)
+    high_floor = min(0.05, high_cap)
+    high_alloc = _clamp(high_alloc, high_floor, high_cap)
     anchors = [(low_temp, low_alloc), (1.0, mid_alloc), (high_temp, high_alloc)]
 
     def _perturb_threshold(value: Optional[float], scale: float) -> Optional[float]:
@@ -487,9 +518,15 @@ def sample_parameters(rng: np.random.Generator) -> GlobalParams:
     low_temp = rng.uniform(0.85, 0.95)
     mid_temp = 1.0
     high_temp = rng.uniform(1.32, 1.58)
-    low_alloc = rng.uniform(1.0, 1.4)
-    mid_alloc = rng.uniform(0.55, min(low_alloc, 1.05))
-    high_alloc = rng.uniform(0.05, min(mid_alloc, 0.45))
+    low_cap = min(ANCHOR_ALLOC_CAP, 1.4)
+    low_floor = min(1.0, low_cap)
+    low_alloc = _uniform_range(rng, low_floor, low_cap)
+    mid_cap = min(low_alloc, 1.05, ANCHOR_ALLOC_CAP)
+    mid_floor = min(0.55, mid_cap)
+    mid_alloc = _uniform_range(rng, mid_floor, mid_cap)
+    high_cap = min(mid_alloc, 0.45, ANCHOR_ALLOC_CAP)
+    high_floor = min(0.05, high_cap)
+    high_alloc = _uniform_range(rng, high_floor, high_cap)
     anchors = [(low_temp, low_alloc), (mid_temp, mid_alloc), (high_temp, high_alloc)]
 
     buy_thresholds = {
@@ -616,6 +653,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="Baseline experiment name to perturb (default A1g)",
     )
     parser.add_argument(
+        "--max-allocation",
+        type=float,
+        default=1.5,
+        help="Maximum allocation permitted for any temperature anchor (default 1.5)",
+    )
+    parser.add_argument(
         "--csv",
         default=None,
         help="Optional CSV override with date/close columns for the underlying symbol",
@@ -672,7 +715,10 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
 
     print(f"Preparing data for {symbol} with {settings.leverage:.2f}x leverage ...")
     env = prepare_symbol_environment(symbol, settings)
+    set_anchor_allocation_cap(float(args.max_allocation))
+
     baseline_params = _load_baseline_params(baseline_key)
+    baseline_params = apply_allocation_cap(baseline_params, ANCHOR_ALLOC_CAP)
     baseline_result = evaluate_params(env, baseline_params)
     print(f"Baseline {args.baseline} CAGR ({settings.leverage:.1f}x): {format_percent(baseline_result.cagr)}")
     print("Running optimisation ...")
