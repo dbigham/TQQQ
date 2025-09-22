@@ -3,8 +3,8 @@
 - **Span**: 2001-07-19 → 2025-09-19 (24.17 years)
 - **Underlying (ACN price) CAGR**: 13.77%
 - **Fitted curve CAGR**: 16.90%
-- **Strategy CAGR**: 21.96%
-- **Max drawdown**: -76.93%
+- **Strategy CAGR**: 24.52%
+- **Max drawdown**: -76.97%
 - **Rebalances executed**: 137
 - **P/E ratio (as of 2025-09-21)**: 19.08
 - **PEG ratio (as of 2025-09-21)**: 1.85
@@ -14,4 +14,3 @@ Notes:
 
 - Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
 - Figures use simulated leveraged sleeve with fees and borrow costs.
-

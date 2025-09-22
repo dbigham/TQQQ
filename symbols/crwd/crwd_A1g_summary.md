@@ -2,10 +2,10 @@
 
 - **Span**: 2019-06-12 → 2025-09-19 (6.27 years)
 - **Underlying (CRWD price) CAGR**: 41.09%
-- **Fitted curve CAGR**: 33.35%
-- **Strategy CAGR**: 79.65%
-- **Max drawdown**: -89.56%
-- **Rebalances executed**: 31
+- **Fitted curve CAGR**: 33.37%
+- **Strategy CAGR**: 78.77%
+- **Max drawdown**: -92.12%
+- **Rebalances executed**: 32
 - **P/E ratio (as of 2025-09-21)**: 117.69
 - **PEG ratio (as of 2025-09-21)**: 5.68
 - **Current growth rate (as of 2025-09-21)**: 21.30%
@@ -14,4 +14,3 @@ Notes:
 
 - Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
 - Figures use simulated leveraged sleeve with fees and borrow costs.
-

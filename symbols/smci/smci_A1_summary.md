@@ -2,9 +2,9 @@
 
 - **Span**: 2007-03-29 → 2025-09-19 (18.48 years)
 - **Underlying (SMCI price) CAGR**: 23.88%
-- **Fitted curve CAGR**: 18.51%
+- **Fitted curve CAGR**: 18.54%
 - **Strategy CAGR**: nan%
-- **Max drawdown**: -405.75%
+- **Max drawdown**: -345.15%
 - **Rebalances executed**: 61
 - **P/E ratio (as of 2025-09-21)**: 27.27
 - **PEG ratio (as of 2025-09-21)**: N/A
@@ -14,4 +14,3 @@ Notes:
 
 - Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
 - Figures use simulated leveraged sleeve with fees and borrow costs.
-

@@ -3,9 +3,9 @@
 - **Span**: 1990-02-16 → 2025-09-19 (35.59 years)
 - **Underlying (CSCO price) CAGR**: 22.45%
 - **Fitted curve CAGR**: 12.18%
-- **Strategy CAGR**: 35.18%
-- **Max drawdown**: -91.78%
-- **Rebalances executed**: 140
+- **Strategy CAGR**: 36.88%
+- **Max drawdown**: -91.82%
+- **Rebalances executed**: 144
 - **P/E ratio (as of 2025-09-21)**: 26.75
 - **PEG ratio (as of 2025-09-21)**: 1.63
 - **Current growth rate (as of 2025-09-21)**: 17.90%
@@ -14,4 +14,3 @@ Notes:
 
 - Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
 - Figures use simulated leveraged sleeve with fees and borrow costs.
-

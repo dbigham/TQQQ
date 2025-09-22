@@ -3,8 +3,8 @@
 - **Span**: 2004-06-23 → 2025-09-19 (21.24 years)
 - **Underlying (CRM price) CAGR**: 21.07%
 - **Fitted curve CAGR**: 22.39%
-- **Strategy CAGR**: 35.75%
-- **Max drawdown**: -75.02%
+- **Strategy CAGR**: 35.43%
+- **Max drawdown**: -74.89%
 - **Rebalances executed**: 65
 - **P/E ratio (as of 2025-09-21)**: 35.97
 - **PEG ratio (as of 2025-09-21)**: 1.31

@@ -4,8 +4,8 @@
 - **Underlying (AAPL price) CAGR**: 19.09%
 - **Fitted curve CAGR**: 22.26%
 - **Strategy CAGR**: nan%
-- **Max drawdown**: -19797.23%
-- **Rebalances executed**: 210
+- **Max drawdown**: -21986.69%
+- **Rebalances executed**: 212
 - **P/E ratio (as of 2025-09-21)**: 37.31
 - **PEG ratio (as of 2025-09-21)**: 2.36
 - **Current growth rate (as of 2025-09-21)**: 15.82%
@@ -14,4 +14,3 @@ Notes:
 
 - Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
 - Figures use simulated leveraged sleeve with fees and borrow costs.
-

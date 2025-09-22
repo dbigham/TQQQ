@@ -4,8 +4,8 @@
 - **Underlying (TTD price) CAGR**: 34.91%
 - **Fitted curve CAGR**: 47.25%
 - **Strategy CAGR**: nan%
-- **Max drawdown**: -104.03%
-- **Rebalances executed**: 40
+- **Max drawdown**: -102.25%
+- **Rebalances executed**: 43
 - **P/E ratio (as of 2025-09-21)**: 53.58
 - **PEG ratio (as of 2025-09-21)**: 1.32
 - **Current growth rate (as of 2025-09-21)**: 40.61%
@@ -14,4 +14,3 @@ Notes:
 
 - Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
 - Figures use simulated leveraged sleeve with fees and borrow costs.
-

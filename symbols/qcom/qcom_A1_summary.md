@@ -3,9 +3,9 @@
 - **Span**: 1991-12-13 → 2025-09-19 (33.77 years)
 - **Underlying (QCOM price) CAGR**: 20.11%
 - **Fitted curve CAGR**: 15.00%
-- **Strategy CAGR**: 0.76%
+- **Strategy CAGR**: 0.17%
 - **Max drawdown**: -99.95%
-- **Rebalances executed**: 118
+- **Rebalances executed**: 120
 - **P/E ratio (as of 2025-09-21)**: 16.11
 - **PEG ratio (as of 2025-09-21)**: 1.92
 - **Current growth rate (as of 2025-09-21)**: 8.41%
@@ -14,4 +14,3 @@ Notes:
 
 - Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
 - Figures use simulated leveraged sleeve with fees and borrow costs.
-

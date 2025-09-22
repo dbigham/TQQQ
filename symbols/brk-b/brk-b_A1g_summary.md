@@ -3,9 +3,9 @@
 - **Span**: 1996-05-09 → 2025-09-19 (29.36 years)
 - **Underlying (BRK-B price) CAGR**: 10.97%
 - **Fitted curve CAGR**: 9.68%
-- **Strategy CAGR**: 16.91%
-- **Max drawdown**: -85.69%
-- **Rebalances executed**: 182
+- **Strategy CAGR**: 18.35%
+- **Max drawdown**: -85.01%
+- **Rebalances executed**: 183
 - **P/E ratio (as of 2025-09-21)**: 16.89
 - **PEG ratio (as of 2025-09-21)**: N/A
 - **Current growth rate (as of 2025-09-21)**: -59.20%
@@ -14,4 +14,3 @@ Notes:
 
 - Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
 - Figures use simulated leveraged sleeve with fees and borrow costs.
-

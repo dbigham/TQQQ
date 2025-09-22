@@ -2,10 +2,10 @@
 
 - **Span**: 2017-04-07 → 2025-09-19 (8.45 years)
 - **Underlying (OKTA price) CAGR**: 17.72%
-- **Fitted curve CAGR**: 5.98%
-- **Strategy CAGR**: 21.82%
-- **Max drawdown**: -84.10%
-- **Rebalances executed**: 31
+- **Fitted curve CAGR**: 5.97%
+- **Strategy CAGR**: 21.32%
+- **Max drawdown**: -84.73%
+- **Rebalances executed**: 32
 - **P/E ratio (as of 2025-09-21)**: 111.15
 - **PEG ratio (as of 2025-09-21)**: 0.52
 - **Current growth rate (as of 2025-09-21)**: 212.90%
@@ -14,4 +14,3 @@ Notes:
 
 - Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
 - Figures use simulated leveraged sleeve with fees and borrow costs.
-

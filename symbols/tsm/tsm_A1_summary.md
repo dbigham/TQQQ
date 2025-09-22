@@ -3,8 +3,8 @@
 - **Span**: 1997-10-09 → 2025-09-19 (27.95 years)
 - **Underlying (TSM price) CAGR**: 17.18%
 - **Fitted curve CAGR**: 16.54%
-- **Strategy CAGR**: 22.73%
-- **Max drawdown**: -96.51%
+- **Strategy CAGR**: 25.72%
+- **Max drawdown**: -96.36%
 - **Rebalances executed**: 107
 - **P/E ratio (as of 2025-09-21)**: 28.67
 - **PEG ratio (as of 2025-09-21)**: 1.38
@@ -14,4 +14,3 @@ Notes:
 
 - Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
 - Figures use simulated leveraged sleeve with fees and borrow costs.
-

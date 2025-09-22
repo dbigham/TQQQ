@@ -3,9 +3,9 @@
 - **Span**: 1998-12-22 → 2025-09-19 (26.74 years)
 - **Underlying (XLK price) CAGR**: 9.62%
 - **Fitted curve CAGR**: 10.90%
-- **Strategy CAGR**: 17.26%
-- **Max drawdown**: -88.64%
-- **Rebalances executed**: 114
+- **Strategy CAGR**: 18.12%
+- **Max drawdown**: -89.02%
+- **Rebalances executed**: 119
 - **P/E ratio (as of 2025-09-21)**: 39.68
 - **PEG ratio (as of 2025-09-21)**: 3.00
 - **Current growth rate (as of 2025-09-21)**: 13.25%
@@ -14,4 +14,3 @@ Notes:
 
 - Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
 - Figures use simulated leveraged sleeve with fees and borrow costs.
-

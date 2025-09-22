@@ -3,9 +3,9 @@
 - **Span**: 1980-03-17 → 2025-09-19 (45.51 years)
 - **Underlying (AMAT price) CAGR**: 19.00%
 - **Fitted curve CAGR**: 17.81%
-- **Strategy CAGR**: 14.97%
-- **Max drawdown**: -98.69%
-- **Rebalances executed**: 173
+- **Strategy CAGR**: 16.21%
+- **Max drawdown**: -98.91%
+- **Rebalances executed**: 185
 - **P/E ratio (as of 2025-09-21)**: 22.68
 - **PEG ratio (as of 2025-09-21)**: 1.96
 - **Current growth rate (as of 2025-09-21)**: 11.58%
@@ -14,4 +14,3 @@ Notes:
 
 - Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
 - Figures use simulated leveraged sleeve with fees and borrow costs.
-

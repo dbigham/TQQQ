@@ -1,11 +1,11 @@
 # QQQ – Strategy A1g Summary
 
-- **Span**: 1971-02-05 → 2025-09-05 (54.58 years)
-- **Underlying (Unified Nasdaq) CAGR**: 13.30%
-- **Fitted curve CAGR**: 13.56%
-- **Strategy CAGR**: 25.73%
-- **Max drawdown**: -88.73%
-- **Rebalances executed**: 273
+- **Span**: 1971-02-05 → 2025-09-19 (54.62 years)
+- **Underlying (Unified Nasdaq) CAGR**: 12.77%
+- **Fitted curve CAGR**: 13.37%
+- **Strategy CAGR**: 25.79%
+- **Max drawdown**: -89.14%
+- **Rebalances executed**: 272
 - **P/E ratio (as of 2025-09-21)**: 34.42
 - **PEG ratio (as of 2025-09-21)**: 2.91
 - **Current growth rate (as of 2025-09-21)**: 11.83%
@@ -14,4 +14,3 @@ Notes:
 
 - Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
 - Figures use simulated leveraged sleeve with fees and borrow costs.
-

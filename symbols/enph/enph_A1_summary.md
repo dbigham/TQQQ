@@ -2,9 +2,9 @@
 
 - **Span**: 2012-03-30 → 2025-09-19 (13.47 years)
 - **Underlying (ENPH price) CAGR**: 13.07%
-- **Fitted curve CAGR**: 40.45%
+- **Fitted curve CAGR**: 40.43%
 - **Strategy CAGR**: nan%
-- **Max drawdown**: -101.67%
+- **Max drawdown**: -102.12%
 - **Rebalances executed**: 19
 - **P/E ratio (as of 2025-09-21)**: 29.78
 - **PEG ratio (as of 2025-09-21)**: 0.64
@@ -14,4 +14,3 @@ Notes:
 
 - Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
 - Figures use simulated leveraged sleeve with fees and borrow costs.
-

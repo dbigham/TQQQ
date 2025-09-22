@@ -70,7 +70,7 @@ python strategy_tqqq_reserve.py [--base-symbol QQQ] [--csv unified_nasdaq.csv] [
   [--initial-capital 100000] [--print-rebalances] [--save-plot strategy_tqqq.png] [--no-show]
 
 The CLI defaults to the best-performing experiment; as of the latest calibration this is
-A36 (High-Leverage Ramp), which delivers ~45.31% CAGR through 2025-01-10.
+A36 (High-Leverage Ramp), which delivers ~42.68% CAGR through 2025-01-10.
 """
 
 from __future__ import annotations
@@ -94,7 +94,7 @@ SYMBOL_DATA_DIR = "symbol_data"
 # "leveraged ETF + cash" allocations with the low-drag replication described in
 # ``docs/leverage_exposure_replication.md``. Experiments may override this on a
 # per-profile basis via the ``use_leverage_replication`` flag.
-DEFAULT_USE_LEVERAGE_REPLICATION = False
+DEFAULT_USE_LEVERAGE_REPLICATION = True
 
 
 def import_libs():
@@ -2362,7 +2362,7 @@ EXPERIMENTS["A35"] = {
 }
 
 # A36 simply dials leverage higher while keeping the A27 signal stack intact
-# Boosts CAGR to 45.31% (+3.55 pp, +8.5% relative vs A27)
+# Boosts CAGR to 42.68% (+3.26 pp, +8.3% relative vs A27)
 EXPERIMENTS["A36"] = {
     **EXPERIMENTS["A27"],
     "leverage_override": 3.6,
@@ -3413,10 +3413,13 @@ def main():
             rebalance_df["cagr"] = cagr_values
             display_df = rebalance_df.copy()
             display_df["date"] = display_df["date"].dt.date
-            display_df["tqqq_pct"] = display_df["p_tqqq"] * 100.0
+            display_df["leveraged_pct"] = display_df["p_tqqq"] * 100.0
             display_df["unlevered_pct"] = display_df["p_unlevered"] * 100.0
-            display_df["tbill_pct"] = display_df["p_cash"] * 100.0
+            display_df["cash_pct"] = display_df["p_cash"] * 100.0
             display_df["portfolio_value"] = display_df["total_after"]
+            display_df["leveraged_dollars"] = display_df["tqqq_value"]
+            display_df["unlevered_dollars"] = display_df["unlevered_value"]
+            display_df["cash_dollars"] = display_df["cash_value"]
             display_df["cagr_pct"] = display_df["cagr"] * 100.0
             trade_eps = 1e-9
 
@@ -3443,9 +3446,12 @@ def main():
             columns = [
                 "date",
                 "action",
-                "tqqq_pct",
+                "leveraged_pct",
                 "unlevered_pct",
-                "tbill_pct",
+                "cash_pct",
+                "leveraged_dollars",
+                "unlevered_dollars",
+                "cash_dollars",
                 "delta_unlevered",
                 "delta_tqqq",
                 "delta_cash",
@@ -3453,16 +3459,19 @@ def main():
                 "cagr_pct",
             ]
             formatters = {
-                "tqqq_pct": fmt_pct,
+                "leveraged_pct": fmt_pct,
                 "unlevered_pct": fmt_pct,
-                "tbill_pct": fmt_pct,
+                "cash_pct": fmt_pct,
+                "leveraged_dollars": fmt_amt,
+                "unlevered_dollars": fmt_amt,
+                "cash_dollars": fmt_amt,
                 "delta_unlevered": fmt_amt,
                 "delta_tqqq": fmt_amt,
                 "delta_cash": fmt_amt,
                 "portfolio_value": fmt_amt,
                 "cagr_pct": fmt_pct,
             }
-            print("Rebalance log:")
+            print("Rebalance log (leveraged / unlevered / cash breakdown):")
             print(display_df[columns].to_string(index=False, formatters=formatters))
 
     # Plot

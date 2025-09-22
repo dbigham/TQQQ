@@ -2,9 +2,9 @@
 
 - **Span**: 2002-05-23 → 2025-09-19 (23.33 years)
 - **Underlying (NFLX price) CAGR**: 34.61%
-- **Fitted curve CAGR**: 35.98%
-- **Strategy CAGR**: 41.46%
-- **Max drawdown**: -95.85%
+- **Fitted curve CAGR**: 35.96%
+- **Strategy CAGR**: 40.12%
+- **Max drawdown**: -96.83%
 - **Rebalances executed**: 107
 - **P/E ratio (as of 2025-09-21)**: 52.35
 - **PEG ratio (as of 2025-09-21)**: 1.36
@@ -14,4 +14,3 @@ Notes:
 
 - Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
 - Figures use simulated leveraged sleeve with fees and borrow costs.
-

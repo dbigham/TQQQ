@@ -3,9 +3,9 @@
 - **Span**: 1971-02-05 → 2025-09-19 (54.62 years)
 - **Underlying (Unified Nasdaq) CAGR**: 12.77%
 - **Fitted curve CAGR**: 13.37%
-- **Strategy CAGR**: 29.39%
-- **Max drawdown**: -79.73%
-- **Rebalances executed**: 240
+- **Strategy CAGR**: 30.43%
+- **Max drawdown**: -79.84%
+- **Rebalances executed**: 239
 - **P/E ratio (as of 2025-09-21)**: 34.42
 - **PEG ratio (as of 2025-09-21)**: 2.91
 - **Current growth rate (as of 2025-09-21)**: 11.83%

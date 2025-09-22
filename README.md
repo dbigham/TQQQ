@@ -67,7 +67,7 @@ Key capabilities include:
    Provide a different `--base-symbol` (for example `SPY`, `BTC-USD`, `NVDA`) to drive the strategy with another asset. When a non-QQQ base is requested the script downloads the adjusted history via Yahoo Finance, caches it under `symbol_data/`, and stores the fitted temperature parameters plus diagnostic PNGs for reuse.
 
 ## Strategy Experiments
-Strategy configurations are encapsulated in the `EXPERIMENTS` dictionary so features such as cold-temperature leverage boosts, hot-momentum overlays, macro filters, leverage ladders, and rate tapers can be combined without cluttering the core simulation loop. Each entry corresponds to an experiment documented in depth in `EXPERIMENTS.md`, which traces the evolution from the baseline A1 configuration (~29.7% CAGR) to the current A36 high-leverage variant (~45.31% CAGR through 2025‑01‑10). Use `--experiment A#` on the CLI to reproduce any particular configuration.
+Strategy configurations are encapsulated in the `EXPERIMENTS` dictionary so features such as cold-temperature leverage boosts, hot-momentum overlays, macro filters, leverage ladders, and rate tapers can be combined without cluttering the core simulation loop. Each entry corresponds to an experiment documented in depth in `EXPERIMENTS.md`, which traces the evolution from the baseline A1 configuration (~30.43% CAGR) to the current A36 high-leverage variant (~42.68% CAGR through 2025‑01‑10). Use `--experiment A#` on the CLI to reproduce any particular configuration.
 
 ### Base experiment walkthrough (A1 foundation)
 

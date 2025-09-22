@@ -4,7 +4,7 @@
 - **Underlying (UNH price) CAGR**: 21.61%
 - **Fitted curve CAGR**: 21.81%
 - **Strategy CAGR**: nan%
-- **Max drawdown**: -601.10%
+- **Max drawdown**: -4156.14%
 - **Rebalances executed**: 133
 - **P/E ratio (as of 2025-09-21)**: 14.58
 - **PEG ratio (as of 2025-09-21)**: N/A
@@ -14,4 +14,3 @@ Notes:
 
 - Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
 - Figures use simulated leveraged sleeve with fees and borrow costs.
-

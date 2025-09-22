@@ -3,9 +3,9 @@
 - **Span**: 1973-02-21 → 2025-09-19 (52.57 years)
 - **Underlying (BAC price) CAGR**: 6.97%
 - **Fitted curve CAGR**: 8.37%
-- **Strategy CAGR**: 8.83%
-- **Max drawdown**: -98.25%
-- **Rebalances executed**: 210
+- **Strategy CAGR**: 7.67%
+- **Max drawdown**: -99.26%
+- **Rebalances executed**: 228
 - **P/E ratio (as of 2025-09-21)**: 15.32
 - **PEG ratio (as of 2025-09-21)**: 1.31
 - **Current growth rate (as of 2025-09-21)**: 11.72%
@@ -14,4 +14,3 @@ Notes:
 
 - Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.
 - Figures use simulated leveraged sleeve with fees and borrow costs.
-
