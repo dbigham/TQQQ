@@ -15,17 +15,20 @@ The bridge lives in `strategy_tqqq_reserve.py` and is available in two forms:
 
 ## Request schema
 
-Every request must include the model to evaluate, the date of the last
-completed rebalance, and the current holdings expressed in dollars (share
-counts are optional but improve the share-level output). All symbol and market
-data settings default to the chosen experiment, but the caller may override
+Every request must include the model to evaluate and the current holdings
+expressed in dollars (share counts are optional but improve the share-level
+output). Providing the date of the last completed rebalance lets the simulator
+reconstruct drift accurately, but when InvestmentsView is onboarding a fresh
+account the field may be omitted and the bridge will assume the last rebalance
+occurred on the request date. All symbol and market data settings default to the
+chosen experiment, but the caller may override
 them when necessary (e.g., to test a custom CSV or a different reserve asset).
 
 ```jsonc
 {
   "experiment": "A1",               // required – strategy experiment key
   "request_date": "2025-09-19",     // required – evaluation date (trading day)
-  "last_rebalance": "2025-09-01",   // required – last executed rebalance (string or object)
+  "last_rebalance": "2025-09-01",   // optional – last executed rebalance (string or object)
   "positions": [                     // required – current holdings as of request_date
     {"symbol": "TQQQ", "dollars": 2150.25, "shares": 31.5},
     {"symbol": "SGOV", "dollars": 3150.00}
@@ -51,7 +54,10 @@ Optional keys mirror the CLI arguments and override the experiment defaults:
 
 When richer audit detail is available, `last_rebalance` may be provided as an
 object (e.g., `{ "date": "2025-09-01", "note": "Quarterly rebalance" }`). Only
-the `date` field is required; extra keys are ignored by the bridge.
+the `date` field is required; extra keys are ignored by the bridge. If the field
+is omitted entirely, the simulator seeds its state using the request date so
+newly created portfolios can obtain their first trade recommendation without
+supplying historical activity.
 
 The simulator reconstructs the original rebalance state by inferring share
 counts from the supplied dollar amounts and each symbol’s adjusted close on the

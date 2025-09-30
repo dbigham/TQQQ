@@ -3913,16 +3913,21 @@ def evaluate_integration_request(payload: Mapping[str, Any]) -> Dict[str, Any]:
 
     last_info = payload.get("last_rebalance")
     last_date_raw: Optional[str]
+    implied_last_rebalance = False
     if isinstance(last_info, Mapping):
         last_date_raw = last_info.get("date")  # type: ignore[assignment]
     elif isinstance(last_info, str):
         last_date_raw = last_info
     else:
         last_date_raw = None
-    if not last_date_raw:
-        raise ValueError("last_rebalance date is required")
-    last_ts = pd.to_datetime(last_date_raw)
-    if request_ts < last_ts:
+
+    if last_date_raw:
+        last_ts = pd.to_datetime(last_date_raw)
+    else:
+        last_ts = request_ts
+        implied_last_rebalance = True
+
+    if not implied_last_rebalance and request_ts < last_ts:
         raise ValueError("request_date must be on or after last_rebalance.date")
 
     csv_override = payload.get("csv")
@@ -3946,6 +3951,8 @@ def evaluate_integration_request(payload: Mapping[str, Any]) -> Dict[str, Any]:
     def load_prices(symbol: str) -> pd.Series:
         sym = symbol.upper()
         if sym == "CASH":
+            if last_ts == request_ts:
+                return pd.Series([1.0], index=[request_ts])
             return pd.Series([1.0, 1.0], index=[last_ts, request_ts])
         series, _ = load_symbol_history(pd, sym)
         if last_ts not in series.index or request_ts not in series.index:
@@ -4220,6 +4227,14 @@ def evaluate_integration_request(payload: Mapping[str, Any]) -> Dict[str, Any]:
             result.leverage * total_today
         )
 
+    model_days_since: Optional[int]
+    if decision_entry:
+        model_days_since = int(decision_entry.get("days_since_last_rebalance", 0))
+    elif implied_last_rebalance:
+        model_days_since = 0
+    else:
+        model_days_since = None
+
     response = {
         "request_date": request_ts.strftime("%Y-%m-%d"),
         "experiment": experiment,
@@ -4238,7 +4253,7 @@ def evaluate_integration_request(payload: Mapping[str, Any]) -> Dict[str, Any]:
         "trades": trades,
         "model": {
             "rebalance_cadence": rebalance_cadence,
-            "days_since_last_rebalance": int(decision_entry.get("days_since_last_rebalance", 0)) if decision_entry else None,
+            "days_since_last_rebalance": model_days_since,
             "due": bool(decision_entry.get("due")) if decision_entry else False,
             "target_allocation": float(decision_entry.get("target_p")) if decision_entry else None,
             "base_allocation": float(decision_entry.get("base_p")) if decision_entry else None,
