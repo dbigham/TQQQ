@@ -40,9 +40,9 @@ def test_evaluate_request_without_last_rebalance():
     }
     assert symbols == expected_symbols
 
-    # The bridge should still return a valid decision block.
-    assert response["decision"]["action"] in {"rebalance", "hold"}
-    assert isinstance(response["decision"]["reason"], str) and response["decision"]["reason"]
+    # The bridge should request an immediate rebalance to establish the initial position.
+    assert response["decision"]["action"] == "rebalance"
+    assert response["decision"]["reason"] == "Rebalance required by strategy rules."
 
 
 def test_evaluate_request_with_weekend_last_rebalance():

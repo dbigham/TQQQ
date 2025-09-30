@@ -4074,12 +4074,19 @@ def evaluate_integration_request(payload: Mapping[str, Any]) -> Dict[str, Any]:
         no_show=True,
     )
 
+    next_rebalance_idx_override = rebalance_cadence
+    last_rebalance_idx_override = 0
+    if implied_last_rebalance:
+        # With no recorded rebalance we should treat the current window as immediately
+        # eligible so the bridge can surface the initial deployment trades.
+        next_rebalance_idx_override = 0
+
     overrides = BacktestOverrides(
         initial_unlevered=initial_unlevered,
         initial_leveraged=initial_leveraged,
         initial_cash=initial_cash,
-        last_rebalance_index=0,
-        next_rebalance_index=rebalance_cadence,
+        last_rebalance_index=last_rebalance_idx_override,
+        next_rebalance_index=next_rebalance_idx_override,
         allow_rebalances_from_index=allow_index,
         capture_decision_log=True,
     )
