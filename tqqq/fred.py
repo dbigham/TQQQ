@@ -93,29 +93,76 @@ def fetch_fred_series(
     api_key: Optional[str] = None,
     opener: Callable[[str], io.BufferedReader] = urllib.request.urlopen,
 ) -> pd.DataFrame:
-    """Fetch ``series_id`` between ``start`` and ``end`` with layered fallbacks."""
+    """Fetch ``series_id`` between ``start`` and ``end`` with layered fallbacks.
+
+    If no provider returns data within the requested window, the function
+    incrementally widens the lookback so we can backfill from the most recent
+    observation rather than failing.
+    """
 
     start_ts = pd.to_datetime(start)
     end_ts = pd.to_datetime(end)
     if start_ts > end_ts:
         raise ValueError("start must be <= end")
 
-    attempts = (
-        lambda: _fetch_with_fredapi(series_id, start_ts, end_ts, api_key),
-        lambda: _fetch_with_datareader(series_id, start_ts, end_ts, api_key),
-        lambda: _fetch_with_csv(series_id, start_ts, end_ts, api_key, opener=opener),
-    )
-
-    for attempt in attempts:
-        frame = attempt()
+    def normalise_frame(frame: pd.DataFrame) -> Optional[pd.DataFrame]:
         if frame is None or frame.empty:
-            continue
+            return None
         frame = frame.sort_index()
         if "rate" not in frame.columns:
             frame = frame.rename(columns={frame.columns[0]: "rate"})
+        frame = frame.loc[frame.index <= end_ts]
+        if frame.empty:
+            return None
+
+        if start_ts not in frame.index:
+            prior = frame.loc[frame.index < start_ts]
+            if not prior.empty:
+                last_row = prior.iloc[[-1]].copy()
+                last_row.index = [start_ts]
+                frame = pd.concat([frame, last_row])
+
+        frame = frame.sort_index()
+        if frame.index.max() >= start_ts:
+            frame = frame.loc[frame.index >= start_ts]
+
+        frame = frame[~frame.index.duplicated(keep="last")]
         return frame
 
-    raise RuntimeError(f"Failed to fetch FRED series '{series_id}' via fredapi, pandas-datareader, or CSV fallback")
+    fetchers: tuple[Callable[[pd.Timestamp, pd.Timestamp], Optional[pd.DataFrame]], ...] = (
+        lambda s, e: _fetch_with_fredapi(series_id, s, e, api_key),
+        lambda s, e: _fetch_with_datareader(series_id, s, e, api_key),
+        lambda s, e: _fetch_with_csv(series_id, s, e, api_key, opener=opener),
+    )
+
+    def try_fetch(window_start: pd.Timestamp) -> Optional[pd.DataFrame]:
+        for fetcher in fetchers:
+            frame = fetcher(window_start, end_ts)
+            normalised = normalise_frame(frame)
+            if normalised is not None and not normalised.empty:
+                return normalised
+        return None
+
+    result = try_fetch(start_ts)
+    if result is not None:
+        return result
+
+    lookbacks = (
+        pd.Timedelta(days=30),
+        pd.Timedelta(days=365),
+        pd.Timedelta(days=365 * 5),
+        pd.Timedelta(days=365 * 10),
+    )
+
+    for delta in lookbacks:
+        window_start = start_ts - delta
+        result = try_fetch(window_start)
+        if result is not None:
+            return result
+
+    raise RuntimeError(
+        f"Failed to fetch FRED series '{series_id}' via fredapi, pandas-datareader, or CSV fallback"
+    )
 
 
 __all__ = [
