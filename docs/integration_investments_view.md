@@ -127,8 +127,9 @@ rebalance. A typical rebalance recommendation looks like:
 When the model elects to hold, the response still includes the model’s desired
 weights so InvestmentsView can surface drift information, and the `reason`
 string explains which cadence or momentum rule blocked trading (e.g. “Next
-rebalance window opens in 5 trading day(s).” or “Buy-side momentum guard active”
-when a drawdown filter is engaged).【F:strategy_tqqq_reserve.py†L4497-L4541】
+rebalance window opens in 5 trading day(s).”, “Buy-side momentum guard active”
+when a drawdown filter is engaged, or “Buy prevented by violation of maximum
+temperature of 1.30.” when only the temperature limit blocks the trade).
 
 ## Consuming the bridge
 

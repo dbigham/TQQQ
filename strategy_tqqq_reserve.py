@@ -3341,6 +3341,11 @@ def run_backtest(
                             "blocked_reason_buy_r12_le_-2pct": bool(trig_buy_r12),
                             "blocked_reason_buy_r22_le_0pct": bool(trig_buy_r22),
                             "blocked_reason_buy_T_gt_limit": bool(trig_buy_T),
+                            "buy_temperature_limit": (
+                                float(temp_limit)
+                                if temp_limit is not None and not math.isnan(temp_limit)
+                                else None
+                            ),
                         },
                     )
                 # Debug log for decision day
@@ -4167,8 +4172,28 @@ def evaluate_integration_request(payload: Mapping[str, Any]) -> Dict[str, Any]:
                 reasons.append("12-day drawdown guard")
             if decision.get("blocked_reason_buy_r22_le_0pct"):
                 reasons.append("22-day drawdown guard")
+            temp_limit = decision.get("buy_temperature_limit")
+            temp_only_block = (
+                bool(decision.get("blocked_reason_buy_T_gt_limit"))
+                and not any(
+                    decision.get(flag)
+                    for flag in (
+                        "blocked_reason_buy_r3_le_-3pct",
+                        "blocked_reason_buy_r6_le_-3pct",
+                        "blocked_reason_buy_r12_le_-2pct",
+                        "blocked_reason_buy_r22_le_0pct",
+                    )
+                )
+            )
+            if temp_only_block:
+                if isinstance(temp_limit, (int, float)) and not math.isnan(temp_limit):
+                    return (
+                        "Buy prevented by violation of maximum temperature of "
+                        f"{temp_limit:.2f}."
+                    )
+                return "Buy prevented by violation of maximum temperature limit."
             if decision.get("blocked_reason_buy_T_gt_limit"):
-                reasons.append("temperature ceiling")
+                reasons.append("temperature limit")
             detail = ", ".join(reasons) if reasons else "momentum filters"
             return f"Buy-side momentum guard active ({detail})."
         if action == "blocked_sell":
