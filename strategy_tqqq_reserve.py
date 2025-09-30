@@ -3618,11 +3618,20 @@ def run_backtest(
 
     # Normalized lines for plotting
     unified_norm = df["close"].to_numpy() / df["close"].iloc[0]
-    strategy_norm = port_total / port_total[0]
+    initial_total = port_total[0]
+    if initial_total == 0:
+        strategy_norm = np.ones_like(port_total)
+    else:
+        strategy_norm = port_total / initial_total
 
     # CAGR for strategy
     years = (df.index[-1] - df.index[0]).days / 365.25
-    cagr = (strategy_norm[-1] / strategy_norm[0]) ** (1.0 / years) - 1.0
+    if years <= 0:
+        cagr = 0.0
+    else:
+        start_norm = strategy_norm[0] if strategy_norm[0] != 0 else 1.0
+        end_norm = strategy_norm[-1]
+        cagr = (end_norm / start_norm) ** (1.0 / years) - 1.0
     # Max drawdown for strategy (based on total portfolio)
     # Avoid division by zero by guarding initial value
     if len(port_total) > 0 and port_total[0] > 0:
@@ -3910,6 +3919,7 @@ def evaluate_integration_request(payload: Mapping[str, Any]) -> Dict[str, Any]:
     if not request_date_raw:
         raise ValueError("request_date is required")
     request_ts = pd.to_datetime(request_date_raw)
+    request_ts_original = request_ts
 
     last_info = payload.get("last_rebalance")
     last_date_raw: Optional[str]
@@ -3932,10 +3942,39 @@ def evaluate_integration_request(payload: Mapping[str, Any]) -> Dict[str, Any]:
 
     csv_override = payload.get("csv")
     df_full, price_source = load_symbol_history(pd, base_symbol, csv_override=csv_override)
-    if last_ts not in df_full.index:
-        raise ValueError(f"Base symbol data missing last rebalance date {last_ts.date()}")
-    if request_ts not in df_full.index:
-        raise ValueError(f"Base symbol data missing request date {request_ts.date()}")
+    index_sorted = df_full.index.sort_values()
+
+    def align_market_date(ts: "pd.Timestamp", label: str, *, max_lag_days: Optional[int] = None) -> "pd.Timestamp":
+        if ts in index_sorted:
+            return ts
+
+        eligible = index_sorted[index_sorted <= ts]
+        if len(eligible) == 0:
+            earliest = index_sorted[0]
+            raise ValueError(
+                f"Base symbol data starts at {earliest.date()} which is after {label} {ts.date()}"
+            )
+
+        aligned = eligible[-1]
+
+        if max_lag_days is not None:
+            lag_days = int((ts.normalize() - aligned.normalize()).days)
+            if lag_days > max_lag_days:
+                latest_available = index_sorted[-1]
+                raise ValueError(
+                    "Base symbol data not available on or before "
+                    f"{label} {ts.date()} (latest available {latest_available.date()})"
+                )
+
+        return aligned
+
+    last_ts = align_market_date(last_ts, "last rebalance date")
+    request_ts = align_market_date(request_ts, "request date", max_lag_days=5)
+
+    if request_ts < last_ts:
+        raise ValueError(
+            "Aligned request date precedes last rebalance date; price history is inconsistent"
+        )
 
     df_slice = df_full.loc[(df_full.index >= last_ts) & (df_full.index <= request_ts)]
     if df_slice.empty:
@@ -4236,7 +4275,7 @@ def evaluate_integration_request(payload: Mapping[str, Any]) -> Dict[str, Any]:
         model_days_since = None
 
     response = {
-        "request_date": request_ts.strftime("%Y-%m-%d"),
+        "request_date": request_ts_original.strftime("%Y-%m-%d"),
         "experiment": experiment,
         "base_symbol": base_symbol,
         "leveraged_symbol": leveraged_symbol,
