@@ -80,7 +80,9 @@ import json
 import math
 import os
 import re
-from typing import Mapping, Optional, Sequence
+import sys
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from tqqq import fetch_fred_series as download_fred_series
 from tqqq import ensure_fundamentals
@@ -95,6 +97,51 @@ SYMBOL_DATA_DIR = "symbol_data"
 # ``docs/leverage_exposure_replication.md``. Experiments may override this on a
 # per-profile basis via the ``use_leverage_replication`` flag.
 DEFAULT_USE_LEVERAGE_REPLICATION = True
+
+
+@dataclass
+class BacktestResult:
+    df: "pd.DataFrame"
+    port_unlevered: "np.ndarray"
+    port_tqqq: "np.ndarray"
+    port_cash: "np.ndarray"
+    port_total: "np.ndarray"
+    deployed_p: "np.ndarray"
+    base_p_series: "np.ndarray"
+    target_p_series: "np.ndarray"
+    block_buy_series: "np.ndarray"
+    block_sell_series: "np.ndarray"
+    forced_derisk_series: "np.ndarray"
+    rebalance_entries: List[Dict[str, Any]]
+    decision_log: List[Dict[str, Any]]
+    debug_rows: List[Dict[str, Any]]
+    unified_norm: "np.ndarray"
+    strategy_norm: "np.ndarray"
+    cagr: float
+    max_drawdown: float
+    rate_ann: "np.ndarray"
+    macro: "pd.DataFrame"
+    leverage: float
+    artifact_experiment: str
+    base_symbol: str
+    config: Mapping[str, Any]
+    use_leverage_replication: bool
+    price_source: str
+    start_ts: "pd.Timestamp"
+    end_ts: "pd.Timestamp"
+    years: float
+    initial_capital: float
+
+
+@dataclass
+class BacktestOverrides:
+    initial_unlevered: Optional[float] = None
+    initial_leveraged: Optional[float] = None
+    initial_cash: Optional[float] = None
+    last_rebalance_index: Optional[int] = None
+    next_rebalance_index: Optional[int] = None
+    allow_rebalances_from_index: Optional[int] = None
+    capture_decision_log: bool = False
 
 
 def import_libs():
@@ -2564,63 +2611,14 @@ EXPERIMENTS["A32"] = {
 }
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Simulate TQQQ+reserve strategy with temperature & filters")
-    parser.add_argument(
-        "--base-symbol",
-        default=None,
-        help="Underlying symbol/index used for the leverage sleeve (defaults to the experiment base symbol or QQQ)",
-    )
-    parser.add_argument(
-        "--csv",
-        default=None,
-        help="Optional CSV path with date/close columns (defaults to unified_nasdaq.csv for QQQ)",
-    )
-    parser.add_argument("--start", default=None, help="Start date (YYYY-MM-DD) inclusive")
-    parser.add_argument("--end", default="2025-09-19", help="End date (YYYY-MM-DD) inclusive")
-    parser.add_argument("--fred-series", default="FEDFUNDS", help="FRED rate series (default FEDFUNDS)")
-    parser.add_argument(
-        "--experiment",
-        default="A36",
-        choices=sorted(EXPERIMENTS.keys()),
-        help="Strategy experiment to run (default A36, best-known)"
-    )
-    parser.add_argument("--leverage", type=float, default=3.0)
-    parser.add_argument("--annual-fee", type=float, default=0.0095)
-    parser.add_argument("--borrow-divisor", type=float, default=0.7)
-    parser.add_argument("--trading-days", type=int, default=252)
-    parser.add_argument(
-        "--initial-capital",
-        type=float,
-        default=1.0,
-        help="Initial portfolio value for the simulation (default 1.0)",
-    )
-    parser.add_argument(
-        "--print-rebalances",
-        action="store_true",
-        help="Print a detailed log of executed rebalances",
-    )
-    parser.add_argument(
-        "--disable-buy-temp-limit",
-        action="store_true",
-        help="Ignore temperature buy blocks so the strategy can add exposure regardless of T",
-    )
-    parser.add_argument("--save-plot", default=None, help="If set, save output figure to this PNG path")
-    parser.add_argument("--save-csv", default=None, help="If set, save daily debug CSV here")
-    parser.add_argument(
-        "--save-summary",
-        default=None,
-        help=(
-            "If set, write a markdown summary of key stats to this path; "
-            "if not provided, a default '[symbol]_[experiment]_summary.md' is saved in the symbol directory"
-        ),
-    )
-    # Debug mode for rebalance decisions
-    parser.add_argument("--debug-start", default=None, help="Start date (YYYY-MM-DD) for rebalance debug output")
-    parser.add_argument("--debug-end", default=None, help="End date (YYYY-MM-DD) for rebalance debug output (inclusive)")
-    parser.add_argument("--debug-csv", default=None, help="If set, write rebalance debug CSV to this path (default strategy_tqqq_reserve_debug.csv if a debug range is provided)")
-    parser.add_argument("--no-show", action="store_true")
-    args = parser.parse_args()
+def run_backtest(
+    pd,
+    np,
+    plt,
+    args,
+    overrides: BacktestOverrides | None = None,
+    quiet: bool = False,
+) -> BacktestResult:
     disable_buy_temp_limit = bool(args.disable_buy_temp_limit)
     experiment = args.experiment.upper()
     config = EXPERIMENTS[experiment]
@@ -2720,28 +2718,31 @@ def main():
 
     # Determine per-symbol artifact directory
     symbol_dir = os.path.join("symbols", ("qqq" if base_symbol == "QQQ" else base_symbol.lower()))
-    os.makedirs(symbol_dir, exist_ok=True)
+    if not quiet:
+        os.makedirs(symbol_dir, exist_ok=True)
 
-    if args.save_plot:
-        root, ext = os.path.splitext(args.save_plot)
-        # If caller didn't specify a directory, write into the per-symbol dir
-        if not os.path.dirname(root):
-            root = os.path.join(symbol_dir, os.path.basename(root))
-        if base_symbol != "QQQ":
-            root = ensure_suffix(root, base_symbol)
-        root = ensure_suffix(root, artifact_experiment)
-        args.save_plot = f"{root}{ext}"
+        if args.save_plot:
+            root, ext = os.path.splitext(args.save_plot)
+            # If caller didn't specify a directory, write into the per-symbol dir
+            if not os.path.dirname(root):
+                root = os.path.join(symbol_dir, os.path.basename(root))
+            if base_symbol != "QQQ":
+                root = ensure_suffix(root, base_symbol)
+            root = ensure_suffix(root, artifact_experiment)
+            args.save_plot = f"{root}{ext}"
+        else:
+            prefix = "strategy_qqq_reserve" if base_symbol == "QQQ" else f"strategy_{base_symbol.lower()}_reserve"
+            args.save_plot = os.path.join(symbol_dir, f"{prefix}_{artifact_experiment}.png")
+
+        # If a CSV path is provided without a directory, write it under the per-symbol dir
+        if args.save_csv:
+            csv_root = args.save_csv
+            if not os.path.dirname(csv_root):
+                args.save_csv = os.path.join(symbol_dir, os.path.basename(csv_root))
     else:
-        prefix = "strategy_qqq_reserve" if base_symbol == "QQQ" else f"strategy_{base_symbol.lower()}_reserve"
-        args.save_plot = os.path.join(symbol_dir, f"{prefix}_{artifact_experiment}.png")
+        args.save_plot = None
+        args.save_csv = None
 
-    # If a CSV path is provided without a directory, write it under the per-symbol dir
-    if args.save_csv:
-        csv_root = args.save_csv
-        if not os.path.dirname(csv_root):
-            args.save_csv = os.path.join(symbol_dir, os.path.basename(csv_root))
-
-    pd, np, plt = import_libs()
     df_full, price_source = load_symbol_history(pd, base_symbol, csv_override=args.csv)
     df = df_full.copy()
     if args.start:
@@ -2837,21 +2838,46 @@ def main():
     if debug_start_ts is not None and debug_end_ts is None:
         debug_end_ts = debug_start_ts
 
-    # Start with all in cash
+    # Start with provided holdings (default all cash)
     initial_capital = float(args.initial_capital)
-    port_unlevered[0] = 0.0
-    port_tqqq[0] = 0.0
-    port_cash[0] = initial_capital
+    init_unlevered = 0.0
+    init_leveraged = 0.0
+    init_cash = initial_capital
+    if overrides:
+        if overrides.initial_unlevered is not None:
+            init_unlevered = float(overrides.initial_unlevered)
+        if overrides.initial_leveraged is not None:
+            init_leveraged = float(overrides.initial_leveraged)
+        if overrides.initial_cash is not None:
+            init_cash = float(overrides.initial_cash)
+        initial_capital = init_unlevered + init_leveraged + init_cash
+    port_unlevered[0] = init_unlevered
+    port_tqqq[0] = init_leveraged
+    port_cash[0] = init_cash
     port_total[0] = port_cash[0] + port_tqqq[0] + port_unlevered[0]
-    deployed_p[0] = 0.0
+    if port_total[0] <= 0:
+        deployed_p[0] = 0.0
+    else:
+        deployed_p[0] = (port_unlevered[0] + leverage * port_tqqq[0]) / (leverage * port_total[0])
 
     # Rebalance scheduling
     next_rebalance_idx = 0  # day 0 is an eligible rebalance day after updates
+    if overrides and overrides.next_rebalance_index is not None:
+        next_rebalance_idx = int(overrides.next_rebalance_index)
     eps = 1e-6
     last_rebalance_idx = -rebalance_cadence
+    if overrides and overrides.last_rebalance_index is not None:
+        last_rebalance_idx = int(overrides.last_rebalance_index)
     peak_total = port_total[0]
 
     rebalance_entries = []
+    decision_log: List[Dict[str, Any]] = []
+    allow_rebalances_from_index = (
+        int(overrides.allow_rebalances_from_index)
+        if overrides and overrides.allow_rebalances_from_index is not None
+        else None
+    )
+    capture_decisions = bool(overrides.capture_decision_log) if overrides else False
 
     def add_rebalance_entry(
         index: int,
@@ -2916,6 +2942,7 @@ def main():
             curr_p = 0.0
         else:
             curr_p = (port_unlevered[i] + leverage * port_tqqq[i]) / (leverage * total)
+        curr_p_before = curr_p
         drawdown = 0.0 if peak_total <= 0 else (total / peak_total) - 1.0
 
         T = df["temp"].iloc[i]
@@ -3111,6 +3138,28 @@ def main():
         base_p_series[i] = base_p
         target_p_series[i] = target_p
 
+        decision_base: Optional[Dict[str, Any]] = None
+        if capture_decisions:
+            decision_base = {
+                "index": int(i),
+                "date": pd.Timestamp(dates[i]),
+                "curr_p": float(curr_p),
+                "target_p": float(target_p),
+                "base_p": float(base_p),
+                "temperature": float(T) if not math.isnan(T) else float("nan"),
+                "rate": float(rate_today),
+                "ret_3": float(r3) if not math.isnan(r3) else float("nan"),
+                "ret_6": float(r6) if not math.isnan(r6) else float("nan"),
+                "ret_12": float(r12) if not math.isnan(r12) else float("nan"),
+                "ret_22": float(r22) if not math.isnan(r22) else float("nan"),
+                "vol_22": float(vol22) if not math.isnan(vol22) else float("nan"),
+                "vol_66": float(vol66) if not math.isnan(vol66) else float("nan"),
+                "drawdown": float(drawdown),
+                "next_rebalance_index": int(next_rebalance_idx),
+                "last_rebalance_index": int(last_rebalance_idx),
+                "rebalance_cadence": int(rebalance_cadence),
+            }
+
         intra_cfg = config.get("intra_cycle_rebalance")
         if (
             intra_cfg
@@ -3130,6 +3179,34 @@ def main():
         # Rebalance logic
         acted = False
         if i >= next_rebalance_idx:
+            diff_target = target_p - curr_p_before
+            if diff_target > eps:
+                desired_direction = "buy"
+            elif diff_target < -eps:
+                desired_direction = "sell"
+            else:
+                desired_direction = "hold"
+
+            def log_decision(action: str, executed: bool, extra: Optional[Dict[str, Any]] = None) -> None:
+                if not capture_decisions or decision_base is None:
+                    return
+                entry = dict(decision_base)
+                entry["action"] = action
+                entry["executed"] = bool(executed)
+                entry["direction"] = desired_direction
+                entry["curr_p_before"] = float(curr_p_before)
+                entry["curr_p_after"] = float(curr_p)
+                entry["allow_rebalances_from_index"] = (
+                    int(allow_rebalances_from_index)
+                    if allow_rebalances_from_index is not None
+                    else None
+                )
+                entry["due"] = True
+                entry["days_since_last_rebalance"] = int(i - last_rebalance_idx)
+                if extra:
+                    entry.update(extra)
+                decision_log.append(entry)
+
             # First, check the 22d crash de-risk. If triggered, act immediately and skip momentum filters.
             ret22 = r22
             forced_today = False
@@ -3186,12 +3263,29 @@ def main():
                     prev_cash,
                     reason="forced_derisk",
                 )
+                log_decision(
+                    "forced_derisk",
+                    True,
+                    {
+                        "ret_22": float(ret22) if not math.isnan(ret22) else float("nan"),
+                        "crash_threshold": float(crash_threshold) if crash_threshold is not None else float("nan"),
+                    },
+                )
                 # Update debug AFTER action
                 if debug_start_ts is not None:
                     ts_i = dates[i]
                     if ts_i >= debug_start_ts and ts_i <= debug_end_ts:
                         debug_rows[-1]["curr_p_after"] = float(curr_p)
             if forced_today:
+                port_total[i] = port_unlevered[i] + port_tqqq[i] + port_cash[i]
+                deployed_p[i] = curr_p
+                continue
+            if allow_rebalances_from_index is not None and i < allow_rebalances_from_index:
+                log_decision(
+                    "deferred_until_index",
+                    False,
+                    {"deferred_until_index": int(allow_rebalances_from_index)},
+                )
                 port_total[i] = port_unlevered[i] + port_tqqq[i] + port_cash[i]
                 deployed_p[i] = curr_p
                 continue
@@ -3237,6 +3331,18 @@ def main():
                 if trig_buy_r3 or trig_buy_r6 or trig_buy_r12 or trig_buy_r22 or trig_buy_T:
                     block_buy = True
                 block_buy_series[i] = 1 if block_buy else 0
+                if block_buy:
+                    log_decision(
+                        "blocked_buy",
+                        False,
+                        {
+                            "blocked_reason_buy_r3_le_-3pct": bool(trig_buy_r3),
+                            "blocked_reason_buy_r6_le_-3pct": bool(trig_buy_r6),
+                            "blocked_reason_buy_r12_le_-2pct": bool(trig_buy_r12),
+                            "blocked_reason_buy_r22_le_0pct": bool(trig_buy_r22),
+                            "blocked_reason_buy_T_gt_limit": bool(trig_buy_T),
+                        },
+                    )
                 # Debug log for decision day
                 if debug_start_ts is not None:
                     ts_i = dates[i]
@@ -3308,6 +3414,17 @@ def main():
                         prev_tqqq,
                         prev_cash,
                     )
+                    log_decision(
+                        "rebalance_buy",
+                        True,
+                        {
+                            "blocked_reason_buy_r3_le_-3pct": False,
+                            "blocked_reason_buy_r6_le_-3pct": False,
+                            "blocked_reason_buy_r12_le_-2pct": False,
+                            "blocked_reason_buy_r22_le_0pct": False,
+                            "blocked_reason_buy_T_gt_limit": False,
+                        },
+                    )
                     if debug_start_ts is not None:
                         ts_i = dates[i]
                         if ts_i >= debug_start_ts and ts_i <= debug_end_ts:
@@ -3339,6 +3456,17 @@ def main():
                 if trig_sell_r3 or trig_sell_r6 or trig_sell_r12 or trig_sell_r22:
                     block_sell = True
                 block_sell_series[i] = 1 if block_sell else 0
+                if block_sell:
+                    log_decision(
+                        "blocked_sell",
+                        False,
+                        {
+                            "blocked_reason_sell_r3_ge_3pct": bool(trig_sell_r3),
+                            "blocked_reason_sell_r6_ge_3pct": bool(trig_sell_r6),
+                            "blocked_reason_sell_r12_ge_2.25pct": bool(trig_sell_r12),
+                            "blocked_reason_sell_r22_ge_0.75pct": bool(trig_sell_r22),
+                        },
+                    )
                 # Debug log for decision day
                 if debug_start_ts is not None:
                     ts_i = dates[i]
@@ -3409,6 +3537,16 @@ def main():
                         prev_tqqq,
                         prev_cash,
                     )
+                    log_decision(
+                        "rebalance_sell",
+                        True,
+                        {
+                            "blocked_reason_sell_r3_ge_3pct": False,
+                            "blocked_reason_sell_r6_ge_3pct": False,
+                            "blocked_reason_sell_r12_ge_2.25pct": False,
+                            "blocked_reason_sell_r22_ge_0.75pct": False,
+                        },
+                    )
                     if debug_start_ts is not None:
                         ts_i = dates[i]
                         if ts_i >= debug_start_ts and ts_i <= debug_end_ts:
@@ -3418,6 +3556,7 @@ def main():
                 next_rebalance_idx = i + rebalance_cadence
                 last_rebalance_idx = i
                 acted = True
+                log_decision("cadence_hold", False, None)
                 if debug_start_ts is not None:
                     ts_i = dates[i]
                     if ts_i >= debug_start_ts and ts_i <= debug_end_ts:
@@ -3449,6 +3588,30 @@ def main():
                             "curr_p_after": float(curr_p)
                         })
 
+        else:
+            if capture_decisions and decision_base is not None:
+                diff_target = target_p - curr_p_before
+                if diff_target > eps:
+                    direction = "buy"
+                elif diff_target < -eps:
+                    direction = "sell"
+                else:
+                    direction = "hold"
+                entry = dict(decision_base)
+                entry["action"] = "not_due"
+                entry["executed"] = False
+                entry["direction"] = direction
+                entry["curr_p_before"] = float(curr_p_before)
+                entry["curr_p_after"] = float(curr_p)
+                entry["allow_rebalances_from_index"] = (
+                    int(allow_rebalances_from_index)
+                    if allow_rebalances_from_index is not None
+                    else None
+                )
+                entry["due"] = False
+                entry["days_since_last_rebalance"] = int(i - last_rebalance_idx)
+                decision_log.append(entry)
+
         port_total[i] = port_unlevered[i] + port_tqqq[i] + port_cash[i]
         deployed_p[i] = curr_p
         peak_total = max(peak_total, port_total[i])
@@ -3468,99 +3631,100 @@ def main():
         max_drawdown = float(np.nanmin(drawdowns)) if drawdowns.size > 0 else float('nan')
     else:
         max_drawdown = float('nan')
-    # Print CAGR summary for convenience
-    print(f"Strategy span: {df.index[0].date()} -> {df.index[-1].date()} ({years:.2f} years)")
-    print(f"Strategy CAGR: {cagr * 100.0:.2f}%")
+    if not quiet:
+        # Print CAGR summary for convenience
+        print(f"Strategy span: {df.index[0].date()} -> {df.index[-1].date()} ({years:.2f} years)")
+        print(f"Strategy CAGR: {cagr * 100.0:.2f}%")
 
-    if args.print_rebalances:
-        print()
-        if len(rebalance_entries) == 0:
-            print("No rebalances were executed in the specified range.")
-        else:
-            rebalance_df = pd.DataFrame(rebalance_entries)
-            start_date = pd.Timestamp(df.index[0])
-            initial_total = float(port_total[0]) if port_total[0] > 0 else float("nan")
-            cagr_values = []
-            for _, row in rebalance_df.iterrows():
-                total_after = float(row["total_after"])
-                date = pd.Timestamp(row["date"])
-                days_elapsed = (date - start_date).days
-                if (
-                    days_elapsed <= 0
-                    or math.isnan(initial_total)
-                    or initial_total <= 0
-                    or total_after <= 0
-                ):
-                    cagr_values.append(float("nan"))
-                else:
-                    years_elapsed = days_elapsed / 365.25
-                    if years_elapsed <= 0:
+        if args.print_rebalances:
+            print()
+            if len(rebalance_entries) == 0:
+                print("No rebalances were executed in the specified range.")
+            else:
+                rebalance_df = pd.DataFrame(rebalance_entries)
+                start_date = pd.Timestamp(df.index[0])
+                initial_total = float(port_total[0]) if port_total[0] > 0 else float("nan")
+                cagr_values = []
+                for _, row in rebalance_df.iterrows():
+                    total_after = float(row["total_after"])
+                    date = pd.Timestamp(row["date"])
+                    days_elapsed = (date - start_date).days
+                    if (
+                        days_elapsed <= 0
+                        or math.isnan(initial_total)
+                        or initial_total <= 0
+                        or total_after <= 0
+                    ):
                         cagr_values.append(float("nan"))
                     else:
-                        cagr_values.append((total_after / initial_total) ** (1.0 / years_elapsed) - 1.0)
-            rebalance_df["cagr"] = cagr_values
-            display_df = rebalance_df.copy()
-            display_df["date"] = display_df["date"].dt.date
-            display_df["leveraged_pct"] = display_df["p_tqqq"] * 100.0
-            display_df["unlevered_pct"] = display_df["p_unlevered"] * 100.0
-            display_df["cash_pct"] = display_df["p_cash"] * 100.0
-            display_df["portfolio_value"] = display_df["total_after"]
-            display_df["leveraged_dollars"] = display_df["tqqq_value"]
-            display_df["unlevered_dollars"] = display_df["unlevered_value"]
-            display_df["cash_dollars"] = display_df["cash_value"]
-            display_df["cagr_pct"] = display_df["cagr"] * 100.0
-            trade_eps = 1e-9
+                        years_elapsed = days_elapsed / 365.25
+                        if years_elapsed <= 0:
+                            cagr_values.append(float("nan"))
+                        else:
+                            cagr_values.append((total_after / initial_total) ** (1.0 / years_elapsed) - 1.0)
+                rebalance_df["cagr"] = cagr_values
+                display_df = rebalance_df.copy()
+                display_df["date"] = display_df["date"].dt.date
+                display_df["leveraged_pct"] = display_df["p_tqqq"] * 100.0
+                display_df["unlevered_pct"] = display_df["p_unlevered"] * 100.0
+                display_df["cash_pct"] = display_df["p_cash"] * 100.0
+                display_df["portfolio_value"] = display_df["total_after"]
+                display_df["leveraged_dollars"] = display_df["tqqq_value"]
+                display_df["unlevered_dollars"] = display_df["unlevered_value"]
+                display_df["cash_dollars"] = display_df["cash_value"]
+                display_df["cagr_pct"] = display_df["cagr"] * 100.0
+                trade_eps = 1e-9
 
-            def classify_action(row: pd.Series) -> str:
-                exposure_delta = float(row.get("delta_unlevered", 0.0)) + leverage * float(
-                    row.get("delta_tqqq", 0.0)
-                )
-                if exposure_delta > trade_eps:
-                    return "Buy"
-                if exposure_delta < -trade_eps:
-                    return "Sell"
-                return "Hold"
+                def classify_action(row: pd.Series) -> str:
+                    exposure_delta = float(row.get("delta_unlevered", 0.0)) + leverage * float(
+                        row.get("delta_tqqq", 0.0)
+                    )
+                    if exposure_delta > trade_eps:
+                        return "Buy"
+                    if exposure_delta < -trade_eps:
+                        return "Sell"
+                    return "Hold"
 
-            display_df["action"] = display_df.apply(classify_action, axis=1)
+                display_df["action"] = display_df.apply(classify_action, axis=1)
 
-            def fmt_pct(val: float) -> str:
-                if pd.isna(val):
-                    return "   n/a"
-                return f"{val:6.2f}%"
+                def fmt_pct(val: float) -> str:
+                    if pd.isna(val):
+                        return "   n/a"
+                    return f"{val:6.2f}%"
 
-            def fmt_amt(val: float) -> str:
-                return f"{val:,.2f}"
+                def fmt_amt(val: float) -> str:
+                    return f"{val:,.2f}"
 
-            columns = [
-                "date",
-                "action",
-                "leveraged_pct",
-                "unlevered_pct",
-                "cash_pct",
-                "leveraged_dollars",
-                "unlevered_dollars",
-                "cash_dollars",
-                "delta_unlevered",
-                "delta_tqqq",
-                "delta_cash",
-                "portfolio_value",
-                "cagr_pct",
-            ]
-            formatters = {
-                "leveraged_pct": fmt_pct,
-                "unlevered_pct": fmt_pct,
-                "cash_pct": fmt_pct,
-                "leveraged_dollars": fmt_amt,
-                "unlevered_dollars": fmt_amt,
-                "cash_dollars": fmt_amt,
-                "delta_unlevered": fmt_amt,
-                "delta_tqqq": fmt_amt,
-                "delta_cash": fmt_amt,
-                "portfolio_value": fmt_amt,
-                "cagr_pct": fmt_pct,
-            }
-            print("Rebalance log (leveraged / unlevered / cash breakdown):")
-            print(display_df[columns].to_string(index=False, formatters=formatters))
+                columns = [
+                    "date",
+                    "action",
+                    "leveraged_pct",
+                    "unlevered_pct",
+                    "cash_pct",
+                    "leveraged_dollars",
+                    "unlevered_dollars",
+                    "cash_dollars",
+                    "delta_unlevered",
+                    "delta_tqqq",
+                    "delta_cash",
+                    "portfolio_value",
+                    "cagr_pct",
+                ]
+                formatters = {
+                    "leveraged_pct": fmt_pct,
+                    "unlevered_pct": fmt_pct,
+                    "cash_pct": fmt_pct,
+                    "leveraged_dollars": fmt_amt,
+                    "unlevered_dollars": fmt_amt,
+                    "cash_dollars": fmt_amt,
+                    "delta_unlevered": fmt_amt,
+                    "delta_tqqq": fmt_amt,
+                    "delta_cash": fmt_amt,
+                    "portfolio_value": fmt_amt,
+                    "cagr_pct": fmt_pct,
+                }
+                print("Rebalance log (leveraged / unlevered / cash breakdown):")
+                print(display_df[columns].to_string(index=False, formatters=formatters))
 
     # Plot
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 8), sharex=True)
@@ -3591,9 +3755,9 @@ def main():
     ax2.legend(loc="upper left")
 
     fig.tight_layout()
-    if args.save_plot:
+    if args.save_plot and not quiet:
         fig.savefig(args.save_plot, dpi=150)
-    if args.save_csv:
+    if args.save_csv and not quiet:
         out = df.copy()
         out = out[
             [
@@ -3630,41 +3794,42 @@ def main():
         out.to_csv(args.save_csv)
 
     # Write summary markdown
-    try:
-        symbol_upper = base_symbol.upper()
-        symbol_dir = os.path.join("symbols", ("qqq" if base_symbol == "QQQ" else base_symbol.lower()))
-        os.makedirs(symbol_dir, exist_ok=True)
-        default_summary_name = f"{base_symbol.lower()}_{artifact_experiment}_summary.md"
-        summary_path = args.save_summary if args.save_summary else os.path.join(symbol_dir, default_summary_name)
+    if not quiet:
+        try:
+            symbol_upper = base_symbol.upper()
+            symbol_dir = os.path.join("symbols", ("qqq" if base_symbol == "QQQ" else base_symbol.lower()))
+            os.makedirs(symbol_dir, exist_ok=True)
+            default_summary_name = f"{base_symbol.lower()}_{artifact_experiment}_summary.md"
+            summary_path = args.save_summary if args.save_summary else os.path.join(symbol_dir, default_summary_name)
 
-        # Fitted curve CAGR comes from r (annualised growth of fitted curve)
-        fitted_curve_cagr = float(r)
-        # Underlying CAGR already computed above as underlying_cagr
-        # Strategy CAGR is cagr; max drawdown computed as max_drawdown
-        # Rebalance count
-        rebalance_count = int(len(rebalance_entries))
+            # Fitted curve CAGR comes from r (annualised growth of fitted curve)
+            fitted_curve_cagr = float(r)
+            # Underlying CAGR already computed above as underlying_cagr
+            # Strategy CAGR is cagr; max drawdown computed as max_drawdown
+            # Rebalance count
+            rebalance_count = int(len(rebalance_entries))
 
-        fundamentals = ensure_fundamentals(symbol_upper, symbol_dir)
+            fundamentals = ensure_fundamentals(symbol_upper, symbol_dir)
 
-        with open(summary_path, "w", encoding="utf-8") as fh:
-            fh.write(f"# {symbol_upper} – Strategy {args.experiment} Summary\n\n")
-            fh.write(f"- **Span**: {df.index[0].date()} → {df.index[-1].date()} ({years:.2f} years)\n")
-            fh.write(f"- **Underlying ({underlying_label}) CAGR**: {underlying_cagr * 100.0:.2f}%\n")
-            fh.write(f"- **Fitted curve CAGR**: {fitted_curve_cagr * 100.0:.2f}%\n")
-            fh.write(f"- **Strategy CAGR**: {cagr * 100.0:.2f}%\n")
-            fh.write(f"- **Max drawdown**: {max_drawdown * 100.0:.2f}%\n")
-            fh.write(f"- **Rebalances executed**: {rebalance_count}\n")
-            for line in fundamentals.summary_lines():
-                fh.write(line + "\n")
-            fh.write("\n")
-            fh.write("Notes:\n\n")
-            fh.write("- Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.\n")
-            fh.write("- Figures use simulated leveraged sleeve with fees and borrow costs.\n")
-    except Exception:
-        # Non-fatal: continue even if summary cannot be written
-        pass
+            with open(summary_path, "w", encoding="utf-8") as fh:
+                fh.write(f"# {symbol_upper} – Strategy {args.experiment} Summary\n\n")
+                fh.write(f"- **Span**: {df.index[0].date()} → {df.index[-1].date()} ({years:.2f} years)\n")
+                fh.write(f"- **Underlying ({underlying_label}) CAGR**: {underlying_cagr * 100.0:.2f}%\n")
+                fh.write(f"- **Fitted curve CAGR**: {fitted_curve_cagr * 100.0:.2f}%\n")
+                fh.write(f"- **Strategy CAGR**: {cagr * 100.0:.2f}%\n")
+                fh.write(f"- **Max drawdown**: {max_drawdown * 100.0:.2f}%\n")
+                fh.write(f"- **Rebalances executed**: {rebalance_count}\n")
+                for line in fundamentals.summary_lines():
+                    fh.write(line + "\n")
+                fh.write("\n")
+                fh.write("Notes:\n\n")
+                fh.write("- Temperatures and anchors per experiment govern deployment; see EXPERIMENTS.md for details.\n")
+                fh.write("- Figures use simulated leveraged sleeve with fees and borrow costs.\n")
+        except Exception:
+            # Non-fatal: continue even if summary cannot be written
+            pass
     # Rebalance debug CSV output
-    if (args.debug_start or args.debug_end) and len(debug_rows) > 0:
+    if not quiet and (args.debug_start or args.debug_end) and len(debug_rows) > 0:
         debug_df = pd.DataFrame(debug_rows)
         debug_df = debug_df.sort_values("date")
         if args.debug_csv:
@@ -3679,8 +3844,491 @@ def main():
             os.makedirs(symbol_dir, exist_ok=True)
             debug_path = os.path.join(symbol_dir, default_debug)
         debug_df.to_csv(debug_path, index=False)
-    if not args.no_show:
+    if not quiet and not args.no_show:
         plt.show()
+
+    result = BacktestResult(
+        df=df,
+        port_unlevered=port_unlevered,
+        port_tqqq=port_tqqq,
+        port_cash=port_cash,
+        port_total=port_total,
+        deployed_p=deployed_p,
+        base_p_series=base_p_series,
+        target_p_series=target_p_series,
+        block_buy_series=block_buy_series,
+        block_sell_series=block_sell_series,
+        forced_derisk_series=forced_derisk_series,
+        rebalance_entries=rebalance_entries,
+        decision_log=decision_log,
+        debug_rows=debug_rows,
+        unified_norm=unified_norm,
+        strategy_norm=strategy_norm,
+        cagr=cagr,
+        max_drawdown=max_drawdown,
+        rate_ann=rate_ann,
+        macro=macro,
+        leverage=leverage,
+        artifact_experiment=artifact_experiment,
+        base_symbol=base_symbol,
+        config=config,
+        use_leverage_replication=use_leverage_replication,
+        price_source=price_source,
+        start_ts=start_ts,
+        end_ts=df.index.max(),
+        years=years,
+        initial_capital=initial_capital,
+    )
+
+    return result
+
+
+def evaluate_integration_request(payload: Mapping[str, Any]) -> Dict[str, Any]:
+    """Process an integration request from InvestmentsView and return a JSON-ready response."""
+
+    if not isinstance(payload, Mapping):
+        raise TypeError("Integration request payload must be a mapping")
+
+    pd, np, plt = import_libs()
+
+    experiment = str(payload.get("experiment", "A1")).upper()
+    if experiment not in EXPERIMENTS:
+        raise ValueError(f"Unknown experiment '{experiment}'")
+
+    config = EXPERIMENTS[experiment]
+
+    default_base_symbol = str(config.get("base_symbol", "QQQ")).upper()
+    base_symbol = str(payload.get("base_symbol", default_base_symbol)).upper()
+
+    default_leveraged_symbol = str(config.get("leveraged_symbol", "TQQQ")).upper()
+    leveraged_symbol = str(payload.get("leveraged_symbol", default_leveraged_symbol)).upper()
+
+    default_reserve_symbol = str(config.get("reserve_symbol", "CASH")).upper()
+    reserve_symbol = str(payload.get("reserve_symbol", default_reserve_symbol)).upper()
+
+    request_date_raw = payload.get("request_date")
+    if not request_date_raw:
+        raise ValueError("request_date is required")
+    request_ts = pd.to_datetime(request_date_raw)
+
+    last_info = payload.get("last_rebalance")
+    last_date_raw: Optional[str]
+    if isinstance(last_info, Mapping):
+        last_date_raw = last_info.get("date")  # type: ignore[assignment]
+    elif isinstance(last_info, str):
+        last_date_raw = last_info
+    else:
+        last_date_raw = None
+    if not last_date_raw:
+        raise ValueError("last_rebalance date is required")
+    last_ts = pd.to_datetime(last_date_raw)
+    if request_ts < last_ts:
+        raise ValueError("request_date must be on or after last_rebalance.date")
+
+    csv_override = payload.get("csv")
+    df_full, price_source = load_symbol_history(pd, base_symbol, csv_override=csv_override)
+    if last_ts not in df_full.index:
+        raise ValueError(f"Base symbol data missing last rebalance date {last_ts.date()}")
+    if request_ts not in df_full.index:
+        raise ValueError(f"Base symbol data missing request date {request_ts.date()}")
+
+    df_slice = df_full.loc[(df_full.index >= last_ts) & (df_full.index <= request_ts)]
+    if df_slice.empty:
+        raise ValueError("No price data available between last rebalance and request date")
+
+    num_days = len(df_slice)
+    allow_index = num_days - 1
+
+    base_prices = df_full["close"]
+    base_price_start = float(base_prices.loc[last_ts])
+    base_price_today = float(base_prices.loc[request_ts])
+
+    def load_prices(symbol: str) -> pd.Series:
+        sym = symbol.upper()
+        if sym == "CASH":
+            return pd.Series([1.0, 1.0], index=[last_ts, request_ts])
+        series, _ = load_symbol_history(pd, sym)
+        if last_ts not in series.index or request_ts not in series.index:
+            raise ValueError(f"Price history for {sym} missing required dates")
+        return series["close"]
+
+    leveraged_prices = load_prices(leveraged_symbol)
+    reserve_prices = load_prices(reserve_symbol)
+
+    positions_raw = payload.get("positions", [])
+    if not isinstance(positions_raw, list):
+        raise ValueError("positions must be a list of holdings")
+    position_map: Dict[str, Mapping[str, Any]] = {}
+    for item in positions_raw:
+        if not isinstance(item, Mapping):
+            continue
+        symbol = str(item.get("symbol", "")).upper()
+        if symbol:
+            position_map[symbol] = item
+
+    def dollars_and_shares(symbol: str) -> tuple[float, Optional[float]]:
+        record = position_map.get(symbol.upper())
+        if not record:
+            return 0.0, None
+        dollars = float(record.get("dollars", 0.0))
+        shares = record.get("shares")
+        if shares is None:
+            return dollars, None
+        return dollars, float(shares)
+
+    base_dollars_today, base_shares = dollars_and_shares(base_symbol)
+    lever_dollars_today, lever_shares = dollars_and_shares(leveraged_symbol)
+    reserve_dollars_today, reserve_shares = dollars_and_shares(reserve_symbol)
+
+    price_lever_today = float(leveraged_prices.loc[request_ts])
+    price_lever_start = float(leveraged_prices.loc[last_ts])
+    if lever_shares is None:
+        lever_shares = 0.0 if price_lever_today == 0 else (lever_dollars_today / price_lever_today)
+    lever_dollars_today = lever_shares * price_lever_today
+    initial_leveraged = lever_shares * price_lever_start
+
+    if base_shares is None:
+        base_shares = 0.0 if base_price_today == 0 else (base_dollars_today / base_price_today)
+    base_dollars_today = base_shares * base_price_today
+    initial_unlevered = base_shares * base_price_start
+
+    price_reserve_today = float(reserve_prices.loc[request_ts])
+    price_reserve_start = float(reserve_prices.loc[last_ts])
+    if reserve_shares is None:
+        reserve_shares = 0.0 if price_reserve_today == 0 else (reserve_dollars_today / price_reserve_today)
+    reserve_dollars_today = reserve_shares * price_reserve_today
+    initial_cash = reserve_shares * price_reserve_start
+
+    total_today = base_dollars_today + lever_dollars_today + reserve_dollars_today
+
+    rebalance_cadence = int(EXPERIMENTS[experiment].get("rebalance_days", 22))
+    if rebalance_cadence <= 0:
+        rebalance_cadence = 22
+
+    args = argparse.Namespace(
+        base_symbol=base_symbol,
+        csv=csv_override,
+        start=last_ts.strftime("%Y-%m-%d"),
+        end=request_ts.strftime("%Y-%m-%d"),
+        fred_series=str(payload.get("fred_series", "FEDFUNDS")),
+        experiment=experiment,
+        leverage=float(payload.get("leverage", config.get("leverage_override", 3.0))),
+        annual_fee=float(payload.get("annual_fee", config.get("annual_fee_override", 0.0095))),
+        borrow_divisor=float(payload.get("borrow_divisor", config.get("borrow_divisor_override", 0.7))),
+        trading_days=int(payload.get("trading_days", 252)),
+        initial_capital=initial_unlevered + initial_leveraged + initial_cash,
+        print_rebalances=False,
+        disable_buy_temp_limit=bool(payload.get("disable_buy_temp_limit", False)),
+        save_plot=None,
+        save_csv=None,
+        save_summary=None,
+        debug_start=None,
+        debug_end=None,
+        debug_csv=None,
+        no_show=True,
+    )
+
+    overrides = BacktestOverrides(
+        initial_unlevered=initial_unlevered,
+        initial_leveraged=initial_leveraged,
+        initial_cash=initial_cash,
+        last_rebalance_index=0,
+        next_rebalance_index=rebalance_cadence,
+        allow_rebalances_from_index=allow_index,
+        capture_decision_log=True,
+    )
+
+    result = run_backtest(pd, np, plt, args, overrides=overrides, quiet=True)
+
+    final_idx = len(result.df) - 1
+    final_ts = result.df.index[-1]
+
+    decision_entry: Optional[Dict[str, Any]] = None
+    for entry in result.decision_log:
+        if int(entry.get("index", -1)) == final_idx:
+            decision_entry = entry
+
+    final_rebalance: Optional[Dict[str, Any]] = None
+    for entry in result.rebalance_entries:
+        if int(entry.get("index", -1)) == final_idx:
+            final_rebalance = entry
+
+    last_rebalance_event = result.rebalance_entries[-1] if result.rebalance_entries else None
+
+    price_lookup = {
+        base_symbol: base_price_today,
+        leveraged_symbol: price_lever_today,
+        reserve_symbol: price_reserve_today,
+    }
+
+    current_positions = [
+        {
+            "symbol": base_symbol,
+            "dollars": base_dollars_today,
+            "shares": base_shares,
+            "price": base_price_today,
+        },
+        {
+            "symbol": leveraged_symbol,
+            "dollars": lever_dollars_today,
+            "shares": lever_shares,
+            "price": price_lever_today,
+        },
+        {
+            "symbol": reserve_symbol,
+            "dollars": reserve_dollars_today,
+            "shares": reserve_shares,
+            "price": price_reserve_today,
+        },
+    ]
+
+    def clean_entry(entry: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        if not entry:
+            return None
+        cleaned: Dict[str, Any] = {}
+        for key, value in entry.items():
+            if isinstance(value, pd.Timestamp):
+                cleaned[key] = value.strftime("%Y-%m-%d")
+            elif isinstance(value, np.generic):
+                cleaned[key] = float(value)
+            else:
+                cleaned[key] = value
+        return cleaned
+
+    def build_reason(decision: Optional[Dict[str, Any]]) -> str:
+        if decision is None:
+            return "Decision context unavailable."
+        action = decision.get("action")
+        if action == "not_due":
+            cadence = int(decision.get("rebalance_cadence", rebalance_cadence))
+            since_last = int(decision.get("days_since_last_rebalance", 0))
+            remaining = max(0, cadence - since_last)
+            return f"Next rebalance window opens in {remaining} trading day(s)."
+        if action == "blocked_buy":
+            reasons = []
+            if decision.get("blocked_reason_buy_r3_le_-3pct"):
+                reasons.append("3-day drawdown guard")
+            if decision.get("blocked_reason_buy_r6_le_-3pct"):
+                reasons.append("6-day drawdown guard")
+            if decision.get("blocked_reason_buy_r12_le_-2pct"):
+                reasons.append("12-day drawdown guard")
+            if decision.get("blocked_reason_buy_r22_le_0pct"):
+                reasons.append("22-day drawdown guard")
+            if decision.get("blocked_reason_buy_T_gt_limit"):
+                reasons.append("temperature ceiling")
+            detail = ", ".join(reasons) if reasons else "momentum filters"
+            return f"Buy-side momentum guard active ({detail})."
+        if action == "blocked_sell":
+            reasons = []
+            if decision.get("blocked_reason_sell_r3_ge_3pct"):
+                reasons.append("3-day surge guard")
+            if decision.get("blocked_reason_sell_r6_ge_3pct"):
+                reasons.append("6-day surge guard")
+            if decision.get("blocked_reason_sell_r12_ge_2.25pct"):
+                reasons.append("12-day surge guard")
+            if decision.get("blocked_reason_sell_r22_ge_0.75pct"):
+                reasons.append("22-day surge guard")
+            detail = ", ".join(reasons) if reasons else "momentum filters"
+            return f"Sell-side momentum guard active ({detail})."
+        if action == "cadence_hold":
+            return "Cadence advanced without trades; target allocation already met."
+        if action == "deferred_until_index":
+            deferred_idx = decision.get("deferred_until_index")
+            if isinstance(deferred_idx, int):
+                deferred_date = result.df.index[int(deferred_idx)].strftime("%Y-%m-%d")
+                return f"Rebalance deferred until {deferred_date} per user override."
+            return "Rebalance deferred until user-provided date."
+        if action == "forced_derisk":
+            return "Crash guard forced a cash move."
+        return f"No rebalance executed (action={action})."
+
+    action: str
+    trades: List[Dict[str, Any]] = []
+    target_positions: List[Dict[str, Any]] = []
+
+    if final_rebalance is not None:
+        action = "rebalance"
+        for symbol, key in (
+            (base_symbol, "unlevered_value"),
+            (leveraged_symbol, "tqqq_value"),
+            (reserve_symbol, "cash_value"),
+        ):
+            dollars = float(final_rebalance.get(key, 0.0))
+            price = price_lookup.get(symbol, 1.0)
+            shares = dollars / price if price else 0.0
+            target_positions.append({"symbol": symbol, "dollars": dollars, "shares": shares, "price": price})
+
+        for symbol, key in (
+            (base_symbol, "delta_unlevered"),
+            (leveraged_symbol, "delta_tqqq"),
+            (reserve_symbol, "delta_cash"),
+        ):
+            delta = float(final_rebalance.get(key, 0.0))
+            if abs(delta) < 1e-6:
+                continue
+            price = price_lookup.get(symbol, 1.0)
+            shares = delta / price if price else 0.0
+            trades.append(
+                {
+                    "symbol": symbol,
+                    "action": "buy" if delta > 0 else "sell",
+                    "dollars": delta,
+                    "shares": shares,
+                    "price": price,
+                }
+            )
+        reason_text = "Rebalance required by strategy rules."
+    else:
+        action = "hold"
+        reason_text = build_reason(decision_entry)
+
+        target_allocation = float(decision_entry.get("target_p")) if decision_entry else result.deployed_p[-1]
+        weight_1x, weight_levered, weight_cash = compute_deployment_weights(
+            target_allocation,
+            result.leverage,
+            use_replication=result.use_leverage_replication,
+        )
+        target_positions = [
+            {
+                "symbol": base_symbol,
+                "dollars": total_today * weight_1x,
+                "shares": (total_today * weight_1x / price_lookup[base_symbol]) if price_lookup[base_symbol] else 0.0,
+                "price": price_lookup[base_symbol],
+            },
+            {
+                "symbol": leveraged_symbol,
+                "dollars": total_today * weight_levered,
+                "shares": (total_today * weight_levered / price_lookup[leveraged_symbol])
+                if price_lookup[leveraged_symbol]
+                else 0.0,
+                "price": price_lookup[leveraged_symbol],
+            },
+            {
+                "symbol": reserve_symbol,
+                "dollars": total_today * weight_cash,
+                "shares": (total_today * weight_cash / price_lookup[reserve_symbol]) if price_lookup[reserve_symbol] else 0.0,
+                "price": price_lookup[reserve_symbol],
+            },
+        ]
+
+    decision_details = clean_entry(decision_entry)
+    recent_event = clean_entry(last_rebalance_event)
+
+    current_allocation = 0.0
+    if total_today > 0:
+        current_allocation = (base_dollars_today + result.leverage * lever_dollars_today) / (
+            result.leverage * total_today
+        )
+
+    response = {
+        "request_date": request_ts.strftime("%Y-%m-%d"),
+        "experiment": experiment,
+        "base_symbol": base_symbol,
+        "leveraged_symbol": leveraged_symbol,
+        "reserve_symbol": reserve_symbol,
+        "current_value": total_today,
+        "current_allocation": current_allocation,
+        "current_positions": current_positions,
+        "decision": {
+            "action": action,
+            "reason": reason_text,
+            "details": decision_details,
+        },
+        "target_positions": target_positions,
+        "trades": trades,
+        "model": {
+            "rebalance_cadence": rebalance_cadence,
+            "days_since_last_rebalance": int(decision_entry.get("days_since_last_rebalance", 0)) if decision_entry else None,
+            "due": bool(decision_entry.get("due")) if decision_entry else False,
+            "target_allocation": float(decision_entry.get("target_p")) if decision_entry else None,
+            "base_allocation": float(decision_entry.get("base_p")) if decision_entry else None,
+        },
+        "recent_rebalance": recent_event,
+        "price_source": price_source,
+    }
+
+    return response
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Simulate TQQQ+reserve strategy with temperature & filters")
+    parser.add_argument(
+        "--base-symbol",
+        default=None,
+        help="Underlying symbol/index used for the leverage sleeve (defaults to the experiment base symbol or QQQ)",
+    )
+    parser.add_argument(
+        "--csv",
+        default=None,
+        help="Optional CSV path with date/close columns (defaults to unified_nasdaq.csv for QQQ)",
+    )
+    parser.add_argument("--start", default=None, help="Start date (YYYY-MM-DD) inclusive")
+    parser.add_argument("--end", default="2025-09-19", help="End date (YYYY-MM-DD) inclusive")
+    parser.add_argument("--fred-series", default="FEDFUNDS", help="FRED rate series (default FEDFUNDS)")
+    parser.add_argument(
+        "--experiment",
+        default="A36",
+        choices=sorted(EXPERIMENTS.keys()),
+        help="Strategy experiment to run (default A36, best-known)",
+    )
+    parser.add_argument("--leverage", type=float, default=3.0)
+    parser.add_argument("--annual-fee", type=float, default=0.0095)
+    parser.add_argument("--borrow-divisor", type=float, default=0.7)
+    parser.add_argument("--trading-days", type=int, default=252)
+    parser.add_argument(
+        "--initial-capital",
+        type=float,
+        default=1.0,
+        help="Initial portfolio value for the simulation (default 1.0)",
+    )
+    parser.add_argument(
+        "--print-rebalances",
+        action="store_true",
+        help="Print a detailed log of executed rebalances",
+    )
+    parser.add_argument(
+        "--disable-buy-temp-limit",
+        action="store_true",
+        help="Ignore temperature buy blocks so the strategy can add exposure regardless of T",
+    )
+    parser.add_argument("--save-plot", default=None, help="If set, save output figure to this PNG path")
+    parser.add_argument("--save-csv", default=None, help="If set, save daily debug CSV here")
+    parser.add_argument(
+        "--save-summary",
+        default=None,
+        help=(
+            "If set, write a markdown summary of key stats to this path; "
+            "if not provided, a default '[symbol]_[experiment]_summary.md' is saved in the symbol directory"
+        ),
+    )
+    parser.add_argument("--debug-start", default=None, help="Start date (YYYY-MM-DD) for rebalance debug output")
+    parser.add_argument("--debug-end", default=None, help="End date (YYYY-MM-DD) for rebalance debug output (inclusive)")
+    parser.add_argument(
+        "--debug-csv",
+        default=None,
+        help="If set, write rebalance debug CSV to this path (default strategy_tqqq_reserve_debug.csv if a debug range is provided)",
+    )
+    parser.add_argument("--no-show", action="store_true")
+    parser.add_argument(
+        "--integration-request",
+        default=None,
+        help="Path to a JSON payload (or '-' for stdin) describing an integration request",
+    )
+    args = parser.parse_args()
+
+    if args.integration_request:
+        if args.integration_request == "-":
+            payload = json.load(sys.stdin)
+        else:
+            with open(args.integration_request, "r", encoding="utf-8") as fh:
+                payload = json.load(fh)
+        response = evaluate_integration_request(payload)
+        json.dump(response, sys.stdout, indent=2, sort_keys=True)
+        sys.stdout.write("\n")
+        return
+
+    pd, np, plt = import_libs()
+    run_backtest(pd, np, plt, args)
 
 
 if __name__ == "__main__":
