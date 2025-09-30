@@ -4,10 +4,10 @@
   "seam_qqq_ndx_date": "1999-03-10",
   "seam_ixic_ndx_date": "1985-10-01",
   "start_date": "1971-02-05",
-  "end_date": "2025-09-19",
+  "end_date": "2025-09-29",
   "start_value": 0.8439857453047697,
   "ixic_to_ndx_value": 2.378351727243237,
   "qqq_seam_value": 43.23429489135742,
-  "end_value": 599.3499755859375,
+  "end_value": 598.73,
   "ixic_extra_cagr": 0.0
 }
