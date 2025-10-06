@@ -3963,7 +3963,14 @@ def evaluate_integration_request(payload: Mapping[str, Any]) -> Dict[str, Any]:
         aligned = eligible[-1]
 
         if max_lag_days is not None:
-            lag_days = int((ts.normalize() - aligned.normalize()).days)
+            aligned_day = aligned.normalize()
+            target_day = ts.normalize()
+
+            if hasattr(np, "busday_count"):
+                lag_days = int(np.busday_count(aligned_day.strftime("%Y-%m-%d"), target_day.strftime("%Y-%m-%d")))
+            else:
+                lag_days = int((target_day - aligned_day).days)
+
             if lag_days > max_lag_days:
                 latest_available = index_sorted[-1]
                 raise ValueError(
