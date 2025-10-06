@@ -4336,6 +4336,144 @@ def evaluate_integration_request(payload: Mapping[str, Any]) -> Dict[str, Any]:
     return response
 
 
+def evaluate_temperature_chart_request(payload: Mapping[str, Any]) -> Dict[str, Any]:
+    """Return temperature-series data for a JS consumer."""
+
+    if not isinstance(payload, Mapping):
+        raise TypeError("Temperature request payload must be a mapping")
+
+    pd, np, plt = import_libs()
+
+    experiment = str(payload.get("experiment", "A1")).upper()
+    if experiment not in EXPERIMENTS:
+        raise ValueError(f"Unknown experiment '{experiment}'")
+
+    config = EXPERIMENTS[experiment]
+
+    default_base_symbol = str(config.get("base_symbol", "QQQ")).upper()
+    base_symbol = str(payload.get("base_symbol", default_base_symbol)).upper()
+
+    csv_override = payload.get("csv")
+
+    start_raw = payload.get("start_date")
+    end_raw = payload.get("end_date")
+    if start_raw is None or end_raw is None:
+        raise ValueError("start_date and end_date are required")
+
+    start_ts = pd.to_datetime(start_raw)
+    end_ts = pd.to_datetime(end_raw)
+
+    if pd.isna(start_ts) or pd.isna(end_ts):
+        raise ValueError("start_date and end_date must be parseable dates")
+
+    if end_ts < start_ts:
+        raise ValueError("end_date must be on or after start_date")
+
+    df_full, price_source = load_symbol_history(pd, base_symbol, csv_override=csv_override)
+    index_sorted = df_full.index.sort_values()
+
+    def align_start(ts: "pd.Timestamp") -> "pd.Timestamp":
+        eligible = index_sorted[index_sorted >= ts]
+        if len(eligible) == 0:
+            first = index_sorted[0]
+            raise ValueError(
+                f"Base symbol data starts at {first.date()} which is after requested start {ts.date()}"
+            )
+        return eligible[0]
+
+    def align_end(ts: "pd.Timestamp") -> "pd.Timestamp":
+        eligible = index_sorted[index_sorted <= ts]
+        if len(eligible) == 0:
+            last = index_sorted[-1]
+            raise ValueError(
+                f"Base symbol data ends at {last.date()} which is before requested end {ts.date()}"
+            )
+        return eligible[-1]
+
+    resolved_start = align_start(start_ts)
+    resolved_end = align_end(end_ts)
+
+    if resolved_end < resolved_start:
+        raise ValueError("Aligned end date precedes aligned start date")
+
+    df_slice = df_full.loc[(df_full.index >= resolved_start) & (df_full.index <= resolved_end)]
+    if df_slice.empty:
+        raise ValueError("No price data available in the requested range")
+
+    temperature_model_cfg = config.get("temperature_model")
+    if not isinstance(temperature_model_cfg, Mapping):
+        temperature_model_cfg = None
+
+    A_fit, r_fit, fit_start_ts_full = ensure_temperature_assets(
+        pd,
+        np,
+        plt,
+        base_symbol,
+        df_full,
+        manual_model=temperature_model_cfg,
+    )
+    temp_values, A, r, fit_start_ts = compute_temperature_series(
+        pd,
+        np,
+        df_slice,
+        csv_path=price_source,
+        model_params=(A_fit, r_fit, fit_start_ts_full),
+    )
+
+    t_years = (df_slice.index - pd.to_datetime(fit_start_ts)).days / 365.25
+    fitted_prices = A * np.power(1.0 + r, t_years)
+    closes = df_slice["close"].to_numpy(dtype=float)
+
+    points = [
+        {
+            "date": ts.strftime("%Y-%m-%d"),
+            "close": float(close),
+            "fitted": float(fitted),
+            "temperature": float(temp),
+        }
+        for ts, close, fitted, temp in zip(df_slice.index, closes, fitted_prices, temp_values)
+    ]
+
+    fit_details = {
+        "A": float(A),
+        "growth_rate": float(r),
+        "growth_rate_percent": float(r * 100.0),
+        "start_date": pd.to_datetime(fit_start_ts).strftime("%Y-%m-%d"),
+        "manual_override": bool(temperature_model_cfg is not None),
+    }
+
+    response = {
+        "experiment": experiment,
+        "base_symbol": base_symbol,
+        "price_source": price_source,
+        "requested_start_date": pd.to_datetime(start_ts).strftime("%Y-%m-%d"),
+        "requested_end_date": pd.to_datetime(end_ts).strftime("%Y-%m-%d"),
+        "resolved_start_date": resolved_start.strftime("%Y-%m-%d"),
+        "resolved_end_date": resolved_end.strftime("%Y-%m-%d"),
+        "fit": fit_details,
+        "reference_temperatures": [0.5, 1.0, 1.5],
+        "points": points,
+    }
+
+    temp_allocation_cfg = config.get("temperature_allocation")
+    if isinstance(temp_allocation_cfg, Sequence):
+        anchors: List[Dict[str, float]] = []
+        for entry in temp_allocation_cfg:
+            if not isinstance(entry, Mapping):
+                continue
+            if "temp" in entry and "allocation" in entry:
+                anchors.append(
+                    {
+                        "temp": float(entry["temp"]),
+                        "allocation": float(entry["allocation"]),
+                    }
+                )
+        if anchors:
+            response["temperature_allocation"] = anchors
+
+    return response
+
+
 def main():
     parser = argparse.ArgumentParser(description="Simulate TQQQ+reserve strategy with temperature & filters")
     parser.add_argument(
