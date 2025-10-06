@@ -6,10 +6,13 @@ single payload describing the current portfolio and receives back a
 machine-readable decision: rebalance now or hold, along with recommended dollar
 moves, share counts, and human-friendly explanations.
 
-The bridge lives in `strategy_tqqq_reserve.py` and is available in two forms:
+The bridge lives in `strategy_tqqq_reserve.py` and is available in multiple forms:
 
 * `evaluate_integration_request(payload)` – importable function that returns a
   dictionary ready to serialise to JSON.【F:strategy_tqqq_reserve.py†L4378-L4697】
+* `evaluate_temperature_chart_request(payload)` – importable helper that returns
+  the fitted growth curve, temperature series, and pricing/anchor metadata for a
+  requested date range so the frontend can render the temperature chart.【F:strategy_tqqq_reserve.py†L4339-L4475】
 * `python strategy_tqqq_reserve.py --integration-request payload.json` – CLI
   wrapper that reads JSON from a file or stdin and prints the response.【F:strategy_tqqq_reserve.py†L4703-L4725】
 
@@ -154,6 +157,60 @@ python strategy_tqqq_reserve.py --integration-request payload.json > response.js
 
 Both entry points share the same code path and therefore the same defaults for
 experiments, cadence, and rate series.【F:strategy_tqqq_reserve.py†L4703-L4725】
+
+### Temperature chart bridge
+
+InvestmentsView can request temperature chart data by supplying the model and a
+date window. The bridge resolves the experiment defaults, computes the fitted
+growth curve (`A * e^(r * t)`), derives the temperature series (`price / fit`),
+and returns the data required to plot the baseline curve alongside reference
+temperatures and optional allocation anchors.【F:strategy_tqqq_reserve.py†L4339-L4475】
+
+#### Request payload
+
+```jsonc
+{
+  "experiment": "A1",              // required – strategy experiment key
+  "start_date": "2024-01-02",     // required – beginning of chart window (trading day)
+  "end_date": "2024-06-28"        // required – end of chart window (inclusive trading day)
+}
+```
+
+Optional overrides mirror the integration request (e.g., `csv`, `base_symbol`,
+`leveraged_symbol`, etc.) and allow InvestmentsView to chart alternative data
+sources or manual fits.【F:strategy_tqqq_reserve.py†L4403-L4475】
+
+#### Response payload
+
+```jsonc
+{
+  "experiment": "A1",
+  "start_date": "2024-01-02",
+  "end_date": "2024-06-28",
+  "growth_curve": [
+    {"date": "2024-01-02", "fit": 1.92, "price": 375.04, "temperature": 0.98},
+    {"date": "2024-01-03", "fit": 1.93, "price": 378.12, "temperature": 0.99}
+    // … one entry per trading day
+  ],
+  "reference_temperatures": [0.5, 1.0, 1.5],
+  "manual_override": false,
+  "temperature_allocation": [
+    {"temperature": 0.7, "allocation": 1.0},
+    {"temperature": 1.2, "allocation": 0.5}
+  ]
+}
+```
+
+* `growth_curve` – daily entries that include the fitted curve value, observed
+  price, and derived temperature for each trading session in the requested
+  range.【F:strategy_tqqq_reserve.py†L4415-L4454】
+* `reference_temperatures` – standard guideposts (0.5, 1.0, 1.5) to plot the
+  horizontal reference lines in the chart.【F:strategy_tqqq_reserve.py†L4452-L4455】
+* `manual_override` – flag indicating whether the experiment supplied a manual
+  temperature model override (useful for labelling the chart).【F:strategy_tqqq_reserve.py†L4442-L4444】
+* `temperature_allocation` – when the experiment defines allocation anchors, the
+  bridge echoes them back so the frontend can draw the allocation ladder; absent
+  when no anchors are defined.【F:strategy_tqqq_reserve.py†L4458-L4474】
 
 ## Implementation notes
 
