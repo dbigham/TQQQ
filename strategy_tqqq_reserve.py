@@ -3966,6 +3966,9 @@ def evaluate_integration_request(payload: Mapping[str, Any]) -> Dict[str, Any]:
             aligned_day = aligned.normalize()
             target_day = ts.normalize()
 
+            if target_day > index_sorted[-1].normalize():
+                target_day = index_sorted[-1].normalize()
+
             if hasattr(np, "busday_count"):
                 lag_days = int(np.busday_count(aligned_day.strftime("%Y-%m-%d"), target_day.strftime("%Y-%m-%d")))
             else:
