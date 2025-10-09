@@ -181,7 +181,32 @@ def load_symbol_history(pd, symbol: str, *, csv_override: Optional[str] = None):
     if symbol_upper == "QQQ":
         default_csv = "unified_nasdaq.csv"
         if os.path.exists(default_csv):
+            # Load existing unified series (includes pre-QQQ backfill)
             df = load_unified(pd, default_csv)
+
+            # If the cached unified file is stale, refresh the tail using
+            # latest QQQ prices from Yahoo and append any missing dates.
+            try:
+                latest_cached = pd.to_datetime(df.index.max())
+                refresh_cutoff = pd.Timestamp.today().normalize() - pd.Timedelta(days=2)
+                if latest_cached < refresh_cutoff:
+                    df_new = download_symbol_history(pd, symbol_upper)
+                    latest_new = pd.to_datetime(df_new.index.max())
+                    if latest_new > latest_cached:
+                        # Append only the new dates beyond the cached tail
+                        tail = df_new.loc[df_new.index > latest_cached]
+                        if not tail.empty:
+                            df_combined = pd.concat([df, tail]).sort_index()
+                            # Persist refreshed series back to the unified CSV
+                            os.makedirs(os.path.dirname(default_csv) or ".", exist_ok=True)
+                            df_to_save = df_combined.copy()
+                            df_to_save.index.name = "date"
+                            df_to_save.to_csv(default_csv)
+                            df = df_combined
+            except Exception:
+                # Non-fatal: if refresh fails (e.g., offline), use cached data
+                pass
+
             return df, os.path.abspath(default_csv)
 
     cache_name = f"{symbol_upper}.csv"
@@ -4567,7 +4592,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 
 
