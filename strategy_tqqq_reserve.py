@@ -4028,15 +4028,48 @@ def evaluate_integration_request(payload: Mapping[str, Any]) -> Dict[str, Any]:
     base_price_today = float(base_prices.loc[request_ts])
 
     def load_prices(symbol: str) -> pd.Series:
+        """Load close prices for required evaluation dates, aligning when needed.
+
+        For symbols that do not trade on the exact base index dates (holidays,
+        differing inception dates, etc.), align to the most recent available
+        date on or before the target. If the request date equals the last
+        rebalance date, return a single-point series keyed by that timestamp.
+        """
         sym = symbol.upper()
         if sym == "CASH":
             if last_ts == request_ts:
                 return pd.Series([1.0], index=[request_ts])
             return pd.Series([1.0, 1.0], index=[last_ts, request_ts])
+
         series, _ = load_symbol_history(pd, sym)
-        if last_ts not in series.index or request_ts not in series.index:
-            raise ValueError(f"Price history for {sym} missing required dates")
-        return series["close"]
+        prices = series["close"]
+        idx = prices.index
+
+        def align_on_or_before(ts: "pd.Timestamp") -> Optional["pd.Timestamp"]:
+            eligible = idx[idx <= ts]
+            if len(eligible) == 0:
+                return None
+            return eligible[-1]
+
+        if last_ts == request_ts:
+            aligned = align_on_or_before(request_ts)
+            if aligned is None:
+                raise ValueError(f"Price history for {sym} missing data on or before {request_ts.date()}")
+            value = float(prices.loc[aligned])
+            return pd.Series([value], index=[request_ts])
+
+        aligned_last = align_on_or_before(last_ts)
+        aligned_req = align_on_or_before(request_ts)
+        if aligned_last is None or aligned_req is None:
+            missing_label = (
+                ("last rebalance date " + str(last_ts.date())) if aligned_last is None else ("request date " + str(request_ts.date()))
+            )
+            raise ValueError(f"Price history for {sym} missing data on or before {missing_label}")
+
+        return pd.Series(
+            [float(prices.loc[aligned_last]), float(prices.loc[aligned_req])],
+            index=[last_ts, request_ts],
+        )
 
     leveraged_prices = load_prices(leveraged_symbol)
     reserve_prices = load_prices(reserve_symbol)
@@ -4592,7 +4625,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 
 
