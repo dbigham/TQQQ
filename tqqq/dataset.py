@@ -84,7 +84,10 @@ def load_price_csv(
     _require_columns(df, ["date", "close"])
 
     df = df.copy()
-    df["date"] = pd.to_datetime(df["date"])
+    # Coerce any malformed date cells (e.g., stray tokens like "44") to NaT
+    # and drop those rows to keep the series clean and parseable.
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    df = df.dropna(subset=["date"])
     df = df.sort_values("date")
     df = df.dropna(subset=["close"])
     if ensure_positive:
