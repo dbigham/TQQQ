@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import Iterable, Tuple
 
+import io
+import re
+
 import pandas as pd
 
 _DAYS_PER_YEAR = 365.25
@@ -47,7 +50,37 @@ def load_price_csv(
         The cleaned frame and the first timestamp in the series.
     """
 
-    df = pd.read_csv(path)
+    try:
+        df = pd.read_csv(path)
+    except Exception as e:
+        # Recover from occasional malformed rows where two records were
+        # concatenated or corrupted mid-line (e.g.,
+        # "YYYY-MM-DD,priceYYYY-MM-DD,price" or "...86.72022-2022-..."), by
+        # extracting well-formed (date, close) pairs and rebuilding the frame.
+        if getattr(pd, "errors", None) is not None and isinstance(e, pd.errors.ParserError) or "ParserError" in type(e).__name__:
+            with open(path, "r", encoding="utf-8") as f:
+                raw = f.read()
+
+            pairs = re.findall(r"((?:19|20)\d{2}-\d{2}-\d{2}),\s*(-?\d+(?:\.\d+)?)", raw)
+            if not pairs:
+                # As a second attempt, try inserting newlines before repeated date
+                # patterns and re-parse via pandas.
+                fixed = re.sub(
+                    r"(?<!^)(?=(?:19|20)\d{2}-\d{2}-\d{2},)",
+                    "\n",
+                    raw,
+                    flags=re.MULTILINE,
+                )
+                fixed = re.sub(r"(?<=\d)-(\r?\n)", r"\1", fixed)
+                df = pd.read_csv(io.StringIO(fixed))
+            else:
+                import pandas as _pd
+                df = _pd.DataFrame(pairs, columns=["date", "close"])  # type: ignore[assignment]
+                # Ensure correct dtypes before further cleaning
+                df["date"] = df["date"].astype(str)
+                df["close"] = df["close"].astype(float)
+        else:
+            raise
     _require_columns(df, ["date", "close"])
 
     df = df.copy()

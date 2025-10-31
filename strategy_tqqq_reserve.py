@@ -189,7 +189,9 @@ def load_symbol_history(pd, symbol: str, *, csv_override: Optional[str] = None):
             try:
                 latest_cached = pd.to_datetime(df.index.max())
                 refresh_cutoff = pd.Timestamp.today().normalize() - pd.Timedelta(days=2)
-                if latest_cached < refresh_cutoff:
+                # Refresh when cache is at or before the cutoff to avoid
+                # being one trading day behind early in the morning.
+                if latest_cached <= refresh_cutoff:
                     df_new = download_symbol_history(pd, symbol_upper)
                     latest_new = pd.to_datetime(df_new.index.max())
                     if latest_new > latest_cached:
@@ -217,7 +219,8 @@ def load_symbol_history(pd, symbol: str, *, csv_override: Optional[str] = None):
         try:
             latest_cached = pd.to_datetime(df.index.max())
             refresh_cutoff = pd.Timestamp.today().normalize() - pd.Timedelta(days=2)
-            if latest_cached < refresh_cutoff:
+            # Inclusive cutoff avoids staying one day behind.
+            if latest_cached <= refresh_cutoff:
                 df_new = download_symbol_history(pd, symbol_upper)
                 latest_new = pd.to_datetime(df_new.index.max())
                 if latest_new > latest_cached:
@@ -4625,7 +4628,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 
 
