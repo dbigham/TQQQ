@@ -157,6 +157,18 @@ def get_fred_series(series_id: str, start, end):
 
 def load_unified(pd, csv_path: str):
     df, _ = load_price_csv(csv_path, set_index=True)
+    # Normalize and clean index to avoid duplicate-date lookups returning Series
+    df.index = pd.to_datetime(df.index)
+    if getattr(df.index, "tz", None) is not None:
+        df.index = df.index.tz_localize(None)
+    df = df.sort_index()
+    # Drop any duplicate dates, keeping the first occurrence
+    df = df[~df.index.duplicated(keep="first")]
+    # Ensure index and close values are valid
+    df = df[df.index.notna()]
+    if "close" in df.columns:
+        df["close"] = df["close"].astype(float)
+        df = df[df["close"] > 0]
     return df
 
 
@@ -4628,7 +4640,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 
 
