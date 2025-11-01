@@ -4375,6 +4375,29 @@ def evaluate_integration_request(payload: Mapping[str, Any]) -> Dict[str, Any]:
     decision_details = clean_entry(decision_entry)
     recent_event = clean_entry(last_rebalance_event)
 
+    # Provide human-readable label/description for the recent event reason so
+    # downstream UIs don't need to expose internal enums like "forced_derisk".
+    def humanize_recent_reason(reason: Optional[str]) -> tuple[Optional[str], Optional[str]]:
+        if not isinstance(reason, str) or not reason:
+            return None, None
+        token = reason.strip().lower()
+        if token == "forced_derisk":
+            return "Forced derisk", "Crash guard forced a cash move."
+        if token == "rebalance":
+            return "Rebalance", "Allocation updated per strategy rules."
+        # Fallback: title-case the token and provide no extra text
+        label = token.replace("_", " ").strip()
+        if label:
+            label = label[:1].upper() + label[1:]
+        return label or None, None
+
+    if isinstance(recent_event, dict):
+        label, desc = humanize_recent_reason(recent_event.get("reason"))
+        if label:
+            recent_event["reason_label"] = label
+        if desc:
+            recent_event["reason_description"] = desc
+
     current_allocation = 0.0
     if total_today > 0:
         current_allocation = (base_dollars_today + result.leverage * lever_dollars_today) / (
@@ -4640,6 +4663,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 
