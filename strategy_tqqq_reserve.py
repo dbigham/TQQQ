@@ -3248,6 +3248,10 @@ def run_backtest(
                 decision_log.append(entry)
 
             # First, check the 22d crash de-risk. If triggered, act immediately and skip momentum filters.
+            # When the integration bridge requests evaluation for "today" with a historical
+            # last rebalance, do not execute forced de-risk events earlier than the
+            # allowed index — they represent actions that were not actually taken.
+            # In that case, defer until the allowed index (typically the final day).
             ret22 = r22
             forced_today = False
             if (
@@ -3257,6 +3261,21 @@ def run_backtest(
                 and ret22 <= crash_threshold
                 and curr_p > 0.0
             ):
+                if allow_rebalances_from_index is not None and i < allow_rebalances_from_index:
+                    # Defer this forced de-risk until the allowed index; do not mutate state.
+                    log_decision(
+                        "deferred_until_index",
+                        False,
+                        {
+                            "deferred_until_index": int(allow_rebalances_from_index),
+                            "pending_action": "forced_derisk",
+                            "ret_22": float(ret22) if not math.isnan(ret22) else float("nan"),
+                            "crash_threshold": float(crash_threshold) if crash_threshold is not None else float("nan"),
+                        },
+                    )
+                    port_total[i] = port_unlevered[i] + port_tqqq[i] + port_cash[i]
+                    deployed_p[i] = curr_p
+                    continue
                 prev_unlevered = port_unlevered[i]
                 prev_tqqq = port_tqqq[i]
                 prev_cash = port_cash[i]
@@ -4663,5 +4682,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
